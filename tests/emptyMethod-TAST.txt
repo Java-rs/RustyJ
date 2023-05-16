@@ -1,0 +1,12 @@
+Class {
+	name = "emptyMethod",
+	fields = [],
+	methods = [
+		Method {
+			retType = void,
+			name = "f",
+			params = [],
+			body = Block([])
+		}
+	]
+}

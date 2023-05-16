@@ -1,0 +1,23 @@
+class {
+	name = "LocalVarDecl",
+	fields = [],
+	methods = [
+		Method {
+			retType = int,
+			name = "f",
+			body = Block([
+				VarDecl {
+					type = int,
+					name = "x",
+					val = Some(69)
+				},
+				Return(
+					TypedExpr {
+						expr = LocalOrFieldVar("x"),
+						type = int
+					}
+				)
+			])
+		}
+	]
+}

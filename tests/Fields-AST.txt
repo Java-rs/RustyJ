@@ -1,0 +1,26 @@
+Class {
+	name = "Fields",
+	fields = [
+		VarDecl {
+			type = int,
+			name = "x",
+			val = None
+		},
+		VarDecl {
+			type = boolean,
+			name = "b",
+			val = None
+		},
+		VarDecl {
+			type = char,
+			name = "c",
+			val = None
+		},
+		VarDecl {
+			type = String,
+			name = "s",
+			val = None
+		}
+	],
+	methods = []
+}

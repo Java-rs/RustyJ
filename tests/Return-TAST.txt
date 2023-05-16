@@ -1,0 +1,44 @@
+Class {
+	name = "Return",
+	fields = [],
+	methods = [
+		Method {
+			retType = char,
+			name = "id",
+			params = [
+				VarDecl {
+					type = char,
+					name = "x",
+					val = None
+				}
+			],
+			body = Block([
+				Return(
+					TypedExpr {
+						expr = LocalOrFieldVar("x"),
+						type = char
+					}
+				)
+			])
+		},
+		Method {
+			retType = boolean,
+			name = "id",
+			params = [
+				VarDecl {
+					type = boolean,
+					name = "b",
+					val = None
+				}
+			],
+			body = Block([
+				Return(
+					TypedExpr {
+						expr = LocalOrFieldVar("b"),
+						type = boolean
+					}
+				)
+			])
+		}
+	]
+}

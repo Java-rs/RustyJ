@@ -1,5 +1,9 @@
 class Negator {
-	int neg(int x) {
+	int neg1(int x) {
 		return -x;
+	}
+
+	int neg2(int x) {
+		return -(+(-(-1 * x)));
 	}
 }

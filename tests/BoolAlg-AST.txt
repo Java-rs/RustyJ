@@ -1,0 +1,40 @@
+Class {
+	name = "BoolAlg",
+	fields = [],
+	methods = [
+		Method {
+			retType = boolean,
+			name = "f",
+			params = [
+				VarDecl {
+					type = boolean,
+					name = "a",
+					val = None
+				},
+				VarDecl {
+					type = boolean,
+					name = "b",
+					val = None
+				},
+				VarDecl {
+					type = boolean,
+					name = "c",
+					val = None
+				}
+			],
+			body = Block ([
+				Return (
+					Binary {
+						op = Or,
+						left = Binary {
+							op = And,
+							left = LocalOrFieldVar("a"),
+							right = LocalOrFieldVar("b")
+						},
+						right = LocalOrFieldVar("c")
+					}
+				)
+			])
+		}
+	]
+}

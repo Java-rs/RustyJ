@@ -1,0 +1,52 @@
+Class {
+	name = "BoolAlg",
+	fields = [],
+	methods = [
+		Method {
+			retType = boolean,
+			name = "f",
+			params = [
+				VarDecl {
+					type = boolean,
+					name = "a",
+					val = None
+				},
+				VarDecl {
+					type = boolean,
+					name = "b",
+					val = None
+				},
+				VarDecl {
+					type = boolean,
+					name = "c",
+					val = None
+				}
+			],
+			body = Block ([
+				Return (
+					TypedExpr {
+						expr = Binary {
+							op = Or,
+							left = Binary {
+								op = And,
+								left = TypedExpr {
+									expr = LocalOrFieldVar("a"),
+									type = boolean
+								}
+								right = TypedExpr {
+									expr = LocalOrFieldVar("b"),
+									type = boolean
+								}
+							},
+							right = TypedExpr {
+								expr = LocalOrFieldVar("c"),
+								type = boolean
+							}
+						},
+					type = boolean
+					}
+				)
+			])
+		}
+	]
+}

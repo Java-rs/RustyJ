@@ -1,0 +1,151 @@
+Class {
+	name = "ArithmeticMethods",
+	fields = [
+		VarDecl {
+			type = int,
+			name = "x",
+			val = Some(Int(69))
+		},
+		VarDecl {
+			type = int,
+			name = "y",
+			val = Some(Int(420))
+		}
+	],
+	methods = [
+		Method {
+			retType = int,
+			name = "addX",
+			params = [
+				VarDecl {
+					type = int,
+					name = "a",
+					val = None
+				}
+			],
+			body = Block ([
+				Return (
+					TypedExpr {
+						expr = Binary {
+							op = Add,
+							left = TypedExpr {
+								expr = LocalOrFieldVar("x"),
+								type = int
+							},
+							right = TypedExpr {
+								expr = LocalOrFieldVar("a"),
+								type = int
+							}
+						},
+						type = int
+					}
+				)
+			])
+		},
+		Method {
+			retType = int,
+			name = "addY",
+			params = [
+				VarDecl {
+					type = int,
+					name = a,
+					val = None
+				}
+			],
+			body = Block ([
+				Return (
+					TypedExpr {
+						expr = Binary {
+							op = Add,
+							left = TypedExpr {
+								expr = LocalOrFieldVar("y"),
+								type = int
+							}
+							right = TypedExpr {
+								expr = LocalOrFieldVar("a"),
+								type = int,
+							}
+						},
+						type = int,
+					}
+				)
+			])
+		},
+		Method {
+			retType = int,
+			name = "complexMath",
+			params = [
+				VarDecl {
+					type = int,
+					name = a,
+					val = None
+				},
+				VarDecl {
+					type = int,
+					name = b,
+					val = None
+				}
+			],
+			body = Block([
+				TypedStmtExpr {
+					stmtExp = Assign {
+						var = "a",
+						expr = Binary {
+							op = Div,
+							left = Binary {
+								op = Mul,
+								left = LocalOrFieldVar("y"),
+								right = Binary {
+									op = Add,
+									left = LocalOrFieldVar("a"),
+									right = LocalOrFieldVar("b")
+								},
+							},
+							right = LocalOrFieldVar("x")
+						}
+					},
+					type = int
+				},
+				TypedStmtExpr {
+					stmtExp = Assign {
+						var = "b",
+						expr = Binary {
+							op = Add,
+							left = LocalOrFieldVar("a"),
+							right = Unary {
+								op = Minus,
+								val = LocalOrFieldVar("b")
+							}
+						}
+					},
+					type = int
+				},
+				TypedStmtExpr {
+					stmtExp = Assign {
+						var = "a",
+						expr = Binary {
+							op = Add,
+							left = LocalOrFieldVar("x"),
+							right = Binary {
+								op = Mul,
+								left = LocalOrFieldVar("b"),
+								right = LocalOrFieldVar("a")
+							}
+						}
+					},
+					type = int
+				},
+				TypedStmtExpr {
+					stmtExp = Return (
+						Binary {
+							op = Mul,
+							left = LocalOrFieldVar("x"),
+							right = LocalOrFieldVar("a")
+						}
+					),
+					type = int
+				}
+			])
+		}
+	]
+}

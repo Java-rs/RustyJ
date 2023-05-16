@@ -1,8 +1,8 @@
 class SetterGetter {
 	int x;
-	boolean amICool;
+	boolean b;
 	char c;
-	String name;
+	String s;
 
 	int getX() {
 		return this.x;
@@ -12,16 +12,12 @@ class SetterGetter {
 		this.x = x;
 	}
 
-	boolean isAmICool() {
-		return this.amICool;
+	boolean getB() {
+		return this.b;
 	}
 
-	boolean getAmICool() {
-		return this.amICool;
-	}
-
-	void setAmICool(boolean amICool) {
-		this.amICool = amICool;
+	void setB(boolean b) {
+		this.b = b;
 	}
 
 	char getC() {
@@ -32,11 +28,11 @@ class SetterGetter {
 		this.c = c;
 	}
 
-	String getName() {
-		return this.name;
+	String getS() {
+		return this.s;
 	}
 
-	void setName(String name) {
-		this.name = name;
+	void setS(String s) {
+		this.s = s;
 	}
 }

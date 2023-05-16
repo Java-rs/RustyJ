@@ -1,0 +1,75 @@
+Class {
+	name = "While",
+	fields = [
+		VarDecl {
+			type = int,
+			name = "n",
+			val = Some(Int(2))
+		}
+	],
+	methods = [
+		Method {
+			retType = int,
+			name = "f",
+			params = [
+				VarDecl {
+					type = int,
+					name = "x",
+					val = None
+				}
+			],
+			body = Block([
+				VarDecl {
+					type = int,
+					name = "i",
+					val = Some(Int(0))
+				},
+				VarDecl {
+					type = int,
+					name = "a",
+					val = Some(LocalOrFieldVar("n"))
+				},
+				While {
+					cond = TypedExpr {
+						expr = Binary {
+							op = LessThan,
+							left = LocalOrFieldVar("i"),
+							right = LocalOrFieldVar("x")
+						},
+						type = boolean
+					}
+					body = Block([
+						Assign {
+							var = LocalOrFieldVar("a"),
+							val = TypedExpr {
+								expr = Binary {
+									op = Mul,
+									left = LocalOrFieldVar("a"),
+									right = LocalOrFieldVar("a")
+								},
+								type = int
+							}
+						},
+						Assign {
+							var = LocalOrFieldVar("i"),
+							val = TypedExpr {
+								expr = Binary {
+									op = Add,
+									left = LocalOrFieldVar("i"),
+									right = Int(1)
+								},
+								type = int
+							}
+						},
+					])
+				},
+				Return(
+					TypedExpr {
+						expr = LocalOrFieldVar("a"),
+						type = int
+					}
+				)
+			])
+		}
+	]
+}

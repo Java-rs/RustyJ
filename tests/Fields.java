@@ -1,6 +1,6 @@
 class Fields {
 	int x;
-	boolean amICool;
+	boolean b;
 	char c;
-	String name;
+	String s;
 }

@@ -1,0 +1,128 @@
+Class {
+	name = "Fib",
+	fields = [],
+	methods = [
+		Method {
+			retType = int,
+			name = "rec",
+			params = [
+				VarDecl {
+					type = int,
+					name = "n",
+					val = None
+				}
+			],
+			body = Block([
+				If {
+					cond = Binary {
+						op = LessThan,
+						left = LocalOrFieldVar("n"),
+						right = Int(2)
+					},
+					body = Return(LocalOrFieldVar("n")),
+					else = Some(
+						Return(
+							Binary {
+								op = Add,
+								left = MethodCall {
+									obj = This,
+									name = "rec",
+									params = [
+										Binary {
+											op = Sub,
+											left = LocalOrFieldVar("n"),
+											right = Int(1)
+										}
+									]
+								},
+								right = MethodCall {
+									obj = This,
+									name = "rec",
+									params = [
+										Binary {
+											op = Sub,
+											left = LocalOrFieldVar("n"),
+											right = Int(2)
+										}
+									]
+								},
+							}
+						)
+					)
+				}
+			])
+		},
+		Method = {
+			retType = int,
+			name = "iter",
+			params = [
+				VarDecl {
+					type = int,
+					name = "n",
+					val = None
+				}
+			],
+			body = Block([
+				If {
+					cond = Binary {
+						op = LessThan,
+						left = LocalOrFieldVar("n"),
+						right = Int(2)
+					},
+					body = Return(LocalOrFieldVar("n")),
+					else = None
+				},
+				VarDecl {
+					type = int,
+					name = "x",
+					val = Int(0)
+				},
+				VarDecl {
+					type = int,
+					name = "y",
+					val = Int(1)
+				},
+				VarDecl {
+					type = int,
+					name = "i",
+					val = Int(1)
+				},
+				While {
+					cond = Binary {
+						op = LessThan,
+						left = LocalOrFieldVar("i"),
+						right = LocalOrFieldVar("n")
+					},
+					body = Block([
+						VarDecl {
+							type = int,
+							name = "next",
+							val = Binary {
+								op = Add,
+								left = LocalOrFieldVar("y"),
+								right = LocalOrFieldVar("x")
+							}
+						},
+						Assign {
+							var = "x",
+							expr = LocalOrFieldVar("y")
+						},
+						Assign {
+							var = "y",
+							expr = LocalOrFieldVar("next")
+						},
+						Assign {
+							var = "i",
+							expr = Binary {
+								op = Add,
+								left = LocalOrFieldVar("i"),
+								right = Int(1)
+							}
+						},
+						Return(LocalOrFieldVar("y"))
+					]),
+				}
+			])
+		}
+	]
+}

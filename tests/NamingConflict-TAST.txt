@@ -1,0 +1,44 @@
+Class {
+	name = "NamingConflict",
+	fields = [
+		VarDecl {
+			type = int,
+			name = "x",
+			val = Some(69)
+		}
+	],
+	methods = [
+		Method {
+			retType = int,
+			name = "f",
+			params = [
+				VarDecl {
+					type = int,
+					name = "x",
+					val = None
+				}
+			],
+			body = Block([
+				Return(
+					TypedExpr {
+						expr = Binary {
+							op = Add,
+							left = TypedExpr {
+								expr = InstVar {
+									obj = This,
+									field = "x"
+								},
+								type = int
+							}
+							right = TypedExpr {
+								expr = LocalOrFieldVar("x"),
+								type = int
+							}
+						},
+						type = int
+					}
+				)
+			])
+		}
+	]
+}
