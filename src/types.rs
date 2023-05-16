@@ -1,125 +1,70 @@
-use std::str::FromStr;
-use serde::{Serialize, Deserialize};
-use serde_with::skip_serializing_none;
-use regex::Regex;
+use serde::{Deserialize, Serialize};
+use serde_with::{DeserializeFromStr, SerializeDisplay};
+use std::fmt::Display;
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Class(
+    pub(crate) Type,
+    pub(crate) Vec<FieldDecl>,
+    pub(crate) Vec<MethodDecl>,
+);
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct FieldDecl(pub(crate) Type, pub(crate) String);
 
-#[derive(Serialize, Deserialize, Debug,PartialEq)]
-enum Type {
-    Boolean,
-    Char,
-}
-#[derive(Serialize, Deserialize, Debug)]
-enum Types {
-    boolean,
-    char,
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct MethodDecl(Type, String, Vec<(Type, String)>, pub(crate) Stmt);
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum Stmt {
     Block(Vec<Stmt>),
-}
-#[derive(Serialize, Deserialize, Debug)]
-enum Expr {
-    Binary {
-        op: BinaryOp,
-        left: Box<Expr>,
-        right: Box<Expr>,
-    },
-    LocalOrFieldVar(String),
-    Char(char),
-    Bool(bool),
-}
-#[derive(Serialize, Deserialize, Debug)]
-enum BinaryOp {
-    Equal,
-}
-#[derive(Serialize, Deserialize, Debug)]
-enum Stmt {
-    If {
-        cond: Expr,
-        body: Box<Stmt>,
-        else_stmt: Option<Box<Stmt>>,
-    },
     Return(Expr),
-    Block(Vec<Stmt>),
-}
-#[derive(Serialize, Deserialize, Debug)]
-struct Method {
-   r#type: Type,
-    name: String,
-    params: Vec<VarDecl>,
-    body: Stmt,
+    While(Expr, Box<Stmt>),
+    LocalVarDecl(Type, String),
+    If(Expr, Box<Stmt>, Option<Box<Stmt>>),
+    StmtExprStmt(StmtExpr),
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct VarDecl {
-    r#type: Type,
-    name: String,
-    value: Option<Types>
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum StmtExpr {
+    Assign(String, Expr),
+    New(Type, Vec<Expr>),
+    MethodCall(Expr, String, Vec<Expr>),
 }
 
-
-#[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct Class {
-    name: String,
-    fields: Vec<VarDecl>,
-    methods: Vec<Method>,
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum Expr {
+    This,
+    Super,
+    LocalOrFieldVar(String),
+    InstVar(Box<Expr>, String),
+    Unary(String, Box<Expr>),
+    Binary(String, Box<Expr>, Box<Expr>),
+    Integer(i32),
+    Bool(bool),
+    Char(char),
+    String(String),
+    Jnull,
+    StmtExprExpr(Box<StmtExpr>),
 }
 
-fn check_expr(expr: &Expr) -> Type {
-    match expr {
-        Expr::Binary { op, left, right } => {
-            let left_type = check_expr(left);
-            let right_type = check_expr(right);
-            // Check if types of left and right expressions are the same
-            assert_eq!(left_type, right_type);
-            // For simplicity, we assume that the type of a binary expression is always boolean
-            Type::Boolean
-        },
-        Expr::LocalOrFieldVar(_) => {
-            // For simplicity, we assume that the type of a variable is always char
-            Type::Char
-        },
-        Expr::Char(_) => Type::Char,
-        Expr::Bool(_) => Type::Boolean,
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Hash, Eq)]
+pub enum Type {
+    Int,
+    Bool,
+    Char,
+    String,
+}
+
+impl Display for Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Type::Int => write!(f, "int"),
+            Type::Bool => write!(f, "bool"),
+            Type::Char => write!(f, "char"),
+            Type::String => write!(f, "String"),
+        }
     }
 }
 
-fn check_stmt(stmt: &Stmt) -> Type {
-    match stmt {
-        Stmt::If { cond, body, else_stmt } => {
-            // Check if the condition is a boolean
-            assert_eq!(check_expr(cond), Type::Boolean);
-            // Check the body and the else statement
-            check_stmt(body);
-            if let Some(else_stmt) = else_stmt {
-                check_stmt(else_stmt);
-            }
-            Type::Boolean
-        },
-        Stmt::Return(expr) => check_expr(expr),
-        Stmt::Block(stmts) => {
-            for stmt in stmts {
-                check_stmt(stmt);
-            }
-            Type::Boolean
-        },
-    }
-}
-
-fn check_method(method: &Method) {
-    // Check if the type of the body is the same as the return type
-    assert_eq!(check_stmt(&method.body), method.r#type);
-}
-
-pub(crate) fn check_class(class: &Class) {
-    for method in &class.methods {
-        check_method(method);
-    }
-}
-
-impl FromStr for Class {
-    type Err = serde_json::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-
-    }
-}
+pub type Prg = Vec<Class>;
