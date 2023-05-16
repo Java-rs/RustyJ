@@ -1,10 +1,9 @@
 mod typechecker;
 mod types;
 
-use std::error::Error;
 use tracing::info;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
     tracing_subscriber::fmt::init();
     info!("Hello RustyJ!");
