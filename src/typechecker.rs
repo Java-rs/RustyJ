@@ -140,6 +140,10 @@ impl TypeChecker {
                 }
                 Ok(())
             }
+            StmtExpr::TypedStmtExpr(expr, _) => {
+                !unimplemented!();
+                Ok(())
+            }
         }
     }
 }
