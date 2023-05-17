@@ -1,3 +1,5 @@
 //! Grammar doc
-name = {[A-Z][a-z]+}
+ID = {ASCII_ALPHA_UPPER~ASCII_ALPHA+}
+Name = {ID~","~ID}
+List = {(Name~"\n")+}
 
