@@ -1,0 +1,55 @@
+{
+	"name": "Negator",
+	"fields": [],
+	"methods": [
+		{
+			"stmtType": "Method",
+			"retType": "int",
+			"name": "neg1",
+			"params": [
+				{
+					"type": "int",
+					"name": "x",
+					"val": null
+				}
+			],
+			"body": [
+				{
+					"stmtType": "Return",
+					"Unary": {
+						"op": "Minus",
+						"val": { "exprType": "LocalOrFieldVar", "val": "x" }
+					}
+				}
+			]
+		},
+		{
+			"retType": "int",
+			"name": "neg2",
+			"params": [
+				{
+					"type": "int",
+					"name": "x",
+					"val": null
+				}
+			],
+			"body": [
+				{
+					"stmtType": "Return",
+					"Unary": {
+						"op": "Minus",
+						"val": {
+							"exprType": "Unary",
+							"op": "Plus",
+							"val": {
+								"exprType": "Unary",
+								"op": "Minus",
+								"val": { "exprType": "Binary", "op": "Mul", "left": { "exprType": "Int", "val": -1 }, "right": { "exprType": "LocalOrFieldVar", "val": "x" } }
+							}
+						}
+					}
+				}
+			]
+		}
+	]
+}

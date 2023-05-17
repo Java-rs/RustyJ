@@ -1,0 +1,147 @@
+{
+	"name": "ArithmeticMethods",
+	"fields": [
+		{
+			"type": "int",
+			"name": "x",
+			"val": { "Int": 69 }
+		},
+		{
+			"type": "int",
+			"name": "y",
+			"val": { "Int": 420 }
+		}
+	],
+	"methods": [
+		{
+			"stmtType": "Method",
+			"retType": "int",
+			"name": "addX",
+			"params": [
+				{
+					"type": "int",
+					"name": "a",
+					"val": null
+				}
+			],
+			"body": [
+				{
+					"stmtType": "Return",
+					"TypedExpr": {
+						"expr": {
+							"exprType": "Binary",
+							"op": "Add",
+							"left": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "x" }, "type": "int" },
+							"right": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "a" }, "type": "int" }
+						},
+						"type": "int"
+					}
+				}
+			]
+		},
+		{
+			"stmtType": "Method",
+			"retType": "int",
+			"name": "addY",
+			"params": [
+				{
+					"type": "int",
+					"name": "a",
+					"val": null
+				}
+			],
+			"body": [
+				{
+					"stmtType": "Return",
+					"TypedExpr": {
+						"expr": {
+							"exprType": "Binary",
+							"op": "Add",
+							"left": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "y" }, "type": "int" },
+							"right": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "a" }, "type": "int" }
+						},
+						"type": "int"
+					}
+				}
+			]
+		},
+		{
+			"stmtType": "Method",
+			"retType": "int",
+			"name": "complexMath",
+			"params": [
+				{
+					"type": "int",
+					"name": "a",
+					"val": null
+				},
+				{
+					"type": "int",
+					"name": "b",
+					"val": null
+				}
+			],
+			"body": [
+				{
+					"TypedStmtExpr": {
+						"stmtExp": {
+							"exprType": "Assign",
+							"var": "a",
+							"expr": {
+								"exprType": "Binary",
+								"op": "Div",
+								"left": {
+									"exprType": "Binary",
+									"op": "Mul",
+									"left": { "exprType": "LocalOrFieldVar", "val": "y" },
+									"right": { "exprType": "Binary", "op": "Add", "left": { "exprType": "LocalOrFieldVar", "val": "a" }, "right": { "exprType": "LocalOrFieldVar", "val": "b" } }
+								},
+								"right": { "exprType": "LocalOrFieldVar", "val": "x" }
+							}
+						},
+						"type": "int"
+					}
+				},
+				{
+					"TypedStmtExpr": {
+						"stmtExp": {
+							"exprType": "Assign",
+							"var": "b",
+							"expr": {
+								"exprType": "Binary",
+								"op": "Add",
+								"left": { "exprType": "LocalOrFieldVar", "val": "a" },
+								"right": { "exprType": "Unary", "op": "Minus", "val": { "exprType": "LocalOrFieldVar", "val": "b" } }
+							}
+						},
+						"type": "int"
+					}
+				},
+				{
+					"TypedStmtExpr": {
+						"stmtExp": {
+							"exprType": "Assign",
+							"var": "a",
+							"expr": {
+								"exprType": "Binary",
+								"op": "Add",
+								"left": { "exprType": "LocalOrFieldVar", "val": "x" },
+								"right": { "exprType": "Binary", "op": "Mul", "left": { "exprType": "LocalOrFieldVar", "val": "b" }, "right": { "exprType": "LocalOrFieldVar", "val": "a" } }
+							}
+						},
+						"type": "int"
+					}
+				},
+				{
+					"TypedStmtExpr": {
+						"stmtExp": {
+							"exprType": "Return",
+							"val": { "stmtType": "Binary", "op": "Mul", "left": { "exprType": "LocalOrFieldVar", "val": "x" }, "right": { "exprType": "LocalOrFieldVar", "val": "a" } }
+						},
+						"type": "int"
+					}
+				}
+			]
+		}
+	]
+}

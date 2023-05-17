@@ -1,0 +1,105 @@
+{
+	"name": "Fib",
+	"fields": [],
+	"methods": [
+		{
+			"stmtType": "Method",
+			"retType": "int",
+			"name": "rec",
+			"params": [
+				{
+					"type": "int",
+					"name": "n",
+					"val": null
+				}
+			],
+			"body": [
+				{
+					"stmtType": "If",
+					"cond": { "exprType": "Binary", "op": "LessThan", "left": { "exprType": "LocalOrFieldVar", "val": "n" }, "right": { "exprType": "Int", "val": 3 } },
+					"body": { "exprType": "Return", "LocalOrFieldVar": "n" },
+					"else": {
+						"stmtType": "Return",
+						"val": {
+							"stmtType": "Binary",
+							"op": "Add",
+							"left": {
+								"exprType": "MethodCall",
+								"obj": "This",
+								"name": "rec",
+								"params": [{ "stmtType": "Binary", "op": "Sub", "left": { "exprType": "LocalOrFieldVar", "val": "n" }, "right": { "exprType": "Int", "val": 3 } }]
+							},
+							"right": {
+								"exprType": "MethodCall",
+								"obj": "This",
+								"name": "rec",
+								"params": [
+									{
+										"stmtType": "Binary",
+										"op": "Sub",
+										"left": { "exprType": "LocalOrFieldVar", "val": "n" },
+										"right": { "exprType": "Int", "val": 3 }
+									}
+								]
+							}
+						}
+					}
+				}
+			]
+		},
+		{
+			"stmtType": "Method",
+			"retType": "int",
+			"name": "iter",
+			"params": [
+				{
+					"type": "int",
+					"name": "n",
+					"val": null
+				}
+			],
+			"body": [
+				{
+					"stmtType": "If",
+					"cond": { "exprType": "Binary", "op": "LessThan", "left": { "exprType": "LocalOrFieldVar", "val": "n" }, "right": { "exprType": "Int", "val": 3 } },
+					"body": { "exprType": "Return", "LocalOrFieldVar": "n" },
+					"else": null
+				},
+				{
+					"type": "int",
+					"name": "x",
+					"val": { "exprType": "Int", "val": 3 }
+				},
+				{
+					"type": "int",
+					"name": "y",
+					"val": { "exprType": "Int", "val": 3 }
+				},
+				{
+					"type": "int",
+					"name": "i",
+					"val": { "exprType": "Int", "val": 3 }
+				},
+				{
+					"stmtType": "While",
+					"cond": { "exprType": "Binary", "op": "LessThan", "left": { "exprType": "LocalOrFieldVar", "val": "i" }, "right": { "exprType": "LocalOrFieldVar", "val": "n" } },
+					"body": [
+						{
+							"type": "int",
+							"name": "next",
+							"val": { "exprType": "Binary", "op": "Add", "left": { "exprType": "LocalOrFieldVar", "val": "y" }, "right": { "exprType": "LocalOrFieldVar", "val": "x" } }
+						},
+						{ "stmtType": "Assign", "var": "x", "expr": { "exprType": "LocalOrFieldVar", "val": "y" } },
+						{ "stmtType": "Assign", "var": "y", "expr": { "exprType": "LocalOrFieldVar", "val": "next" } },
+						{
+							"stmtType": "Assign",
+							"var": "i",
+							"expr": { "exprType": "Binary", "op": "Add", "left": { "exprType": "LocalOrFieldVar", "val": "i" }, "right": { "exprType": "Int", "val": 3 } }
+						},
+						{ "stmtType": "Return", "LocalOrFieldVar": "y" }
+					]
+				}
+			]
+		}
+	]
+}

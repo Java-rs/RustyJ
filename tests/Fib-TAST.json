@@ -1,0 +1,190 @@
+{
+	"name": "Fib",
+	"fields": [],
+	"methods": [
+		{
+			"stmtType": "Method",
+			"retType": "int",
+			"name": "rec",
+			"params": [
+				{
+					"type": "int",
+					"name": "n",
+					"val": null
+				}
+			],
+			"body": [
+				{
+					"stmtType": "If",
+					"cond": {
+						"exprType": "TypedExpr",
+						"expr": {
+							"exprType": "Binary",
+							"op": "LessThan",
+							"left": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "n" }, "type": "int" },
+							"right": { "exprType": "Int", "val": 3 }
+						},
+						"type": "boolean"
+					},
+					"body": { "exprType": "Return", "expr": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "n" }, "type": "int" } },
+					"else": {
+						"stmtType": "Return",
+						"TypedExpr": {
+							"expr": {
+								"exprType": "Binary",
+								"op": "Add",
+								"left": {
+									"exprType": "TypedStmtExpr",
+									"expr": {
+										"exprType": "MethodCall",
+										"obj": "This",
+										"name": "rec",
+										"params": [
+											{
+												"TypedExpr": {
+													"expr": {
+														"exprType": "Binary",
+														"op": "Sub",
+														"left": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "n" }, "type": "int" },
+														"right": { "exprType": "Int", "val": 3 }
+													},
+													"type": "int"
+												}
+											}
+										]
+									},
+									"type": "int"
+								},
+								"right": {
+									"exprType": "TypedStmtExpr",
+									"expr": {
+										"exprType": "MethodCall",
+										"obj": "This",
+										"name": "rec",
+										"params": [
+											{
+												"TypedExpr": {
+													"expr": {
+														"exprType": "Binary",
+														"op": "Sub",
+														"left": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "n" }, "type": "int" },
+														"right": { "exprType": "Int", "val": 3 }
+													},
+													"type": "int"
+												}
+											}
+										]
+									},
+									"type": "int"
+								}
+							},
+							"type": "int"
+						}
+					}
+				}
+			]
+		},
+		{
+			"stmtType": "Method",
+			"retType": "int",
+			"name": "iter",
+			"params": [
+				{
+					"type": "int",
+					"name": "n",
+					"val": null
+				}
+			],
+			"body": [
+				{
+					"stmtType": "If",
+					"cond": {
+						"exprType": "TypedExpr",
+						"expr": {
+							"exprType": "Binary",
+							"op": "LessThan",
+							"left": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "n" }, "type": "int" },
+							"right": { "exprType": "Int", "val": 3 }
+						},
+						"type": "boolean"
+					},
+					"body": {
+						"exprType": "Return",
+						"TypedExpr": {
+							"expr": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "n" }, "type": "int" },
+							"type": "int"
+						}
+					},
+					"else": null
+				},
+				{
+					"type": "int",
+					"name": "x",
+					"val": { "exprType": "Int", "val": 3 }
+				},
+				{
+					"type": "int",
+					"name": "y",
+					"val": { "exprType": "Int", "val": 3 }
+				},
+				{
+					"type": "int",
+					"name": "i",
+					"val": { "exprType": "Int", "val": 3 }
+				},
+				{
+					"stmtType": "While",
+					"cond": {
+						"exprType": "TypedExpr",
+						"expr": {
+							"exprType": "Binary",
+							"op": "LessThan",
+							"left": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "i" }, "type": "int" },
+							"right": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "n" }, "type": "int" }
+						},
+						"type": "boolean"
+					},
+					"body": [
+						{
+							"type": "int",
+							"name": "next",
+							"val": {
+								"exprType": "TypedExpr",
+								"expr": {
+									"exprType": "Binary",
+									"op": "Add",
+									"left": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "y" }, "type": "int" },
+									"right": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "x" }, "type": "int" }
+								},
+								"type": "int"
+							}
+						},
+						{ "stmtType": "Assign", "var": "x", "expr": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "y" }, "type": "int" } },
+						{ "stmtType": "Assign", "var": "y", "expr": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "next" }, "type": "int" } },
+						{
+							"stmtType": "Assign",
+							"var": "i",
+							"expr": {
+								"exprType": "TypedExpr",
+								"expr": {
+									"exprType": "Binary",
+									"op": "Add",
+									"left": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "i" }, "type": "int" },
+									"right": { "exprType": "Int", "val": 3 }
+								},
+								"type": "int"
+							}
+						},
+						{
+							"stmtType": "Return",
+							"TypedExpr": {
+								"expr": { "exprType": "LocalOrFieldVar", "val": "y" },
+								"type": "int"
+							}
+						}
+					]
+				}
+			]
+		}
+	]
+}

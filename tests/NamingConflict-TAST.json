@@ -1,0 +1,38 @@
+{
+	"name": "NamingConflict",
+	"fields": [
+		{
+			"type": "int",
+			"name": "x",
+			"val": 69
+		}
+	],
+	"methods": [
+		{
+			"stmtType": "Method",
+			"retType": "int",
+			"name": "f",
+			"params": [
+				{
+					"type": "int",
+					"name": "x",
+					"val": null
+				}
+			],
+			"body": [
+				{
+					"stmtType": "Return",
+					"TypedExpr": {
+						"expr": {
+							"exprType": "Binary",
+							"op": "Add",
+							"left": { "exprType": "TypedExpr", "expr": { "exprType": "InstVar", "obj": "This", "field": "x" }, "type": "int" },
+							"right": { "exprType": "TypedExpr", "expr": { "exprType": "LocalOrFieldVar", "val": "x" }, "type": "int" }
+						},
+						"type": "int"
+					}
+				}
+			]
+		}
+	]
+}

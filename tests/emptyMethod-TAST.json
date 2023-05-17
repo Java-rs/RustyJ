@@ -1,0 +1,5 @@
+{
+	"name": "emptyMethod",
+	"fields": [],
+	"methods": [{ "stmtType": "Method", "retType": "void", "name": "f", "params": [], "body": [] }]
+}

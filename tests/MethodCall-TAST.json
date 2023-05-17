@@ -1,0 +1,25 @@
+{
+	"name": "LocalVarDecl",
+	"fields": [],
+	"methods": [
+		{
+			"stmtType": "Method",
+			"retType": "int",
+			"name": "f",
+			"body": [
+				{
+					"type": "int",
+					"name": "x",
+					"val": 69
+				},
+				{
+					"stmtType": "Return",
+					"TypedExpr": {
+						"expr": { "exprType": "LocalOrFieldVar", "val": "x" },
+						"type": "int"
+					}
+				}
+			]
+		}
+	]
+}

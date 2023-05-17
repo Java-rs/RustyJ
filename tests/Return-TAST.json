@@ -1,0 +1,48 @@
+{
+	"name": "Return",
+	"fields": [],
+	"methods": [
+		{
+			"stmtType": "Method",
+			"retType": "char",
+			"name": "id",
+			"params": [
+				{
+					"type": "char",
+					"name": "x",
+					"val": null
+				}
+			],
+			"body": [
+				{
+					"stmtType": "Return",
+					"TypedExpr": {
+						"expr": { "exprType": "LocalOrFieldVar", "val": "x" },
+						"type": "char"
+					}
+				}
+			]
+		},
+		{
+			"stmtType": "Method",
+			"retType": "boolean",
+			"name": "id",
+			"params": [
+				{
+					"type": "boolean",
+					"name": "b",
+					"val": null
+				}
+			],
+			"body": [
+				{
+					"stmtType": "Return",
+					"TypedExpr": {
+						"expr": { "exprType": "LocalOrFieldVar", "val": "b" },
+						"type": "boolean"
+					}
+				}
+			]
+		}
+	]
+}
