@@ -1,0 +1,34 @@
+{
+	"name": "NamingConflict",
+	"fields": [
+		{
+			"type": "int",
+			"name": "x",
+			"val": 69
+		}
+	],
+	"methods": [
+		{
+			"stmtType": "Method",
+			"retType": "int",
+			"name": "f",
+			"params": [
+				{
+					"type": "int",
+					"name": "x",
+					"val": null
+				}
+			],
+			"body": [
+				{
+					"stmtType": "Return",
+					{"stmtType": "Binary",
+						"op": "Add",
+						"left": { "exprType": "InstVar", "obj": "This", "field": "x" },
+						"right": { "exprType": "LocalOrFieldVar", "val": "x" }
+					}
+				}
+			]
+		}
+	]
+}

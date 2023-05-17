@@ -1,0 +1,27 @@
+{
+	"name": "If",
+	"fields": [],
+	"methods": [
+		{
+			"stmtType": "Method",
+			"retType": "boolean",
+			"name": "f",
+			"params": [
+				{
+					"type": "char",
+					"name": "c",
+					"val": null
+				}
+			],
+			"body": [
+				{
+					"stmtType": "If",
+					"cond": { "exprType": "Binary", "op": "Equal", "left": { "exprType": "LocalOrFieldVar", "val": "c" }, "right": { "exprType": "Char", "val": "a" } },
+					"body": { "exprType": "Return", "Bool": "true" },
+					"else": null
+				},
+				{ "stmtType": "Return", "Bool": "false" }
+			]
+		}
+	]
+}

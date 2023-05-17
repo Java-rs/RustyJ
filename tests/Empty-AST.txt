@@ -1,5 +1,0 @@
-Class {
-	name = "Empty",
-	fields = [],
-	methods = []
-}

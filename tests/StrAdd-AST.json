@@ -1,0 +1,28 @@
+{
+	"name": "StrAdd",
+	"fields": [
+		{
+			"type": "String",
+			"name": "hello",
+			"val": { "exprType": "String", "val": "Hi" }
+		}
+	],
+	"methods": [
+		{
+			"stmtType": "Method",
+			"retType": "String",
+			"name": "helloWorld",
+			"params": [],
+			"body": [
+				{
+					"stmtType": "Return",
+					{"stmtType": "Binary",
+						"op": "Add",
+						"left": { "exprType": "LocalOrFieldVar", "val": "hello" },
+						"right": { "exprType": "String", "val": "World" }
+					}
+				}
+			]
+		}
+	]
+}
