@@ -1,3 +1,5 @@
+mod parser;
+
 use tracing::info;
 
 fn main() -> color_eyre::Result<()> {
