@@ -22,6 +22,7 @@ pub enum Stmt {
     LocalVarDecl(Type, String),
     If(Expr, Box<Stmt>, Option<Box<Stmt>>),
     StmtExprStmt(StmtExpr),
+    TypedStmt(Box<Stmt>, Type),
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -29,6 +30,7 @@ pub enum StmtExpr {
     Assign(String, Expr),
     New(Type, Vec<Expr>),
     MethodCall(Expr, String, Vec<Expr>),
+    TypedStmtExpr(Box<StmtExpr>, Type),
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -45,6 +47,7 @@ pub enum Expr {
     String(String),
     Jnull,
     StmtExprExpr(Box<StmtExpr>),
+    TypedExpr(Box<Expr>, Type),
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Hash, Eq)]
