@@ -11,7 +11,7 @@ fn main() -> color_eyre::Result<()> {
 
 
     // let unparesed_file =
-    let test:  Example = parse_Example("Sander,Stella\nTori,Gönnung").expect("u suck");
+    let test:  Example = parse_Example("Sander,Stella\nTori,Gönnheimer").expect("u suck");
     println!("{}", serde_json::to_string(&test).unwrap());
 
 
