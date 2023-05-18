@@ -1,27 +1,41 @@
 {
-	"name": "If",
+	"name": "test",
 	"fields": [],
 	"methods": [
 		{
-			"stmtType": "Method",
-			"retType": "boolean",
+			"retType": "Bool",
 			"name": "f",
-			"params": [
-				{
-					"type": "char",
-					"name": "c",
-					"val": null
-				}
-			],
-			"body": [
-				{
-					"stmtType": "If",
-					"cond": { "exprType": "Binary", "op": "Equal", "left": { "exprType": "LocalOrFieldVar", "val": "c" }, "right": { "exprType": "Char", "val": "a" } },
-					"body": { "exprType": "Return", "Bool": "true" },
-					"else": null
-				},
-				{ "stmtType": "Return", "Bool": "false" }
-			]
+			"params": [["Char", "c"]],
+			"body": {
+				"Block": [
+					{
+						"If": [
+							{
+								"Binary": [
+									"==",
+									{
+										"LocalOrFieldVar": "c"
+									},
+									{
+										"Char": "a"
+									}
+								]
+							},
+							{
+								"Return": {
+									"Bool": true
+								}
+							},
+							null
+						]
+					},
+					{
+						"Return": {
+							"Bool": false
+						}
+					}
+				]
+			}
 		}
 	]
 }
