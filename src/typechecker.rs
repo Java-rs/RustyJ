@@ -11,7 +11,7 @@ impl TypeChecker {
     pub fn new(program: Prg) -> Self {
         let mut classes = HashMap::new();
         for class in program {
-            classes.insert(class.0.clone().to_string(), class.clone());
+            classes.insert(class.name.clone().to_string(), class.clone());
         }
         Self {
             classes,
@@ -31,10 +31,10 @@ impl TypeChecker {
     }
 
     fn check_class(&mut self, class: &Class) -> Result<(), String> {
-        for field in &class.1 {
+        for field in &class.fields {
             self.check_field(field)?;
         }
-        for method in &class.2 {
+        for method in &class.methods {
             self.check_method(method)?;
         }
         Ok(())
@@ -43,24 +43,29 @@ impl TypeChecker {
     fn check_field(&mut self, field: &FieldDecl) -> Result<(), String> {
         if let Some(names) = self
             .field_names
-            .get_mut(&self.current_class.as_ref().unwrap().0.to_string())
+            .get_mut(&self.current_class.as_ref().unwrap().name.to_string())
         {
-            if names.contains(&field.1) {
-                return Err(format!("Duplicate field name: {}", field.1));
+            if names.contains(&field.name) {
+                return Err(format!("Duplicate field name: {}", field.name));
             } else {
-                names.push(field.1.clone());
+                names.push(field.name.clone());
             }
         } else {
             self.field_names.insert(
-                self.current_class.as_ref().unwrap().0.clone().to_string(),
-                vec![field.1.clone()],
+                self.current_class
+                    .as_ref()
+                    .unwrap()
+                    .name
+                    .clone()
+                    .to_string(),
+                vec![field.name.clone()],
             );
         }
         Ok(())
     }
 
     fn check_method(&self, method: &MethodDecl) -> Result<(), String> {
-        self.check_stmt(&method.3)
+        self.check_stmt(&method.body)
     }
 
     fn check_stmt(&self, stmt: &Stmt) -> Result<(), String> {
@@ -94,7 +99,12 @@ impl TypeChecker {
         match expr {
             Expr::LocalOrFieldVar(name) => {
                 let class = self.current_class.as_ref().ok_or("No current class")?;
-                if !class.1.iter().any(|field| field.1 == *name) {
+                if !class.fields.iter().any(|field| field.name == *name)
+                    && !class
+                        .methods
+                        .iter()
+                        .any(|method| method.params.iter().any(|(_, var_name)| var_name == name))
+                {
                     return Err(format!("Unknown variable: {}", name));
                 }
                 Ok(())
@@ -122,7 +132,7 @@ impl TypeChecker {
         match stmt_expr {
             StmtExpr::Assign(name, expr) => {
                 let class = self.current_class.as_ref().ok_or("No current class")?;
-                if !class.1.iter().any(|field| field.1 == *name) {
+                if !class.fields.iter().any(|field| field.name == *name) {
                     return Err(format!("Unknown variable: {}", name));
                 }
                 self.check_expr(expr)
@@ -144,6 +154,7 @@ impl TypeChecker {
                 !unimplemented!();
                 Ok(())
             }
+            _ => Ok(()),
         }
     }
 }

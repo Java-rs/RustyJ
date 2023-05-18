@@ -2,17 +2,25 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Class(
-    pub(crate) Type,
-    pub(crate) Vec<FieldDecl>,
-    pub(crate) Vec<MethodDecl>,
-);
+pub struct Class {
+    pub(crate) name: String,
+    pub(crate) fields: Vec<FieldDecl>,
+    pub(crate) methods: Vec<MethodDecl>,
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct FieldDecl(pub(crate) Type, pub(crate) String);
+pub struct FieldDecl {
+    pub(crate) field_type: Type,
+    pub(crate) name: String,
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct MethodDecl(Type, String, Vec<(Type, String)>, pub(crate) Stmt);
+pub struct MethodDecl {
+    pub(crate) retType: Type,
+    pub(crate) name: String,
+    pub(crate) params: Vec<(Type, String)>,
+    pub(crate) body: Stmt,
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum Stmt {
