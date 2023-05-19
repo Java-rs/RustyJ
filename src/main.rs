@@ -1,6 +1,3 @@
-mod typechecker;
-mod types;
-
 use tracing::info;
 
 fn main() -> color_eyre::Result<()> {
