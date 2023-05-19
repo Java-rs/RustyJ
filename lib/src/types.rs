@@ -76,5 +76,6 @@ impl Display for Type {
         }
     }
 }
-
+/// The entire AST
+// TODO: Rename to TypedAST
 pub type Prg = Vec<Class>;
