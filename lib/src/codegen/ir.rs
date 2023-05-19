@@ -43,14 +43,14 @@ fn generate_code_stmt_expr(stmt_expr: &StmtExpr, code: &mut Vec<u8>) {
         } // ...
     }
 }
-fn generate_code_field(field: &Field, code: &mut Vec<u8>) {
-    match field {
-        Field::FieldDecl {
+fn generate_code_class(class: &Class, code: &mut Vec<u8>) {
+    match class {
+        Class::Class {
             name,
-            field_type,
-            value,
+            fields,
+            methods,
         } => {
-            // Generate bytecode for field declaration
+            // Generate bytecode for class
         } // ...
     }
 }
