@@ -1,3 +1,6 @@
+mod typechecker;
+mod types;
+
 use tracing::info;
 
 pub fn hi(){
