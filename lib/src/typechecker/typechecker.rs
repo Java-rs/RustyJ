@@ -187,4 +187,155 @@ impl TypeChecker {
             _ => Ok(()),
         }
     }
+
+    fn type_stmt(&self, stmt: &Stmt) -> Stmt {
+        match stmt {
+            Stmt::Block(stmts) => {
+                let typed_stmts = stmts.iter().map(|s| self.type_stmt(s)).collect();
+                Stmt::TypedStmt(Box::new(Stmt::Block(typed_stmts)), Type::Int)
+            }
+            Stmt::Return(expr) => {
+                Stmt::TypedStmt(Box::new(Stmt::Return(self.type_expr(expr))), Type::Int)
+            }
+            Stmt::While(expr, stmt) => Stmt::TypedStmt(
+                Box::new(Stmt::While(
+                    self.type_expr(expr),
+                    Box::new(self.type_stmt(stmt)),
+                )),
+                Type::Int,
+            ),
+            Stmt::LocalVarDecl(t, name) => Stmt::TypedStmt(
+                Box::new(Stmt::LocalVarDecl(t.clone(), name.clone())),
+                Type::Int,
+            ),
+            Stmt::If(expr, stmt1, stmt2) => Stmt::TypedStmt(
+                Box::new(Stmt::If(
+                    self.type_expr(expr),
+                    Box::new(self.type_stmt(stmt1)),
+                    stmt2.as_ref().map(|s| Box::new(self.type_stmt(s))),
+                )),
+                Type::Int,
+            ),
+            Stmt::StmtExprStmt(stmt_expr) => Stmt::TypedStmt(
+                Box::new(Stmt::StmtExprStmt(self.type_stmt_expr(stmt_expr))),
+                Type::Int,
+            ),
+            Stmt::TypedStmt(stmt, t) => Stmt::TypedStmt(Box::new(self.type_stmt(stmt)), t.clone()),
+        }
+    }
+
+    fn type_expr(&self, expr: &Expr) -> Expr {
+        match expr {
+            Expr::This => Expr::TypedExpr(Box::new(Expr::This), Type::Int),
+            Expr::Super => Expr::TypedExpr(Box::new(Expr::Super), Type::Int),
+            Expr::LocalOrFieldVar(name) => {
+                Expr::TypedExpr(Box::new(Expr::LocalOrFieldVar(name.clone())), Type::Int)
+            }
+            Expr::InstVar(expr, name) => Expr::TypedExpr(
+                Box::new(Expr::InstVar(Box::new(self.type_expr(expr)), name.clone())),
+                Type::Int,
+            ),
+            Expr::Unary(s, expr) => Expr::TypedExpr(
+                Box::new(Expr::Unary(s.clone(), Box::new(self.type_expr(expr)))),
+                Type::Int,
+            ),
+            Expr::Binary(s, expr1, expr2) => Expr::TypedExpr(
+                Box::new(Expr::Binary(
+                    s.clone(),
+                    Box::new(self.type_expr(expr1)),
+                    Box::new(self.type_expr(expr2)),
+                )),
+                Type::Int,
+            ),
+            Expr::Integer(i) => Expr::TypedExpr(Box::new(Expr::Integer(*i)), Type::Int),
+            Expr::Bool(b) => Expr::TypedExpr(Box::new(Expr::Bool(*b)), Type::Int),
+            Expr::Char(c) => Expr::TypedExpr(Box::new(Expr::Char(*c)), Type::Int),
+            Expr::String(s) => Expr::TypedExpr(Box::new(Expr::String(s.clone())), Type::Int),
+            Expr::Jnull => Expr::TypedExpr(Box::new(Expr::Jnull), Type::Int),
+            Expr::StmtExprExpr(stmt_expr) => Expr::TypedExpr(
+                Box::new(Expr::StmtExprExpr(Box::new(self.type_stmt_expr(stmt_expr)))),
+                Type::Int,
+            ),
+            Expr::TypedExpr(expr, t) => Expr::TypedExpr(Box::new(self.type_expr(expr)), t.clone()),
+        }
+    }
+
+    fn type_stmt_expr(&self, stmt_expr: &StmtExpr) -> StmtExpr {
+        match stmt_expr {
+            StmtExpr::Assign(name, expr) => StmtExpr::TypedStmtExpr(
+                Box::new(StmtExpr::Assign(
+                    name.clone(),
+                    Box::new(self.type_expr(expr)),
+                )),
+                Type::Int,
+            ),
+            StmtExpr::TypedStmtExpr(stmt_expr, t) => {
+                StmtExpr::TypedStmtExpr(Box::new(self.type_stmt_expr(stmt_expr)), t.clone())
+            }
+        }
+    }
+    fn infer_expr_type(&self, expr: &Expr) -> Result<Type, String> {
+        match expr {
+            Expr::This => {
+                // Here we would look up the type of 'this' in the context
+                unimplemented!()
+            }
+            Expr::Super => {
+                // Here we would look up the type of 'super' in the context
+                unimplemented!()
+            }
+            Expr::LocalOrFieldVar(name) => {
+                // Here we would look up the variable in the context
+                self.current_method_vars
+                    .get(name)
+                    .cloned()
+                    .ok_or(format!("Variable '{}' not found", name))
+            }
+            Expr::InstVar(expr, name) => {
+                // Here we would look up the type of the instance variable
+                unimplemented!()
+            }
+            Expr::Unary(s, expr) => {
+                // Depending on your language's semantics, unary operations might always result in a specific type
+                // Or they might depend on the type of the operand
+                unimplemented!()
+            }
+            Expr::Binary(s, expr1, expr2) => {
+                // Binary operations might result in a specific type or depend on the operands
+                // For example, an addition might result in the same type as the operands if they are of the same type,
+                // or it might result in an error if they are not
+                let type1 = self.infer_expr_type(expr1)?;
+                let type2 = self.infer_expr_type(expr2)?;
+
+                if type1 != type2 {
+                    return Err(format!(
+                        "Mismatched types in binary operation: {} and {}",
+                        type1, type2
+                    ));
+                }
+
+                Ok(type1)
+            }
+            Expr::Integer(_) => Ok(Type::Int),
+            Expr::Bool(_) => Ok(Type::Bool),
+            Expr::Char(_) => Ok(Type::Char),
+            Expr::String(_) => Ok(Type::String),
+            Expr::Jnull => {
+                // Here you might want to return a specific 'null' type, or perhaps an optional type parameter
+                unimplemented!()
+            }
+            Expr::StmtExprExpr(stmt_expr) => self.infer_stmt_expr_type(stmt_expr),
+            _ => unimplemented!(),
+        }
+    }
+
+    fn infer_stmt_expr_type(&self, stmt_expr: &StmtExpr) -> Result<Type, String> {
+        match stmt_expr {
+            StmtExpr::Assign(name, expr) => {
+                // In many languages, an assignment results in the same type as the right hand side
+                self.infer_expr_type(expr)
+            }
+            _ => unimplemented!(),
+        }
+    }
 }
