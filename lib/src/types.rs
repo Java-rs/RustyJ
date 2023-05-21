@@ -3,23 +3,23 @@ use std::fmt::Display;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Class {
-    pub(crate) name: String,
-    pub(crate) fields: Vec<FieldDecl>,
-    pub(crate) methods: Vec<MethodDecl>,
+    pub name: String,
+    pub fields: Vec<FieldDecl>,
+    pub methods: Vec<MethodDecl>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct FieldDecl {
-    pub(crate) field_type: Type,
-    pub(crate) name: String,
+    pub field_type: Type,
+    pub name: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MethodDecl {
-    pub(crate) retType: Type,
-    pub(crate) name: String,
-    pub(crate) params: Vec<(Type, String)>,
-    pub(crate) body: Stmt,
+    pub retType: Type,
+    pub name: String,
+    pub params: Vec<(Type, String)>,
+    pub body: Stmt,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
