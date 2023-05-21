@@ -5,6 +5,7 @@ pub struct TypeChecker {
     classes: HashMap<String, Class>,
     current_class: Option<Class>,
     field_names: HashMap<String, Vec<String>>,
+    current_method_vars: HashMap<String, Type>,
 }
 
 impl TypeChecker {
@@ -17,6 +18,7 @@ impl TypeChecker {
             classes,
             current_class: None,
             field_names: HashMap::new(),
+            current_method_vars: HashMap::new(),
         }
     }
 
@@ -64,8 +66,13 @@ impl TypeChecker {
         Ok(())
     }
 
-    fn check_method(&self, method: &MethodDecl) -> Result<(), String> {
-        self.check_stmt(&method.body)
+    fn check_method(&mut self, method: &MethodDecl) -> Result<(), String> {
+        method.params.iter().for_each(|(t, name)| {
+            self.current_method_vars.insert(name.clone(), t.clone());
+        });
+        self.check_stmt(&method.body);
+        self.current_method_vars.clear();
+        Ok(())
     }
 
     fn check_stmt(&self, stmt: &Stmt) -> Result<(), String> {
