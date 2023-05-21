@@ -3,7 +3,9 @@ use std::collections::HashMap;
 
 pub struct TypeChecker {
     classes: HashMap<String, Class>,
+    typed_classes: HashMap<String, Class>,
     current_class: Option<Class>,
+    current_typed_class: Option<Class>,
     field_names: HashMap<String, Vec<String>>,
     current_method_vars: HashMap<String, Type>,
     method_names: Vec<String>,
@@ -25,12 +27,13 @@ impl TypeChecker {
         }
         Ok(Self {
             classes,
+            typed_classes: HashMap::new(),
             current_class: None,
+            current_typed_class: None,
             field_names: HashMap::new(),
             method_names: Vec::new(),
-        current_method_vars: HashMap::new(),
-    })
-        }
+            current_method_vars: HashMap::new(),
+        })
     }
 
     pub fn check_program(&mut self) -> Result<(), String> {
@@ -92,8 +95,6 @@ impl TypeChecker {
         });
         self.check_stmt(&method.body);
         self.current_method_vars.clear();
-        Ok(())
-
         self.check_stmt(&method.body)
     }
 
