@@ -9,23 +9,32 @@ pub struct TypeChecker {
 }
 
 impl TypeChecker {
-    pub fn new(program: Prg) -> Self {
+    pub fn new(program: Prg) -> Result<Self, String> {
+        let mut class_names = Vec::new();
         let mut classes = HashMap::new();
         for class in program {
+            // Check for duplicate class names
+            if class_names.contains(&class.name) {
+                return Err(format!("Duplicate class name: {}", class.name));
+            } else {
+                class_names.push(class.name.clone());
+            }
+
             classes.insert(class.name.clone().to_string(), class.clone());
         }
-        Self {
+        Ok(Self {
             classes,
             current_class: None,
             field_names: HashMap::new(),
             method_names: Vec::new(),
-        }
+        })
     }
 
     pub fn check_program(&mut self) -> Result<(), String> {
         let classes = self.classes.clone();
         for (_, class) in &classes {
             self.current_class = Some(class.clone());
+
             self.check_class(class)?;
             self.field_names.clear();
         }
