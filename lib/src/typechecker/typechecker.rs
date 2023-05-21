@@ -5,6 +5,7 @@ pub struct TypeChecker {
     classes: HashMap<String, Class>,
     current_class: Option<Class>,
     field_names: HashMap<String, Vec<String>>,
+    method_names: Vec<String>,
 }
 
 impl TypeChecker {
@@ -17,6 +18,7 @@ impl TypeChecker {
             classes,
             current_class: None,
             field_names: HashMap::new(),
+            method_names: Vec::new(),
         }
     }
 
@@ -64,7 +66,15 @@ impl TypeChecker {
         Ok(())
     }
 
-    fn check_method(&self, method: &MethodDecl) -> Result<(), String> {
+    fn check_method(&mut self, method: &MethodDecl) -> Result<(), String> {
+        // Check for duplicate method names
+        let name = &method.name;
+        if self.method_names.contains(name) {
+            return Err(format!("Duplicate method name: {}", name));
+        } else {
+            self.method_names.push(name.clone());
+        }
+
         self.check_stmt(&method.body)
     }
 
