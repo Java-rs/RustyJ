@@ -1,5 +1,5 @@
-mod typechecker;
-mod types;
+pub mod typechecker;
+pub mod types;
 
 use tracing::info;
 
