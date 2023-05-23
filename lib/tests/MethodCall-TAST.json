@@ -1,0 +1,28 @@
+{
+	"name": "LocalVarDecl",
+	"fields": [],
+	"methods": [
+		{
+			"retType": "int",
+			"name": "f",
+			"params": [],
+			"body": {
+				"Block": [
+					{
+						"type": "int",
+						"name": "x",
+						"val": 69
+					},
+					{
+						"TypedExpr": {
+							"expr": {
+								"val": "x"
+							},
+							"type": "int"
+						}
+					}
+				]
+			}
+		}
+	]
+}

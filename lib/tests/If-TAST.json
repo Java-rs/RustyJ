@@ -1,0 +1,41 @@
+{
+	"name": "If",
+	"fields": [],
+	"methods": [
+		{
+			"retType": "boolean",
+			"name": "f",
+			"params": [
+				[
+					"char",
+					"c"
+				]
+			],
+			"body": {
+				"Block": [
+					{
+						"cond": {
+							"expr": {
+								"op": "Equal",
+								"left": {
+									"val": "c"
+								},
+								"right": {
+									"val": "a"
+								}
+							},
+							"type": "boolean"
+						},
+						"body": {
+							"Bool": "true"
+						},
+						"else": null
+					},
+					{
+						"Bool": "false"
+					}
+				]
+			}
+		}
+	]
+}

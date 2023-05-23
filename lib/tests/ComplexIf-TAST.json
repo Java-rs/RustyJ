@@ -1,0 +1,191 @@
+{
+	"name": "ComplexIf",
+	"fields": [],
+	"methods": [
+		{
+			"retType": "boolean",
+			"name": "f",
+			"params": [
+				[
+					"char",
+					"a"
+				]
+			],
+			"body": {
+				"Block": [
+					{
+						"cond": {
+							"expr": {
+								"op": "Equal",
+								"left": {
+									"expr": {
+										"val": "c"
+									},
+									"type": "char"
+								},
+								"right": {
+									"val": "a"
+								}
+							},
+							"type": "boolean"
+						},
+						"body": {
+							"expr": {
+								"Bool": "true"
+							},
+							"type": "boolean"
+						},
+						"else": {
+							"cond": {
+								"expr": {
+									"op": "Equal",
+									"left": {
+										"expr": {
+											"val": "c"
+										},
+										"type": "char"
+									},
+									"right": {
+										"val": "b"
+									}
+								},
+								"type": "boolean"
+							},
+							"body": {
+								"expr": {
+									"Bool": "false"
+								},
+								"type": "boolean"
+							},
+							"else": {
+								"cond": {
+									"expr": {
+										"op": "Equal",
+										"left": {
+											"expr": {
+												"val": "c"
+											},
+											"type": "char"
+										},
+										"right": {
+											"val": "c"
+										}
+									},
+									"type": "boolean"
+								},
+								"body": {
+									"expr": {
+										"Bool": "true"
+									},
+									"type": "boolean"
+								},
+								"else": [
+									{
+										"cond": {
+											"expr": {
+												"op": "Or",
+												"left": {
+													"expr": {
+														"op": "Equal",
+														"left": {
+															"expr": {
+																"val": "c"
+															},
+															"type": "char"
+														},
+														"right": {
+															"val": "d"
+														}
+													},
+													"type": "boolean"
+												},
+												"right": {
+													"expr": {
+														"op": "Equal",
+														"left": {
+															"expr": {
+																"val": "c"
+															},
+															"type": "char"
+														},
+														"right": {
+															"val": "e"
+														}
+													},
+													"type": "boolean"
+												}
+											},
+											"type": "boolean"
+										},
+										"body": {
+											"expr": {
+												"Bool": "false"
+											},
+											"type": "boolean"
+										},
+										"else": {
+											"cond": {
+												"expr": {
+													"op": "And",
+													"left": {
+														"expr": {
+															"op": "Equal",
+															"left": {
+																"expr": {
+																	"val": "c"
+																},
+																"type": "char"
+															},
+															"right": {
+																"val": "f"
+															}
+														},
+														"type": "boolean"
+													},
+													"right": {
+														"expr": {
+															"op": "Equal",
+															"left": {
+																"expr": {
+																	"val": "c"
+																},
+																"type": "char"
+															},
+															"right": {
+																"val": "g"
+															}
+														},
+														"type": "boolean"
+													}
+												},
+												"type": "boolean"
+											},
+											"body": {
+												"expr": {
+													"Bool": "true"
+												},
+												"type": "boolean"
+											},
+											"else": {
+												"Block": [
+													{
+														"TypedStmt": {
+															"expr": {
+																"Bool": "false"
+															},
+															"type": "boolean"
+														}
+													}
+												]
+											}
+										}
+									}
+								]
+							}
+						}
+					}
+				]
+			}
+		}
+	]
+}

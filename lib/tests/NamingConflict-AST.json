@@ -1,0 +1,36 @@
+{
+	"name": "NamingConflict",
+	"fields": [
+		{
+			"type": "int",
+			"name": "x",
+			"val": 69
+		}
+	],
+	"methods": [
+		{
+			"retType": "int",
+			"name": "f",
+			"params": [
+				[
+					"int",
+					"x"
+				]
+			],
+			"body": {
+				"Block": [
+					{
+						"op": "Add",
+						"left": {
+							"obj": "This",
+							"field": "x"
+						},
+						"right": {
+							"val": "x"
+						}
+					}
+				]
+			}
+		}
+	]
+}

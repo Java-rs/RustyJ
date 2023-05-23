@@ -1,0 +1,83 @@
+{
+	"name": "Negator",
+	"fields": [],
+	"methods": [
+		{
+			"retType": "int",
+			"name": "neg1",
+			"params": [
+				[
+					"int",
+					"x"
+				]
+			],
+			"body": {
+				"Block": [
+					{
+						"TypedExpr": {
+							"expr": {
+								"op": "Minus",
+								"val": {
+									"expr": {
+										"val": "x"
+									},
+									"type": "int"
+								}
+							},
+							"type": "int"
+						}
+					}
+				]
+			}
+		},
+		{
+			"retType": "int",
+			"name": "neg2",
+			"params": [
+				[
+					"int",
+					"x"
+				]
+			],
+			"body": {
+				"Block": [
+					{
+						"TypedExpr": {
+							"expr": {
+								"op": "Minus",
+								"val": {
+									"expr": {
+										"op": "Plus",
+										"val": {
+											"expr": {
+												"op": "Minus",
+												"val": {
+													"expr": {
+														"op": "Mul",
+														"left": {
+															"val": -1
+														},
+														"right": {
+															"expr": {
+																"val": "x"
+															},
+															"type": "int"
+														}
+													},
+													"type": "int"
+												}
+											},
+											"type": "int"
+										}
+									},
+									"type": "int"
+								}
+							},
+							"type": "int"
+						}
+					}
+				]
+			}
+		}
+	]
+}

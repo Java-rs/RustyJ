@@ -1,0 +1,57 @@
+{
+	"name": "BoolAlg",
+	"fields": [],
+	"methods": [
+		{
+			"retType": "boolean",
+			"name": "f",
+			"params": [
+				[
+					"boolean",
+					"a"
+				],
+				[
+					"boolean",
+					"b"
+				],
+				[
+					"boolean",
+					"c"
+				]
+			],
+			"body": {
+				"Block": [
+					{
+						"TypedExpr": {
+							"expr": {
+								"op": "Or",
+								"left": {
+									"op": "And",
+									"left": {
+										"expr": {
+											"val": "a"
+										},
+										"type": "boolean"
+									},
+									"right": {
+										"expr": {
+											"val": "b"
+										},
+										"type": "boolean"
+									}
+								},
+								"right": {
+									"expr": {
+										"val": "c"
+									},
+									"type": "boolean"
+								}
+							},
+							"type": "boolean"
+						}
+					}
+				]
+			}
+		}
+	]
+}

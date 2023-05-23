@@ -1,0 +1,257 @@
+{
+	"name": "Fib",
+	"fields": [],
+	"methods": [
+		{
+			"retType": "int",
+			"name": "rec",
+			"params": [
+				[
+					"int",
+					"n"
+				]
+			],
+			"body": {
+				"Block": [
+					{
+						"cond": {
+							"expr": {
+								"op": "LessThan",
+								"left": {
+									"expr": {
+										"val": "n"
+									},
+									"type": "int"
+								},
+								"right": {
+									"val": 3
+								}
+							},
+							"type": "boolean"
+						},
+						"body": {
+							"expr": {
+								"expr": {
+									"val": "n"
+								},
+								"type": "int"
+							}
+						},
+						"else": {
+							"TypedExpr": {
+								"expr": {
+									"op": "Add",
+									"left": {
+										"expr": {
+											"obj": "This",
+											"name": "rec",
+											"params": [
+												{
+													"TypedExpr": {
+														"expr": {
+															"op": "Sub",
+															"left": {
+																"expr": {
+																	"val": "n"
+																},
+																"type": "int"
+															},
+															"right": {
+																"val": 3
+															}
+														},
+														"type": "int"
+													}
+												}
+											]
+										},
+										"type": "int"
+									},
+									"right": {
+										"expr": {
+											"obj": "This",
+											"name": "rec",
+											"params": [
+												{
+													"TypedExpr": {
+														"expr": {
+															"op": "Sub",
+															"left": {
+																"expr": {
+																	"val": "n"
+																},
+																"type": "int"
+															},
+															"right": {
+																"val": 3
+															}
+														},
+														"type": "int"
+													}
+												}
+											]
+										},
+										"type": "int"
+									}
+								},
+								"type": "int"
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"retType": "int",
+			"name": "iter",
+			"params": [
+				[
+					"int",
+					"n"
+				]
+			],
+			"body": {
+				"Block": [
+					{
+						"cond": {
+							"expr": {
+								"op": "LessThan",
+								"left": {
+									"expr": {
+										"val": "n"
+									},
+									"type": "int"
+								},
+								"right": {
+									"val": 3
+								}
+							},
+							"type": "boolean"
+						},
+						"body": {
+							"TypedExpr": {
+								"expr": {
+									"expr": {
+										"val": "n"
+									},
+									"type": "int"
+								},
+								"type": "int"
+							}
+						},
+						"else": null
+					},
+					{
+						"type": "int",
+						"name": "x",
+						"val": {
+							"val": 3
+						}
+					},
+					{
+						"type": "int",
+						"name": "y",
+						"val": {
+							"val": 3
+						}
+					},
+					{
+						"type": "int",
+						"name": "i",
+						"val": {
+							"val": 3
+						}
+					},
+					{
+						"cond": {
+							"expr": {
+								"op": "LessThan",
+								"left": {
+									"expr": {
+										"val": "i"
+									},
+									"type": "int"
+								},
+								"right": {
+									"expr": {
+										"val": "n"
+									},
+									"type": "int"
+								}
+							},
+							"type": "boolean"
+						},
+						"body": [
+							{
+								"type": "int",
+								"name": "next",
+								"val": {
+									"expr": {
+										"op": "Add",
+										"left": {
+											"expr": {
+												"val": "y"
+											},
+											"type": "int"
+										},
+										"right": {
+											"expr": {
+												"val": "x"
+											},
+											"type": "int"
+										}
+									},
+									"type": "int"
+								}
+							},
+							{
+								"var": "x",
+								"expr": {
+									"expr": {
+										"val": "y"
+									},
+									"type": "int"
+								}
+							},
+							{
+								"var": "y",
+								"expr": {
+									"expr": {
+										"val": "next"
+									},
+									"type": "int"
+								}
+							},
+							{
+								"var": "i",
+								"expr": {
+									"expr": {
+										"op": "Add",
+										"left": {
+											"expr": {
+												"val": "i"
+											},
+											"type": "int"
+										},
+										"right": {
+											"val": 3
+										}
+									},
+									"type": "int"
+								}
+							},
+							{
+								"TypedExpr": {
+									"expr": {
+										"val": "y"
+									},
+									"type": "int"
+								}
+							}
+						]
+					}
+				]
+			}
+		}
+	]
+}
