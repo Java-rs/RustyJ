@@ -1,0 +1,41 @@
+{
+	"name": "If",
+	"fields": [],
+	"methods": [
+		{
+			"retType": "Bool",
+			"name": "f",
+			"params": [["Char", "c"]],
+			"body": {
+				"Block": [
+					{
+						"If": [
+							{
+								"Binary": [
+									"==",
+									{
+										"LocalOrFieldVar": "c"
+									},
+									{
+										"Char": "a"
+									}
+								]
+							},
+							{
+								"Return": {
+									"Bool": true
+								}
+							},
+							null
+						]
+					},
+					{
+						"Return": {
+							"Bool": false
+						}
+					}
+				]
+			}
+		}
+	]
+}

@@ -1,0 +1,167 @@
+{
+	"name": "ArithmeticMethods",
+	"fields": [
+		{
+			"field_type": "Int",
+			"name": "x"
+		},
+		{
+			"field_type": "Int",
+			"name": "y"
+		}
+	],
+	"methods": [
+		{
+			"retType": "Int",
+			"name": "addX",
+			"params": [["Int", "a"]],
+			"body": {
+				"Block": [
+					{
+						"Return": {
+							"Binary": [
+								"+",
+								{
+									"LocalOrFieldVar": "x"
+								},
+								{
+									"LocalOrFieldVar": "a"
+								}
+							]
+						}
+					}
+				]
+			}
+		},
+		{
+			"retType": "Int",
+			"name": "addY",
+			"params": [["Int", "a"]],
+			"body": {
+				"Block": [
+					{
+						"Return": {
+							"Binary": [
+								"+",
+								{
+									"LocalOrFieldVar": "y"
+								},
+								{
+									"LocalOrFieldVar": "a"
+								}
+							]
+						}
+					}
+				]
+			}
+		},
+		{
+			"retType": "Int",
+			"name": "complexMath",
+			"params": [
+				["Int", "a"],
+				["Int", "b"]
+			],
+			"body": {
+				"Block": [
+					{
+						"StmtExprStmt": {
+							"Assign": [
+								"a",
+								{
+									"Binary": [
+										"*",
+										{
+											"LocalOrFieldVar": "y"
+										},
+										{
+											"Binary": [
+												"/",
+												{
+													"Binary": [
+														"+",
+														{
+															"LocalOrFieldVar": "a"
+														},
+														{
+															"LocalOrFieldVar": "b"
+														}
+													]
+												},
+												{
+													"LocalOrFieldVar": "x"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"StmtExprStmt": {
+							"Assign": [
+								"b",
+								{
+									"Binary": [
+										"+",
+										{
+											"LocalOrFieldVar": "a"
+										},
+										{
+											"Unary": [
+												"-",
+												{
+													"LocalOrFieldVar": "b"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"StmtExprStmt": {
+							"Assign": [
+								"a",
+								{
+									"Binary": [
+										"+",
+										{
+											"LocalOrFieldVar": "x"
+										},
+										{
+											"Binary": [
+												"*",
+												{
+													"LocalOrFieldVar": "b"
+												},
+												{
+													"LocalOrFieldVar": "a"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"Return": {
+							"Binary": [
+								"*",
+								{
+									"LocalOrFieldVar": "x"
+								},
+								{
+									"LocalOrFieldVar": "a"
+								}
+							]
+						}
+					}
+				]
+			}
+		}
+	]
+}

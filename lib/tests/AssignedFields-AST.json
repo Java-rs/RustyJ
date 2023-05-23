@@ -1,0 +1,26 @@
+{
+	"name": "AssignedFields",
+	"fields": [
+		{
+			"field_type": "Int",
+			"name": "x"
+		},
+		{
+			"field_type": "Char",
+			"name": "c"
+		},
+		{
+			"field_type": "String",
+			"name": "s"
+		},
+		{
+			"field_type": "String",
+			"name": "stringsCanBeNull"
+		},
+		{
+			"field_type": "Bool",
+			"name": "b"
+		}
+	],
+	"methods": []
+}

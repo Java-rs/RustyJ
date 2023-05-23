@@ -1,0 +1,14 @@
+{
+	"name": "Fib",
+	"fields": [],
+	"methods": [
+		{
+			"retType": "Int",
+			"name": "rec",
+			"params": [["Int", "n"]],
+			"body": {
+				"Block": []
+			}
+		}
+	]
+}
