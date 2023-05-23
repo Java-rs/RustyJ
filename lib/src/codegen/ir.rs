@@ -22,7 +22,11 @@ pub(crate) struct Constant {
     pub(crate) tag: u8,
     pub(crate) data: Vec<u8>,
 }
-
+pub(crate) enum Instruction {
+    aload(u8),
+    iload(u8),
+    Return,
+}
 pub fn generate_dir(ast: &Prg) -> DIR {
     let mut dir = DIR {
         constant_pool: vec![],
