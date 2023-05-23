@@ -306,9 +306,78 @@ fn fib_class() {
                 retType: Type::Int,
                 name: "rec".to_string(),
                 params: vec![(Type::Int, "n".to_string())],
-                body: Block(vec![]),
+                body: Block(vec![If(
+                    Binary(
+                        "<".to_string(),
+                        Box::new(LocalOrFieldVar("n".to_string())),
+                        Box::new(Expr::Integer(2)),
+                    ),
+                    Box::new(Return(LocalOrFieldVar("n".to_string()))),
+                    Some(Box::new(Block(vec![Return(Binary(
+                        "+".to_string(),
+                        Box::new(StmtExprExpr(Box::new(MethodCall(
+                            Expr::This,
+                            "rec".to_string(),
+                            vec![Binary(
+                                "-".to_string(),
+                                Box::new(LocalOrFieldVar("n".to_string())),
+                                Box::new(Expr::Integer(1)),
+                            )],
+                        )))),
+                        Box::new(StmtExprExpr(Box::new(MethodCall(
+                            Expr::This,
+                            "rec".to_string(),
+                            vec![Binary(
+                                "-".to_string(),
+                                Box::new(LocalOrFieldVar("n".to_string())),
+                                Box::new(Expr::Integer(2)),
+                            )],
+                        )))),
+                    ))]))),
+                )]),
             },
-            // MethodDecl {}
+            MethodDecl {
+                retType: Type::Int,
+                name: "iter".to_string(),
+                params: vec![(Type::Int, "n".to_string())],
+                body: Block(vec![
+                    If(
+                        Binary(
+                            "<".to_string(),
+                            Box::new(LocalOrFieldVar("n".to_string())),
+                            Box::new(Expr::Integer(2)),
+                        ),
+                        Box::new(Return(LocalOrFieldVar("n".to_string()))),
+                        None,
+                    ),
+                    LocalVarDecl(Type::Int, "x".to_string()), // TODO: Add assignment to 0
+                    LocalVarDecl(Type::Int, "y".to_string()), // TODO: Add assignment to 1
+                    LocalVarDecl(Type::Int, "i".to_string()), // TODO: Add assignment to 1
+                    While(
+                        Binary(
+                            "<".to_string(),
+                            Box::new(LocalOrFieldVar("i".to_string())),
+                            Box::new(LocalOrFieldVar("n".to_string())),
+                        ),
+                        Box::new(Block(vec![
+                            LocalVarDecl(Type::Int, "next".to_string()), // TODO: Add assignment to y + x
+                            StmtExprStmt(Assign("x".to_string(), LocalOrFieldVar("y".to_string()))),
+                            StmtExprStmt(Assign(
+                                "y".to_string(),
+                                LocalOrFieldVar("next".to_string()),
+                            )),
+                            StmtExprStmt(Assign(
+                                "i".to_string(),
+                                Binary(
+                                    "+".to_string(),
+                                    Box::new(LocalOrFieldVar("i".to_string())),
+                                    Box::new(Expr::Integer(1)),
+                                ),
+                            )),
+                        ])),
+                    ),
+                ]),
+            },
         ],
     };
     create_test_file(&class, "Fib");

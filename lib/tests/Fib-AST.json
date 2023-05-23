@@ -12,7 +12,197 @@
         ]
       ],
       "body": {
-        "Block": []
+        "Block": [
+          {
+            "If": [
+              {
+                "Binary": [
+                  "<",
+                  {
+                    "LocalOrFieldVar": "n"
+                  },
+                  {
+                    "Integer": 2
+                  }
+                ]
+              },
+              {
+                "Return": {
+                  "LocalOrFieldVar": "n"
+                }
+              },
+              {
+                "Block": [
+                  {
+                    "Return": {
+                      "Binary": [
+                        "+",
+                        {
+                          "StmtExprExpr": {
+                            "MethodCall": [
+                              "This",
+                              "rec",
+                              [
+                                {
+                                  "Binary": [
+                                    "-",
+                                    {
+                                      "LocalOrFieldVar": "n"
+                                    },
+                                    {
+                                      "Integer": 1
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        },
+                        {
+                          "StmtExprExpr": {
+                            "MethodCall": [
+                              "This",
+                              "rec",
+                              [
+                                {
+                                  "Binary": [
+                                    "-",
+                                    {
+                                      "LocalOrFieldVar": "n"
+                                    },
+                                    {
+                                      "Integer": 2
+                                    }
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "retType": "Int",
+      "name": "iter",
+      "params": [
+        [
+          "Int",
+          "n"
+        ]
+      ],
+      "body": {
+        "Block": [
+          {
+            "If": [
+              {
+                "Binary": [
+                  "<",
+                  {
+                    "LocalOrFieldVar": "n"
+                  },
+                  {
+                    "Integer": 2
+                  }
+                ]
+              },
+              {
+                "Return": {
+                  "LocalOrFieldVar": "n"
+                }
+              },
+              null
+            ]
+          },
+          {
+            "LocalVarDecl": [
+              "Int",
+              "x"
+            ]
+          },
+          {
+            "LocalVarDecl": [
+              "Int",
+              "y"
+            ]
+          },
+          {
+            "LocalVarDecl": [
+              "Int",
+              "i"
+            ]
+          },
+          {
+            "While": [
+              {
+                "Binary": [
+                  "<",
+                  {
+                    "LocalOrFieldVar": "i"
+                  },
+                  {
+                    "LocalOrFieldVar": "n"
+                  }
+                ]
+              },
+              {
+                "Block": [
+                  {
+                    "LocalVarDecl": [
+                      "Int",
+                      "next"
+                    ]
+                  },
+                  {
+                    "StmtExprStmt": {
+                      "Assign": [
+                        "x",
+                        {
+                          "LocalOrFieldVar": "y"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "StmtExprStmt": {
+                      "Assign": [
+                        "y",
+                        {
+                          "LocalOrFieldVar": "next"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "StmtExprStmt": {
+                      "Assign": [
+                        "i",
+                        {
+                          "Binary": [
+                            "+",
+                            {
+                              "LocalOrFieldVar": "i"
+                            },
+                            {
+                              "Integer": 1
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     }
   ]
