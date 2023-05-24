@@ -11,7 +11,18 @@ pub struct Class {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct FieldDecl {
     pub(crate) field_type: Type,
+    pub(crate) access_flags: u8,
     pub(crate) name: String,
+}
+
+impl FieldDecl {
+    pub(crate) fn new(field_type: Type, name: String) -> FieldDecl {
+        FieldDecl {
+            field_type,
+            access_flags: 0,
+            name,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

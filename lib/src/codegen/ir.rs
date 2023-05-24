@@ -2,7 +2,7 @@ use crate::typechecker::*;
 use crate::types::*;
 /// The DIR(Duck Intermediate Representation) is our IR for generating Java Bytecode
 /// from our TAST
-pub(crate) struct DIR {
+pub struct DIR {
     pub(crate) constant_pool: Vec<Constant>,
     pub(crate) classes: Vec<IRClass>,
 }
@@ -13,38 +13,53 @@ pub(crate) struct IRClass {
     pub(crate) methods: Vec<CompiledMethod>,
 }
 
+impl IRClass {
+    pub(crate) fn new(
+        name: String,
+        fields: Vec<FieldDecl>,
+        methods: Vec<CompiledMethod>,
+    ) -> IRClass {
+        IRClass {
+            name,
+            super_name: String::from("java/lang/Object"),
+            fields,
+            methods,
+        }
+    }
+}
+
 pub(crate) struct CompiledMethod {
     pub(crate) name: String,
     pub(crate) max_stack: u16,
     pub(crate) code: Vec<Instruction>,
 }
-pub(crate) struct Constant {
-    pub(crate) tag: u8,
-    pub(crate) data: Vec<u8>,
+pub(crate) enum Constant {
+    Class(String),
+    FieldRef(String),
+    MethodRef(String),
+    NameAndType(String),
+    Utf8(String),
 }
 pub(crate) enum Instruction {
     aload(u8),
     iload(u8),
+    ifeq(u16),
     Return,
 }
+
 pub fn generate_dir(ast: &Prg) -> DIR {
     let mut dir = DIR {
         constant_pool: vec![],
         classes: vec![],
     };
     for class in ast {
-        dir.classes.push(generate_class(class, &mut dir));
+        dir.classes.push(generate_class(class, &dir));
     }
     dir
 }
 
-fn generate_class(class: &Class, dir: &mut DIR) -> IRClass {
-    let mut ir_class = IRClass {
-        name: class.name.clone(),
-        super_name: class.superclass.clone(),
-        fields: vec![],
-        methods: vec![],
-    };
+fn generate_class(class: &Class, dir: &DIR) -> IRClass {
+    let mut ir_class = IRClass::new(class.name.clone(), vec![], vec![]);
     for field in &class.fields {
         ir_class.fields.push(field.clone());
     }
@@ -53,28 +68,34 @@ fn generate_class(class: &Class, dir: &mut DIR) -> IRClass {
     }
     ir_class
 }
+
+fn generate_field(field: &FieldDecl, constant_pool: &mut Vec<Constant>) -> FieldDecl {
+    constant_pool.push(Constant::Utf8(field.name.clone()));
+    let name_index = constant_pool.len();
+    constant_pool.push(Constant::FieldRef(field.types.clone()));
+    let type_index = constant_pool.len();
+    let mut compiled_field = FieldDecl::new(field.types.clone(), field.name.clone());
+    compiled_field
+}
+
 // TODO: Parallelize this, since methods are not dependent on each other(hopefully)
-fn generate_method(method: &MethodDecl, dir: &mut DIR) -> CompiledMethod {
+fn generate_method(method: &MethodDecl, dir: &DIR) -> CompiledMethod {
     let mut compiled_method = CompiledMethod {
         name: method.name.clone(),
         max_stack: 0,
         code: vec![],
     };
-    for stmt in &method.body {
-        compiled_method.code.append(&mut generate_stmt(stmt, dir));
-    }
+
+    compiled_method
+        .code
+        .append(&mut generate_code_stmt(method.body.clone(), dir));
+
     compiled_method
 }
 
-fn generate_stmt(stmt: Stmt, dir: &mut DIR) -> Vec<Instruction> {
-    todo!()
-}
-
-fn generate_code_stmt(stmt: &Stmt, code: &mut Vec<u8>) {
+fn generate_code_stmt(stmt: Stmt, dir: &DIR) -> Vec<Instruction> {
     match stmt {
-        Stmt::Block(stmts) => {
-            // Generate bytecode for block
-        }
+        Stmt::Block(stmts) => {}
         Stmt::Return(expr) => {
             // Generate bytecode for return
         }
@@ -94,6 +115,7 @@ fn generate_code_stmt(stmt: &Stmt, code: &mut Vec<u8>) {
             // Generate bytecode for typed stmt
         }
     }
+    vec![]
 }
 
 fn generate_code_stmt_expr(stmt_expr: &StmtExpr, code: &mut Vec<u8>) {
