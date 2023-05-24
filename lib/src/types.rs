@@ -12,11 +12,12 @@ pub struct Class {
 pub struct FieldDecl {
     pub(crate) field_type: Type,
     pub(crate) name: String,
+    pub(crate) val: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MethodDecl {
-    pub(crate) retType: Type,
+    pub(crate) ret_type: Type,
     pub(crate) name: String,
     pub(crate) params: Vec<(Type, String)>,
     pub(crate) body: Stmt,
@@ -64,6 +65,7 @@ pub enum Type {
     Bool,
     Char,
     String,
+    Void,
 }
 
 impl Display for Type {
@@ -73,6 +75,7 @@ impl Display for Type {
             Type::Bool => write!(f, "bool"),
             Type::Char => write!(f, "char"),
             Type::String => write!(f, "String"),
+            Type::Void => write!(f, "void"),
         }
     }
 }
