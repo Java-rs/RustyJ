@@ -3,3 +3,5 @@ Cargo.lock
 .idea
 .vscode
 *.log
+lib/target
+*.class

@@ -6,6 +6,26 @@ pub struct DIR {
     pub(crate) constant_pool: Vec<Constant>,
     pub(crate) classes: Vec<IRClass>,
 }
+struct ConstantPool(Vec<Constant>);
+impl ConstantPool {
+    fn new() -> Self {
+        Self(vec![])
+    }
+    /// Adds a constant to the constant pool, returning its index
+    fn add(&mut self, constant: Constant) -> u16 {
+        if let Some(index) = self.0.iter().position(|c| *c == constant) {
+            return index as u16;
+        }
+        self.0.push(constant);
+        let index = self.0.len() as u16;
+        index
+    }
+    /// Returns the constant at the given index. Note that this is 1-indexed since the constant
+    /// pool of the JVM is 1-indexed
+    fn get(&self, index: u16) -> Option<&Constant> {
+        self.0.get(index as usize - 1)
+    }
+}
 pub(crate) struct IRClass {
     pub(crate) name: String,
     pub(crate) super_name: String,
@@ -28,11 +48,34 @@ impl IRClass {
     }
 }
 
+#[derive(Debug)]
+pub struct IRFieldDecl {
+    pub(crate) type_index: u16,
+    pub(crate) access_flags: AccessFlags,
+    pub(crate) name_index: u16,
+}
+#[repr(u8)]
+#[derive(Debug)]
+pub(crate) enum AccessFlags {
+    Public,
+}
+
+impl IRFieldDecl {
+    pub(crate) fn new(type_index: u16, name_index: u16) -> IRFieldDecl {
+        IRFieldDecl {
+            type_index,
+            access_flags: AccessFlags::Public,
+            name_index,
+        }
+    }
+}
+
 pub(crate) struct CompiledMethod {
     pub(crate) name: String,
     pub(crate) max_stack: u16,
     pub(crate) code: Vec<Instruction>,
 }
+#[derive(PartialEq, Eq, Debug)]
 pub(crate) enum Constant {
     Class(String),
     FieldRef(String),
@@ -69,13 +112,11 @@ fn generate_class(class: &Class, dir: &DIR) -> IRClass {
     ir_class
 }
 
-fn generate_field(field: &FieldDecl, constant_pool: &mut Vec<Constant>) -> FieldDecl {
-    constant_pool.push(Constant::Utf8(field.name.clone()));
-    let name_index = constant_pool.len();
-    constant_pool.push(Constant::FieldRef(field.types.clone()));
-    let type_index = constant_pool.len();
-    let mut compiled_field = FieldDecl::new(field.types.clone(), field.name.clone());
-    compiled_field
+fn generate_field(field: &FieldDecl, constant_pool: &mut ConstantPool) -> IRFieldDecl {
+    let name_index = constant_pool.add(Constant::Utf8(field.name.clone()));
+    // FIXME: The type is wrong. This will yield int, char etc. instead of I, C etc.
+    let type_index = constant_pool.add(Constant::Utf8(field.field_type.clone().to_string()));
+    IRFieldDecl::new(type_index, name_index)
 }
 
 // TODO: Parallelize this, since methods are not dependent on each other(hopefully)
@@ -193,5 +234,30 @@ fn generate_code_type(types: &Type, code: &mut Vec<u8>) {
         Type::String => {
             // Generate bytecode for string
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_fields() {
+        let mut constant_pool = ConstantPool::new();
+        let field = FieldDecl {
+            field_type: Type::Int,
+            name: String::from("test"),
+        };
+        let ir_field = generate_field(&field, &mut constant_pool);
+        assert_eq!(ir_field.name_index, 1);
+        assert_eq!(ir_field.type_index, 2);
+        assert_eq!(
+            constant_pool.get(1),
+            Some(&Constant::Utf8(String::from("test")))
+        );
+        assert_eq!(
+            constant_pool.get(2),
+            Some(&Constant::Utf8(String::from("int")))
+        );
     }
 }
