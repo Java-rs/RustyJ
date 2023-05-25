@@ -8,6 +8,34 @@ pub struct Class {
     pub methods: Vec<MethodDecl>,
 }
 
+impl Display for Class {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut fields = String::new();
+        for field in &self.fields {
+            fields.push_str(&format!("{}: {}, ", field.name, field.field_type));
+        }
+        let mut methods = String::new();
+        for method in &self.methods {
+            methods.push_str(&format!("{}: {}, ", method.name, method.ret_type));
+        }
+        write!(
+            f,
+            "class {} {{\n\tfields: {}\n\tmethods: {}\n}}",
+            self.name, fields, methods
+        )
+    }
+}
+
+impl Default for Class {
+    fn default() -> Self {
+        Class {
+            name: String::new(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct FieldDecl {
     pub field_type: Type,
@@ -66,6 +94,8 @@ pub enum Type {
     Char,
     String,
     Void,
+    Null,
+    Class(String),
 }
 
 impl Display for Type {
@@ -76,6 +106,8 @@ impl Display for Type {
             Type::Char => write!(f, "char"),
             Type::String => write!(f, "String"),
             Type::Void => write!(f, "void"),
+            Type::Null => write!(f, "null"),
+            Type::Class(name) => write!(f, "{}", name),
         }
     }
 }

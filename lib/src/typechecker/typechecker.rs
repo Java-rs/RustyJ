@@ -3,12 +3,12 @@ use std::collections::HashMap;
 
 pub struct TypeChecker {
     classes: HashMap<String, Class>,
-    typed_classes: HashMap<String, Class>,
+    pub typed_classes: HashMap<String, Class>,
     current_class: Option<Class>,
-    current_typed_class: Option<Class>,
-    field_names: HashMap<String, Vec<String>>,
-    current_method_vars: HashMap<String, Type>,
-    method_names: Vec<String>,
+    current_typed_class: Class,
+    fields: HashMap<String, Vec<FieldDecl>>,
+    current_local_vars: HashMap<String, Type>,
+    methods: HashMap<String, Vec<MethodDecl>>,
 }
 
 impl TypeChecker {
@@ -29,10 +29,10 @@ impl TypeChecker {
             classes,
             typed_classes: HashMap::new(),
             current_class: None,
-            current_typed_class: None,
-            field_names: HashMap::new(),
-            method_names: Vec::new(),
-            current_method_vars: HashMap::new(),
+            current_typed_class: Class::default(),
+            fields: HashMap::new(),
+            methods: HashMap::new(),
+            current_local_vars: HashMap::new(),
         })
     }
 
@@ -42,60 +42,127 @@ impl TypeChecker {
             self.current_class = Some(class.clone());
 
             self.check_class(class)?;
-            self.field_names.clear();
+            self.fields.clear();
         }
         Ok(())
     }
 
     fn check_class(&mut self, class: &Class) -> Result<(), String> {
+        self.current_typed_class.name = class.name.clone();
+
+        self.fields.insert(class.name.clone(), vec![]);
         for field in &class.fields {
             self.check_field(field)?;
         }
+
+        self.current_typed_class.fields = self.fields.get(&class.name).unwrap().clone();
+
+        self.methods.insert(class.name.clone(), vec![]);
         for method in &class.methods {
-            self.check_method(method)?;
+            let types_method = self.check_method(method)?;
+            self.current_typed_class.methods.push(types_method);
+            self.current_local_vars.clear();
         }
+
+        self.typed_classes
+            .insert(class.name.clone(), self.current_typed_class.clone());
         Ok(())
     }
 
     fn check_field(&mut self, field: &FieldDecl) -> Result<(), String> {
-        if let Some(names) = self
-            .field_names
-            .get_mut(&self.current_class.as_ref().unwrap().name.to_string())
+        if self
+            .check_field_type(&field.field_type, &field.val)
+            .is_err()
         {
-            if names.contains(&field.name) {
-                return Err(format!("Duplicate field name: {}", field.name));
-            } else {
-                names.push(field.name.clone());
-            }
+            return Err(format!(
+                "Field value '{0}' does not match type '{1}'",
+                field.val.clone().unwrap(),
+                field.field_type
+            ));
+        }
+
+        let names = self
+            .fields
+            .get_mut(&self.current_class.as_ref().unwrap().name.to_string())
+            .unwrap();
+
+        // Check for duplicate field names
+        if names
+            .iter()
+            .any((|vec_field| &vec_field.name == &field.name))
+        {
+            return Err(format!("Duplicate field name: {}", field.name));
         } else {
-            self.field_names.insert(
-                self.current_class
-                    .as_ref()
-                    .unwrap()
-                    .name
-                    .clone()
-                    .to_string(),
-                vec![field.name.clone()],
-            );
+            names.push(field.clone());
+        }
+
+        Ok(())
+    }
+
+    // write a function that checks if the optional val is of the same type as the field_type
+    // if it is, return Ok(())
+    fn check_field_type(&self, field_type: &Type, val: &Option<String>) -> Result<(), String> {
+        if let Some(val) = val {
+            match field_type {
+                Type::Int => {
+                    if val.parse::<i32>().is_err() {
+                        return Err(format!("Field type is int, but val is not int"));
+                    }
+                }
+                Type::Bool => {
+                    if val.parse::<bool>().is_err() {
+                        return Err(format!("Field type is bool, but val is not bool"));
+                    }
+                }
+                Type::Char => {
+                    if val.parse::<char>().is_err() {
+                        return Err(format!("Field type is char, but val is not char"));
+                    }
+                }
+                Type::String => {
+                    if val.parse::<String>().is_err() {
+                        return Err(format!("Field type is string, but val is not string"));
+                    }
+                }
+                Type::Void => {
+                    return Err(format!("Field type is void, but val is not void"));
+                }
+                Type::Null => {
+                    return Err(format!("Field type is null, but val is not null"));
+                }
+            }
         }
         Ok(())
     }
 
-    fn check_method(&mut self, method: &MethodDecl) -> Result<(), String> {
-        // Check for duplicate method names
-        let name = &method.name;
-        if self.method_names.contains(name) {
-            return Err(format!("Duplicate method name: {}", name));
+    fn check_method(&mut self, method: &MethodDecl) -> Result<MethodDecl, String> {
+        method.params.iter().for_each(|(t, name)| {
+            self.current_local_vars.insert(name.clone(), t.clone());
+        });
+
+        self.check_stmt(&method.body)?;
+
+        let mut typed_method = method.clone();
+
+        self.check_stmt(&method.body)?;
+        typed_method.body = self.type_stmt(&method.body);
+
+        let name = self.current_class.as_ref().unwrap().name.clone();
+
+        if let Some(methods) = self.methods.get_mut(&name) {
+            if methods
+                .iter()
+                .any(|vec_method| vec_method.name == method.name)
+            {
+                return Err(format!("Duplicate method name: {}", method.name));
+            } else {
+                methods.push(method.clone());
+            }
         } else {
-            self.method_names.push(name.clone());
+            self.methods.insert(name.clone(), vec![method.clone()]);
         }
 
-        method.params.iter().for_each(|(t, name)| {
-            self.current_method_vars.insert(name.clone(), t.clone());
-        });
-        self.check_stmt(&method.body);
-        self.current_method_vars.clear();
-        self.check_stmt(&method.body)
+        Ok(typed_method.clone())
     }
 
     fn check_stmt(&self, stmt: &Stmt) -> Result<(), String> {
@@ -226,7 +293,10 @@ impl TypeChecker {
 
     fn type_expr(&self, expr: &Expr) -> Expr {
         match expr {
-            Expr::This => Expr::TypedExpr(Box::new(Expr::This), Type::Int),
+            Expr::This => Expr::TypedExpr(
+                Box::new(Expr::This),
+                Type::Class(self.current_class.as_ref().unwrap().name.clone()),
+            ),
             Expr::Super => Expr::TypedExpr(Box::new(Expr::Super), Type::Int),
             Expr::LocalOrFieldVar(name) => {
                 Expr::TypedExpr(Box::new(Expr::LocalOrFieldVar(name.clone())), Type::Int)
@@ -248,10 +318,10 @@ impl TypeChecker {
                 Type::Int,
             ),
             Expr::Integer(i) => Expr::TypedExpr(Box::new(Expr::Integer(*i)), Type::Int),
-            Expr::Bool(b) => Expr::TypedExpr(Box::new(Expr::Bool(*b)), Type::Int),
-            Expr::Char(c) => Expr::TypedExpr(Box::new(Expr::Char(*c)), Type::Int),
-            Expr::String(s) => Expr::TypedExpr(Box::new(Expr::String(s.clone())), Type::Int),
-            Expr::Jnull => Expr::TypedExpr(Box::new(Expr::Jnull), Type::Int),
+            Expr::Bool(b) => Expr::TypedExpr(Box::new(Expr::Bool(*b)), Type::Bool),
+            Expr::Char(c) => Expr::TypedExpr(Box::new(Expr::Char(*c)), Type::Char),
+            Expr::String(s) => Expr::TypedExpr(Box::new(Expr::String(s.clone())), Type::String),
+            Expr::Jnull => Expr::TypedExpr(Box::new(Expr::Jnull), Type::Null),
             Expr::StmtExprExpr(stmt_expr) => Expr::TypedExpr(
                 Box::new(Expr::StmtExprExpr(Box::new(self.type_stmt_expr(stmt_expr)))),
                 Type::Int,
@@ -298,7 +368,7 @@ impl TypeChecker {
             }
             Expr::LocalOrFieldVar(name) => {
                 // Here we would look up the variable in the context
-                self.current_method_vars
+                self.current_local_vars
                     .get(name)
                     .cloned()
                     .ok_or(format!("Variable '{}' not found", name))

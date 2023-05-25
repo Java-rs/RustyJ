@@ -20,11 +20,22 @@ fn main() -> color_eyre::Result<()> {
     //println!("{:#?}", ast);
     let class: Class = Class {
         name: "test".to_string(),
-        fields: vec![],
+        fields: vec![
+            FieldDecl {
+                field_type: Type::Char,
+                name: "c".to_string(),
+                val: None,
+            },
+            FieldDecl {
+                field_type: Type::Int,
+                name: "d".to_string(),
+                val: Some("42".to_string()),
+            },
+        ],
         methods: vec![MethodDecl {
             name: "f".to_string(),
             params: vec![(Type::Char, "c".to_string())],
-            retType: Type::Bool,
+            ret_type: Type::Bool,
             body: Stmt::Block(vec![
                 Stmt::If(
                     Expr::Binary(
@@ -41,14 +52,14 @@ fn main() -> color_eyre::Result<()> {
     };
 
     let program: Prg = vec![class.clone()];
-    let mut typechecker = typechecker::TypeChecker::new(program);
-    typechecker
-        .unwrap()
-        .check_program()
-        .expect("TODO: panic message");
-
+    let mut typechecker = typechecker::TypeChecker::new(program).unwrap();
+    typechecker.check_program().expect("ERROR");
+    serde_json::to_writer_pretty(
+        &mut File::create("typed_if-test.json")?,
+        &typechecker.typed_classes.get(&class.name.clone()),
+    )?;
     // Create a new json file
-    let mut file = File::create("typed_if-test-local.json")?;
+    let mut file = File::create("if-test-local.json")?;
 
     serde_json::to_writer_pretty(&mut file, &class)?;
 
