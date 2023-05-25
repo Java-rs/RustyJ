@@ -130,6 +130,12 @@ impl TypeChecker {
                 Type::Null => {
                     return Err(format!("Field type is null, but val is not null"));
                 }
+                // Fixme: Pls Maxi check this
+                Type::Class(str) => {
+                    if !self.classes.contains_key(str) {
+                        return Err(format!("Field type is class, but class does not exist"));
+                    }
+                }
             }
         }
         Ok(())
