@@ -263,15 +263,27 @@ impl TypeChecker {
     fn type_stmt_expr(&self, stmt_expr: &StmtExpr) -> StmtExpr {
         match stmt_expr {
             StmtExpr::Assign(name, expr) => StmtExpr::TypedStmtExpr(
-                Box::new(StmtExpr::Assign(
-                    name.clone(),
-                    Box::new(self.type_expr(expr)),
-                )),
+                Box::new(StmtExpr::Assign(name.clone(), self.type_expr(expr))),
                 Type::Int,
             ),
             StmtExpr::TypedStmtExpr(stmt_expr, t) => {
                 StmtExpr::TypedStmtExpr(Box::new(self.type_stmt_expr(stmt_expr)), t.clone())
             }
+            StmtExpr::New(t, exprs) => StmtExpr::TypedStmtExpr(
+                Box::new(StmtExpr::New(
+                    t.clone(),
+                    exprs.iter().map(|e| self.type_expr(e)).collect(),
+                )),
+                Type::Int,
+            ),
+            StmtExpr::MethodCall(expr, name, exprs) => StmtExpr::TypedStmtExpr(
+                Box::new(StmtExpr::MethodCall(
+                    self.type_expr(expr),
+                    name.clone(),
+                    exprs.iter().map(|e| self.type_expr(e)).collect(),
+                )),
+                Type::Int,
+            ),
         }
     }
     fn infer_expr_type(&self, expr: &Expr) -> Result<Type, String> {
