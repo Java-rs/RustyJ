@@ -3,7 +3,7 @@
   "fields": [],
   "methods": [
     {
-      "retType": "Int",
+      "ret_type": "Int",
       "name": "f",
       "params": [],
       "body": {

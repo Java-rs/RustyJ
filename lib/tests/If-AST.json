@@ -3,7 +3,7 @@
   "fields": [],
   "methods": [
     {
-      "retType": "Bool",
+      "ret_type": "Bool",
       "name": "f",
       "params": [
         [

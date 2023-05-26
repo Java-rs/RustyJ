@@ -3,7 +3,7 @@
   "fields": [],
   "methods": [
     {
-      "retType": "Int",
+      "ret_type": "Int",
       "name": "rec",
       "params": [
         [
@@ -90,7 +90,7 @@
       }
     },
     {
-      "retType": "Int",
+      "ret_type": "Int",
       "name": "iter",
       "params": [
         [

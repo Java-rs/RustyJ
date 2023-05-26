@@ -1,10 +1,19 @@
+mod to_java;
+
 use crate::types::Expr::*;
 use crate::types::Stmt::*;
 use crate::types::StmtExpr::*;
 use crate::types::*;
+use std::fs::read_to_string;
 use std::fs::File;
 
+use self::to_java::class_to_java;
+
 fn create_test_file(class: &Class, name: &str) {
+    let java_code = read_to_string(format!("tests/{name}.java")).expect("Couldn't read java file");
+    let class_code = class_to_java(class);
+    assert_eq!(java_code, class_code);
+
     let mut file =
         File::create(format!("tests/{name}-AST.json")).expect("File couldn't be created");
     serde_json::to_writer_pretty(&mut file, &class).expect("Couldn't serialize class");
@@ -22,7 +31,7 @@ fn if_class() {
         methods: vec![MethodDecl {
             name: "f".to_string(),
             params: vec![(Type::Char, "c".to_string())],
-            retType: Type::Bool,
+            ret_type: Type::Bool,
             body: Block(vec![
                 If(
                     Binary(
@@ -48,17 +57,17 @@ fn arithmetic_methods_class() {
             FieldDecl {
                 field_type: Type::Int,
                 name: "x".to_string(),
-                // TODO: Add assignment of 69
+                val: Some("69".to_string()),
             },
             FieldDecl {
                 field_type: Type::Int,
                 name: "y".to_string(),
-                // TODO: Add assignment of 420
+                val: Some("420".to_string()),
             },
         ],
         methods: vec![
             MethodDecl {
-                retType: Type::Int,
+                ret_type: Type::Int,
                 name: "addX".to_string(),
                 params: vec![(Type::Int, "a".to_string())],
                 body: Block(vec![Return(Binary(
@@ -68,7 +77,7 @@ fn arithmetic_methods_class() {
                 ))]),
             },
             MethodDecl {
-                retType: Type::Int,
+                ret_type: Type::Int,
                 name: "addY".to_string(),
                 params: vec![(Type::Int, "a".to_string())],
                 body: Block(vec![Return(Binary(
@@ -78,7 +87,7 @@ fn arithmetic_methods_class() {
                 ))]),
             },
             MethodDecl {
-                retType: Type::Int,
+                ret_type: Type::Int,
                 name: "complexMath".to_string(),
                 params: vec![(Type::Int, "a".to_string()), (Type::Int, "b".to_string())],
                 body: Block(vec![
@@ -141,27 +150,27 @@ fn assigned_fields_class() {
             FieldDecl {
                 field_type: Type::Int,
                 name: "x".to_string(),
-                // TODO: Add assignment of 69
+                val: Some("69".to_string()),
             },
             FieldDecl {
                 field_type: Type::Char,
                 name: "c".to_string(),
-                // TODO: Add assignment of 'x'
+                val: Some("x".to_string()),
             },
             FieldDecl {
                 field_type: Type::String,
                 name: "s".to_string(),
-                // TODO: Add assignment of "Hello World"
+                val: Some("Hello World".to_string()),
             },
             FieldDecl {
                 field_type: Type::String,
                 name: "stringsCanBeNull".to_string(),
-                // TODO: Add assignment of null
+                val: Some("null".to_string()),
             },
             FieldDecl {
                 field_type: Type::Bool,
                 name: "b".to_string(),
-                // TODO: Add assignment of true
+                val: Some("true".to_string()),
             },
         ],
         methods: vec![],
@@ -175,7 +184,7 @@ fn bool_alg_class() {
         name: "BoolAlg".to_string(),
         fields: vec![],
         methods: vec![MethodDecl {
-            retType: Type::Bool,
+            ret_type: Type::Bool,
             name: "f".to_string(),
             params: vec![
                 (Type::Bool, "a".to_string()),
@@ -206,7 +215,7 @@ fn complex_if_class() {
         name: "ComplexIf".to_string(),
         fields: vec![],
         methods: vec![MethodDecl {
-            retType: Type::Bool,
+            ret_type: Type::Bool,
             name: "f".to_string(),
             params: vec![(Type::Char, "c".to_string())],
             body: Block(vec![If(
@@ -287,7 +296,7 @@ fn empty_method_class() {
         name: "emptyMethod".to_string(),
         fields: vec![],
         methods: vec![MethodDecl {
-            retType: Type::Int, // TODO: This should be Void actually
+            ret_type: Type::Int, // TODO: This should be Void actually
             name: "f".to_string(),
             params: vec![],
             body: Block(vec![]),
@@ -303,7 +312,7 @@ fn fib_class() {
         fields: vec![],
         methods: vec![
             MethodDecl {
-                retType: Type::Int,
+                ret_type: Type::Int,
                 name: "rec".to_string(),
                 params: vec![(Type::Int, "n".to_string())],
                 body: Block(vec![If(
@@ -337,7 +346,7 @@ fn fib_class() {
                 )]),
             },
             MethodDecl {
-                retType: Type::Int,
+                ret_type: Type::Int,
                 name: "iter".to_string(),
                 params: vec![(Type::Int, "n".to_string())],
                 body: Block(vec![

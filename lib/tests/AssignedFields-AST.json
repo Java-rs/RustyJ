@@ -3,23 +3,28 @@
   "fields": [
     {
       "field_type": "Int",
-      "name": "x"
+      "name": "x",
+      "val": "69"
     },
     {
       "field_type": "Char",
-      "name": "c"
+      "name": "c",
+      "val": "x"
     },
     {
       "field_type": "String",
-      "name": "s"
+      "name": "s",
+      "val": "Hello World"
     },
     {
       "field_type": "String",
-      "name": "stringsCanBeNull"
+      "name": "stringsCanBeNull",
+      "val": "null"
     },
     {
       "field_type": "Bool",
-      "name": "b"
+      "name": "b",
+      "val": "true"
     }
   ],
   "methods": []
