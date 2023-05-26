@@ -3,23 +3,52 @@ use std::fmt::Display;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Class {
-    pub(crate) name: String,
-    pub(crate) fields: Vec<FieldDecl>,
-    pub(crate) methods: Vec<MethodDecl>,
+    pub name: String,
+    pub fields: Vec<FieldDecl>,
+    pub methods: Vec<MethodDecl>,
+}
+
+impl Display for Class {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut fields = String::new();
+        for field in &self.fields {
+            fields.push_str(&format!("{}: {}, ", field.name, field.field_type));
+        }
+        let mut methods = String::new();
+        for method in &self.methods {
+            methods.push_str(&format!("{}: {}, ", method.name, method.ret_type));
+        }
+        write!(
+            f,
+            "class {} {{\n\tfields: {}\n\tmethods: {}\n}}",
+            self.name, fields, methods
+        )
+    }
+}
+
+impl Default for Class {
+    fn default() -> Self {
+        Class {
+            name: String::new(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct FieldDecl {
-    pub(crate) field_type: Type,
-    pub(crate) name: String,
+    pub field_type: Type,
+    pub name: String,
+    pub val: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MethodDecl {
-    pub(crate) retType: Type,
-    pub(crate) name: String,
-    pub(crate) params: Vec<(Type, String)>,
-    pub(crate) body: Stmt,
+    pub ret_type: Type,
+    pub name: String,
+    pub params: Vec<(Type, String)>,
+    pub body: Stmt,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -64,6 +93,9 @@ pub enum Type {
     Bool,
     Char,
     String,
+    Void,
+    Null,
+    Class(String),
 }
 
 impl Display for Type {
@@ -73,6 +105,9 @@ impl Display for Type {
             Type::Bool => write!(f, "bool"),
             Type::Char => write!(f, "char"),
             Type::String => write!(f, "String"),
+            Type::Void => write!(f, "void"),
+            Type::Null => write!(f, "null"),
+            Type::Class(name) => write!(f, "{}", name),
         }
     }
 }
