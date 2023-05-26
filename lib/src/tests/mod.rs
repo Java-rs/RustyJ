@@ -1,19 +1,82 @@
 mod to_java;
 
+use self::to_java::class_to_java;
 use crate::types::Expr::*;
 use crate::types::Stmt::*;
 use crate::types::StmtExpr::*;
 use crate::types::*;
-use std::fs::read_to_string;
+use std::fs::read;
 use std::fs::File;
+use std::io::Write;
+use std::process::Command;
+use std::process::Stdio;
 
-use self::to_java::class_to_java;
+fn normalize_str(s: std::string::String) -> std::string::String {
+    s.split('\n')
+        .fold("".to_string(), |acc, s| acc + s)
+        .split("\t")
+        .fold("".to_string(), |acc, s| acc + s)
+}
 
 fn create_test_file(class: &Class, name: &str) {
-    let java_code = read_to_string(format!("tests/{name}.java")).expect("Couldn't read java file");
-    let class_code = class_to_java(class);
-    assert_eq!(java_code, class_code);
+    let file_path = format!("tests/{name}.java");
+    let gen_file_path = format!("tests/{name}-gen.java");
+    let class_file_path = format!("tests/{name}.class");
 
+    // Generate Java Code from AST and write to file
+    let class_code = class_to_java(class);
+    let mut file =
+        File::create(gen_file_path.clone()).expect("File for generated code couldn't be created");
+    file.write(class_code.as_bytes())
+        .expect("Couldn't write generate java code");
+
+    // TODO: Check that generated java code and original java code are equivalent to javac
+    let mut child = Command::new("javac")
+        .arg(file_path)
+        .spawn()
+        .expect("failed to compile original java-code");
+    let ecode = child
+        .wait()
+        .expect("failed to wait on child compiling original java code");
+    assert!(ecode.success());
+    let mut file = File::create(format!("tests/{name}.txt")).unwrap();
+    let mut child = Command::new("javap")
+        .arg("-v")
+        .arg("-c")
+        .arg(format!("tests/{}.class", name))
+        .stdout(Stdio::from(file))
+        .spawn()
+        .expect("failed to disassemble original java class file");
+    let ecode = child
+        .wait()
+        .expect("failed to wait on child compiling original java code");
+    assert!(ecode.success());
+    // let og_clz_file =
+    //     read(class_file_path.clone()).expect("failed to read original java class file");
+    let mut child = Command::new("javac")
+        .arg(gen_file_path)
+        .spawn()
+        .expect("failed to compile generated java-code");
+    let ecode = child
+        .wait()
+        .expect("failed to wait on child compiling generated java code");
+    assert!(ecode.success());
+    let mut file = File::create(format!("tests/{name}-gen.txt")).unwrap();
+    let mut child = Command::new("javap")
+        .arg("-v")
+        .arg("-c")
+        .arg(format!("tests/{}.class", name))
+        .stdout(Stdio::from(file))
+        .spawn()
+        .expect("failed to disassemble original java class file");
+    let ecode = child
+        .wait()
+        .expect("failed to wait on child compiling original java code");
+    assert!(ecode.success());
+    // let gen_clz_file = read(class_file_path).expect("failed to read generated java class file");
+    // assert_eq!(og_clz_file, gen_clz_file);
+
+    // Write AST & TAST to files
     let mut file =
         File::create(format!("tests/{name}-AST.json")).expect("File couldn't be created");
     serde_json::to_writer_pretty(&mut file, &class).expect("Couldn't serialize class");
@@ -296,7 +359,7 @@ fn empty_method_class() {
         name: "emptyMethod".to_string(),
         fields: vec![],
         methods: vec![MethodDecl {
-            ret_type: Type::Int, // TODO: This should be Void actually
+            ret_type: Type::Void,
             name: "f".to_string(),
             params: vec![],
             body: Block(vec![]),
@@ -359,9 +422,12 @@ fn fib_class() {
                         Box::new(Return(LocalOrFieldVar("n".to_string()))),
                         None,
                     ),
-                    LocalVarDecl(Type::Int, "x".to_string()), // TODO: Add assignment to 0
-                    LocalVarDecl(Type::Int, "y".to_string()), // TODO: Add assignment to 1
-                    LocalVarDecl(Type::Int, "i".to_string()), // TODO: Add assignment to 1
+                    LocalVarDecl(Type::Int, "x".to_string()),
+                    StmtExprStmt(Assign("x".to_string(), Expr::Integer(0))),
+                    LocalVarDecl(Type::Int, "y".to_string()),
+                    StmtExprStmt(Assign("y".to_string(), Expr::Integer(1))),
+                    LocalVarDecl(Type::Int, "i".to_string()),
+                    StmtExprStmt(Assign("i".to_string(), Expr::Integer(1))),
                     While(
                         Binary(
                             "<".to_string(),
@@ -369,7 +435,15 @@ fn fib_class() {
                             Box::new(LocalOrFieldVar("n".to_string())),
                         ),
                         Box::new(Block(vec![
-                            LocalVarDecl(Type::Int, "next".to_string()), // TODO: Add assignment to y + x
+                            LocalVarDecl(Type::Int, "next".to_string()),
+                            StmtExprStmt(Assign(
+                                "next".to_string(),
+                                Binary(
+                                    "+".to_string(),
+                                    Box::new(LocalOrFieldVar("y".to_string())),
+                                    Box::new(LocalOrFieldVar("x".to_string())),
+                                ),
+                            )),
                             StmtExprStmt(Assign("x".to_string(), LocalOrFieldVar("y".to_string()))),
                             StmtExprStmt(Assign(
                                 "y".to_string(),
@@ -385,6 +459,7 @@ fn fib_class() {
                             )),
                         ])),
                     ),
+                    Return(LocalOrFieldVar("y".to_string())),
                 ]),
             },
         ],

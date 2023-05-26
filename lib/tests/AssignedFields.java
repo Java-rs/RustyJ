@@ -3,6 +3,5 @@ class AssignedFields {
 	char c = 'x';
 	String s = "Hello World";
 	String stringsCanBeNull = null;
-
 	boolean b = true;
 }

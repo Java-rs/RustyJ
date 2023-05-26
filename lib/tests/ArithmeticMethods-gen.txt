@@ -1,0 +1,129 @@
+Classfile /C:/Users/Administrator/Documents/Studium/Compilerbau/rustyJ/lib/tests/ArithmeticMethods.class
+  Last modified 26.05.2023; size 499 bytes
+  SHA-256 checksum b830067f937e76e6ed127df00937bb540f619f5ad3fa366bee9d24ef0939c13a
+  Compiled from "ArithmeticMethods-gen.java"
+class ArithmeticMethods
+  minor version: 0
+  major version: 64
+  flags: (0x0020) ACC_SUPER
+  this_class: #8                          // ArithmeticMethods
+  super_class: #2                         // java/lang/Object
+  interfaces: 0, fields: 2, methods: 4, attributes: 1
+Constant pool:
+   #1 = Methodref          #2.#3          // java/lang/Object."<init>":()V
+   #2 = Class              #4             // java/lang/Object
+   #3 = NameAndType        #5:#6          // "<init>":()V
+   #4 = Utf8               java/lang/Object
+   #5 = Utf8               <init>
+   #6 = Utf8               ()V
+   #7 = Fieldref           #8.#9          // ArithmeticMethods.x:I
+   #8 = Class              #10            // ArithmeticMethods
+   #9 = NameAndType        #11:#12        // x:I
+  #10 = Utf8               ArithmeticMethods
+  #11 = Utf8               x
+  #12 = Utf8               I
+  #13 = Fieldref           #8.#14         // ArithmeticMethods.y:I
+  #14 = NameAndType        #15:#12        // y:I
+  #15 = Utf8               y
+  #16 = Utf8               Code
+  #17 = Utf8               LineNumberTable
+  #18 = Utf8               addX
+  #19 = Utf8               (I)I
+  #20 = Utf8               addY
+  #21 = Utf8               complexMath
+  #22 = Utf8               (II)I
+  #23 = Utf8               SourceFile
+  #24 = Utf8               ArithmeticMethods-gen.java
+{
+  int x;
+    descriptor: I
+    flags: (0x0000)
+
+  int y;
+    descriptor: I
+    flags: (0x0000)
+
+  ArithmeticMethods();
+    descriptor: ()V
+    flags: (0x0000)
+    Code:
+      stack=2, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: bipush        69
+         7: putfield      #7                  // Field x:I
+        10: aload_0
+        11: sipush        420
+        14: putfield      #13                 // Field y:I
+        17: return
+      LineNumberTable:
+        line 1: 0
+        line 2: 4
+        line 3: 10
+
+  int addX(int);
+    descriptor: (I)I
+    flags: (0x0000)
+    Code:
+      stack=2, locals=2, args_size=2
+         0: aload_0
+         1: getfield      #7                  // Field x:I
+         4: iload_1
+         5: iadd
+         6: ireturn
+      LineNumberTable:
+        line 5: 0
+
+  int addY(int);
+    descriptor: (I)I
+    flags: (0x0000)
+    Code:
+      stack=2, locals=2, args_size=2
+         0: aload_0
+         1: getfield      #13                 // Field y:I
+         4: iload_1
+         5: iadd
+         6: ireturn
+      LineNumberTable:
+        line 8: 0
+
+  int complexMath(int, int);
+    descriptor: (II)I
+    flags: (0x0000)
+    Code:
+      stack=3, locals=3, args_size=3
+         0: aload_0
+         1: getfield      #13                 // Field y:I
+         4: iload_1
+         5: iload_2
+         6: iadd
+         7: aload_0
+         8: getfield      #7                  // Field x:I
+        11: idiv
+        12: imul
+        13: istore_1
+        14: iload_1
+        15: iload_2
+        16: ineg
+        17: iadd
+        18: istore_2
+        19: aload_0
+        20: getfield      #7                  // Field x:I
+        23: iload_2
+        24: iload_1
+        25: imul
+        26: iadd
+        27: istore_1
+        28: aload_0
+        29: getfield      #7                  // Field x:I
+        32: iload_1
+        33: imul
+        34: ireturn
+      LineNumberTable:
+        line 11: 0
+        line 12: 14
+        line 13: 19
+        line 14: 28
+}
+SourceFile: "ArithmeticMethods-gen.java"

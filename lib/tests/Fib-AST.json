@@ -128,16 +128,46 @@
             ]
           },
           {
+            "StmtExprStmt": {
+              "Assign": [
+                "x",
+                {
+                  "Integer": 0
+                }
+              ]
+            }
+          },
+          {
             "LocalVarDecl": [
               "Int",
               "y"
             ]
           },
           {
+            "StmtExprStmt": {
+              "Assign": [
+                "y",
+                {
+                  "Integer": 1
+                }
+              ]
+            }
+          },
+          {
             "LocalVarDecl": [
               "Int",
               "i"
             ]
+          },
+          {
+            "StmtExprStmt": {
+              "Assign": [
+                "i",
+                {
+                  "Integer": 1
+                }
+              ]
+            }
           },
           {
             "While": [
@@ -159,6 +189,24 @@
                       "Int",
                       "next"
                     ]
+                  },
+                  {
+                    "StmtExprStmt": {
+                      "Assign": [
+                        "next",
+                        {
+                          "Binary": [
+                            "+",
+                            {
+                              "LocalOrFieldVar": "y"
+                            },
+                            {
+                              "LocalOrFieldVar": "x"
+                            }
+                          ]
+                        }
+                      ]
+                    }
                   },
                   {
                     "StmtExprStmt": {
@@ -201,6 +249,11 @@
                 ]
               }
             ]
+          },
+          {
+            "Return": {
+              "LocalOrFieldVar": "y"
+            }
           }
         ]
       }

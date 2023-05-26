@@ -102,7 +102,7 @@ impl Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Type::Int => write!(f, "int"),
-            Type::Bool => write!(f, "bool"),
+            Type::Bool => write!(f, "boolean"),
             Type::Char => write!(f, "char"),
             Type::String => write!(f, "String"),
             Type::Void => write!(f, "void"),

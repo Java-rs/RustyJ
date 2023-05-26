@@ -1,0 +1,66 @@
+Classfile /C:/Users/Administrator/Documents/Studium/Compilerbau/rustyJ/lib/tests/BoolAlg.class
+  Last modified 26.05.2023; size 294 bytes
+  SHA-256 checksum 555dc2395ff404eeaca44ac59c67a4bf2b0a5349e56c641abc56a8ecdc5cb359
+  Compiled from "BoolAlg-gen.java"
+class BoolAlg
+  minor version: 0
+  major version: 64
+  flags: (0x0020) ACC_SUPER
+  this_class: #7                          // BoolAlg
+  super_class: #2                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 2, attributes: 1
+Constant pool:
+   #1 = Methodref          #2.#3          // java/lang/Object."<init>":()V
+   #2 = Class              #4             // java/lang/Object
+   #3 = NameAndType        #5:#6          // "<init>":()V
+   #4 = Utf8               java/lang/Object
+   #5 = Utf8               <init>
+   #6 = Utf8               ()V
+   #7 = Class              #8             // BoolAlg
+   #8 = Utf8               BoolAlg
+   #9 = Utf8               Code
+  #10 = Utf8               LineNumberTable
+  #11 = Utf8               f
+  #12 = Utf8               (ZZZ)Z
+  #13 = Utf8               StackMapTable
+  #14 = Utf8               SourceFile
+  #15 = Utf8               BoolAlg-gen.java
+{
+  BoolAlg();
+    descriptor: ()V
+    flags: (0x0000)
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+      LineNumberTable:
+        line 1: 0
+
+  boolean f(boolean, boolean, boolean);
+    descriptor: (ZZZ)Z
+    flags: (0x0000)
+    Code:
+      stack=1, locals=4, args_size=4
+         0: iload_1
+         1: ifeq          12
+         4: iload_2
+         5: ifeq          12
+         8: iload_3
+         9: ifne          16
+        12: iload_3
+        13: ifeq          20
+        16: iconst_1
+        17: goto          21
+        20: iconst_0
+        21: ireturn
+      LineNumberTable:
+        line 3: 0
+      StackMapTable: number_of_entries = 4
+        frame_type = 12 /* same */
+        frame_type = 3 /* same */
+        frame_type = 3 /* same */
+        frame_type = 64 /* same_locals_1_stack_item */
+          stack = [ int ]
+}
+SourceFile: "BoolAlg-gen.java"
