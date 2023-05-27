@@ -1,5 +1,5 @@
 Classfile /C:/Users/Administrator/Documents/Studium/Compilerbau/rustyJ/lib/tests/ArithmeticMethods.class
-  Last modified 26.05.2023; size 495 bytes
+  Last modified 28.05.2023; size 495 bytes
   SHA-256 checksum 5f4854efdbdf8b72d7afddbea5b9309681c9bd3c71fc4193d0d4860ca85dda32
   Compiled from "ArithmeticMethods.java"
 class ArithmeticMethods

@@ -1,195 +1,185 @@
 {
-	"name": "ArithmeticMethods",
-	"fields": [
-		{
-			"type": "int",
-			"name": "x",
-			"val": {
-				"Int": 69
-			}
-		},
-		{
-			"type": "int",
-			"name": "y",
-			"val": {
-				"Int": 420
-			}
-		}
-	],
-	"methods": [
-		{
-			"retType": "int",
-			"name": "addX",
-			"params": [
-				[
-					"int",
-					"a"
-				]
-			],
-			"body": {
-				"Block": [
-					{
-						"TypedExpr": {
-							"expr": {
-								"op": "Add",
-								"left": {
-									"expr": {
-										"val": "x"
-									},
-									"type": "int"
-								},
-								"right": {
-									"expr": {
-										"val": "a"
-									},
-									"type": "int"
-								}
-							},
-							"type": "int"
-						}
-					}
-				]
-			}
-		},
-		{
-			"retType": "int",
-			"name": "addY",
-			"params": [
-				[
-					"int",
-					"a"
-				]
-			],
-			"body": {
-				"Block": [
-					{
-						"TypedExpr": {
-							"expr": {
-								"op": "Add",
-								"left": {
-									"expr": {
-										"val": "y"
-									},
-									"type": "int"
-								},
-								"right": {
-									"expr": {
-										"val": "a"
-									},
-									"type": "int"
-								}
-							},
-							"type": "int"
-						}
-					}
-				]
-			}
-		},
-		{
-			"retType": "int",
-			"name": "complexMath",
-			"params": [
-				[
-					"int",
-					"a"
-				],
-				[
-					"int",
-					"b"
-				]
-			],
-			"body": {
-				"Block": [
-					{
-						"TypedStmtExpr": {
-							"stmtExp": {
-								"var": "a",
-								"expr": {
-									"op": "Div",
-									"left": {
-										"op": "Mul",
-										"left": {
-											"val": "y"
-										},
-										"right": {
-											"op": "Add",
-											"left": {
-												"val": "a"
-											},
-											"right": {
-												"val": "b"
-											}
-										}
-									},
-									"right": {
-										"val": "x"
-									}
-								}
-							},
-							"type": "int"
-						}
-					},
-					{
-						"TypedStmtExpr": {
-							"stmtExp": {
-								"var": "b",
-								"expr": {
-									"op": "Add",
-									"left": {
-										"val": "a"
-									},
-									"right": {
-										"op": "Minus",
-										"val": {
-											"val": "b"
-										}
-									}
-								}
-							},
-							"type": "int"
-						}
-					},
-					{
-						"TypedStmtExpr": {
-							"stmtExp": {
-								"var": "a",
-								"expr": {
-									"op": "Add",
-									"left": {
-										"val": "x"
-									},
-									"right": {
-										"op": "Mul",
-										"left": {
-											"val": "b"
-										},
-										"right": {
-											"val": "a"
-										}
-									}
-								}
-							},
-							"type": "int"
-						}
-					},
-					{
-						"TypedStmtExpr": {
-							"stmtExp": {
-								"val": {
-									"op": "Mul",
-									"left": {
-										"val": "x"
-									},
-									"right": {
-										"val": "a"
-									}
-								}
-							},
-							"type": "int"
-						}
-					}
-				]
-			}
-		}
-	]
+  "name": "ArithmeticMethods",
+  "fields": [
+    {
+      "field_type": "Int",
+      "name": "x",
+      "val": "69"
+    },
+    {
+      "field_type": "Int",
+      "name": "y",
+      "val": "420"
+    }
+  ],
+  "methods": [
+    {
+      "ret_type": "Int",
+      "name": "addX",
+      "params": [
+        [
+          "Int",
+          "a"
+        ]
+      ],
+      "body": {
+        "Block": [
+          {
+            "Return": {
+              "Binary": [
+                "+",
+                {
+                  "LocalOrFieldVar": "x"
+                },
+                {
+                  "LocalOrFieldVar": "a"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "ret_type": "Int",
+      "name": "addY",
+      "params": [
+        [
+          "Int",
+          "a"
+        ]
+      ],
+      "body": {
+        "Block": [
+          {
+            "Return": {
+              "Binary": [
+                "+",
+                {
+                  "LocalOrFieldVar": "y"
+                },
+                {
+                  "LocalOrFieldVar": "a"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "ret_type": "Int",
+      "name": "complexMath",
+      "params": [
+        [
+          "Int",
+          "a"
+        ],
+        [
+          "Int",
+          "b"
+        ]
+      ],
+      "body": {
+        "Block": [
+          {
+            "StmtExprStmt": {
+              "Assign": [
+                "a",
+                {
+                  "Binary": [
+                    "*",
+                    {
+                      "LocalOrFieldVar": "y"
+                    },
+                    {
+                      "Binary": [
+                        "/",
+                        {
+                          "Binary": [
+                            "+",
+                            {
+                              "LocalOrFieldVar": "a"
+                            },
+                            {
+                              "LocalOrFieldVar": "b"
+                            }
+                          ]
+                        },
+                        {
+                          "LocalOrFieldVar": "x"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "StmtExprStmt": {
+              "Assign": [
+                "b",
+                {
+                  "Binary": [
+                    "+",
+                    {
+                      "LocalOrFieldVar": "a"
+                    },
+                    {
+                      "Unary": [
+                        "-",
+                        {
+                          "LocalOrFieldVar": "b"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "StmtExprStmt": {
+              "Assign": [
+                "a",
+                {
+                  "Binary": [
+                    "+",
+                    {
+                      "LocalOrFieldVar": "x"
+                    },
+                    {
+                      "Binary": [
+                        "*",
+                        {
+                          "LocalOrFieldVar": "b"
+                        },
+                        {
+                          "LocalOrFieldVar": "a"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "Return": {
+              "Binary": [
+                "*",
+                {
+                  "LocalOrFieldVar": "x"
+                },
+                {
+                  "LocalOrFieldVar": "a"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
 }

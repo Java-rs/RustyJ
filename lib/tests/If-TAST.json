@@ -3,37 +3,77 @@
 	"fields": [],
 	"methods": [
 		{
-			"retType": "boolean",
+			"ret_type": "Bool",
 			"name": "f",
-			"params": [
-				[
-					"char",
-					"c"
-				]
-			],
+			"params": [["Char", "c"]],
 			"body": {
-				"Block": [
+				"TypedStmt": [
 					{
-						"cond": {
-							"expr": {
-								"op": "Equal",
-								"left": {
-									"val": "c"
-								},
-								"right": {
-									"val": "a"
-								}
+						"Block": [
+							{
+								"TypedStmt": [
+									{
+										"If": [
+											{
+												"TypedExpr": [
+													{
+														"Binary": [
+															"==",
+															{
+																"TypedExpr": [
+																	{
+																		"LocalOrFieldVar": "c"
+																	},
+																	"Char"
+																]
+															},
+															{
+																"Char": "a"
+															}
+														]
+													},
+													"Bool"
+												]
+											},
+											{
+												"TypedStmt": [
+													{
+														"Return": {
+															"TypedExpr": [
+																{
+																	"Bool": true
+																},
+																"Bool"
+															]
+														}
+													},
+													"Bool"
+												]
+											},
+											null
+										]
+									},
+									"Bool"
+								]
 							},
-							"type": "boolean"
-						},
-						"body": {
-							"Bool": "true"
-						},
-						"else": null
+							{
+								"TypedStmt": [
+									{
+										"Return": {
+											"TypedExpr": [
+												{
+													"Bool": false
+												},
+												"Bool"
+											]
+										}
+									},
+									"Bool"
+								]
+							}
+						]
 					},
-					{
-						"Bool": "false"
-					}
+					"Bool"
 				]
 			}
 		}

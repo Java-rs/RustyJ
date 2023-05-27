@@ -5,12 +5,7 @@
 		{
 			"retType": "int",
 			"name": "neg1",
-			"params": [
-				[
-					"int",
-					"x"
-				]
-			],
+			"params": [["int", "x"]],
 			"body": {
 				"Block": [
 					{
@@ -33,12 +28,7 @@
 		{
 			"retType": "int",
 			"name": "neg2",
-			"params": [
-				[
-					"int",
-					"x"
-				]
-			],
+			"params": [["int", "x"]],
 			"body": {
 				"Block": [
 					{

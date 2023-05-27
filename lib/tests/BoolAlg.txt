@@ -1,5 +1,5 @@
 Classfile /C:/Users/Administrator/Documents/Studium/Compilerbau/rustyJ/lib/tests/BoolAlg.class
-  Last modified 26.05.2023; size 286 bytes
+  Last modified 28.05.2023; size 286 bytes
   SHA-256 checksum 795ca67816db5cbeea83f81b9fa52fddb4ba5a258c126d9b5865f599ecc50326
   Compiled from "BoolAlg.java"
 class BoolAlg

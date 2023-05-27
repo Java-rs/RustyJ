@@ -1,35 +1,31 @@
 {
-	"name": "AssignedFields",
-	"fields": [
-		{
-			"type": "int",
-			"name": "x",
-			"val": {
-				"Int": 69
-			}
-		},
-		{
-			"type": "char",
-			"name": "c",
-			"val": "x"
-		},
-		{
-			"type": "String",
-			"name": "s",
-			"val": "Hello World"
-		},
-		{
-			"type": "String",
-			"name": "s",
-			"val": null
-		},
-		{
-			"type": "boolean",
-			"name": "b",
-			"val": {
-				"Bool": "true"
-			}
-		}
-	],
-	"methods": []
+  "name": "AssignedFields",
+  "fields": [
+    {
+      "field_type": "Int",
+      "name": "x",
+      "val": "69"
+    },
+    {
+      "field_type": "Char",
+      "name": "c",
+      "val": "x"
+    },
+    {
+      "field_type": "String",
+      "name": "s",
+      "val": "Hello World"
+    },
+    {
+      "field_type": "String",
+      "name": "stringsCanBeNull",
+      "val": "null"
+    },
+    {
+      "field_type": "Bool",
+      "name": "b",
+      "val": "true"
+    }
+  ],
+  "methods": []
 }

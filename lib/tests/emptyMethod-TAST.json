@@ -1,14 +1,14 @@
 {
-	"name": "emptyMethod",
-	"fields": [],
-	"methods": [
-		{
-			"retType": "void",
-			"name": "f",
-			"params": [],
-			"body": {
-				"Block": []
-			}
-		}
-	]
+  "name": "emptyMethod",
+  "fields": [],
+  "methods": [
+    {
+      "ret_type": "Void",
+      "name": "f",
+      "params": [],
+      "body": {
+        "Block": []
+      }
+    }
+  ]
 }

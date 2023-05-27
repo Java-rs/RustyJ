@@ -1,5 +1,5 @@
 Classfile /C:/Users/Administrator/Documents/Studium/Compilerbau/rustyJ/lib/tests/Empty.class
-  Last modified 26.05.2023; size 188 bytes
+  Last modified 28.05.2023; size 188 bytes
   SHA-256 checksum ffdeb6fc21abd07acd2c742b1ae8fb0ca8522ffca9c043dab613019892aac24b
   Compiled from "Empty-gen.java"
 class Empty
