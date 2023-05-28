@@ -1,6 +1,6 @@
 Classfile /C:/Users/Administrator/Documents/Studium/Compilerbau/rustyJ/lib/tests/Fib.class
-  Last modified 28.05.2023; size 447 bytes
-  SHA-256 checksum 0e264e38962e969e38ad86a560c9fd8435768b4d55fa852a34bcb16c8743e361
+  Last modified 28.05.2023; size 448 bytes
+  SHA-256 checksum 1ea529885ea89bc75284d161a15c4582c246ff7f0abc232bc79ce45b5a9ab11b
   Compiled from "Fib-gen.java"
 class Fib
   minor version: 0
@@ -86,23 +86,23 @@ Constant pool:
         11: iconst_1
         12: istore        4
         14: iload         4
-        16: iload_1
-        17: if_icmpge     39
-        20: iload_3
-        21: iload_2
-        22: iadd
-        23: istore        5
-        25: iload_3
-        26: istore_2
-        27: iload         5
-        29: istore_3
-        30: iload         4
-        32: iconst_1
-        33: iadd
-        34: istore        4
-        36: goto          14
-        39: iload_3
-        40: ireturn
+        16: iload         4
+        18: if_icmpge     40
+        21: iload_3
+        22: iload_2
+        23: iadd
+        24: istore        5
+        26: iload_3
+        27: istore_2
+        28: iload         5
+        30: istore_3
+        31: iload         4
+        33: iconst_1
+        34: iadd
+        35: istore        4
+        37: goto          14
+        40: iload_3
+        41: ireturn
       LineNumberTable:
         line 10: 0
         line 11: 5
@@ -110,17 +110,17 @@ Constant pool:
         line 16: 9
         line 18: 11
         line 19: 14
-        line 21: 20
-        line 22: 25
-        line 23: 27
-        line 24: 30
-        line 25: 36
-        line 26: 39
+        line 21: 21
+        line 22: 26
+        line 23: 28
+        line 24: 31
+        line 25: 37
+        line 26: 40
       StackMapTable: number_of_entries = 3
         frame_type = 7 /* same */
         frame_type = 254 /* append */
           offset_delta = 6
           locals = [ int, int, int ]
-        frame_type = 24 /* same */
+        frame_type = 25 /* same */
 }
 SourceFile: "Fib-gen.java"

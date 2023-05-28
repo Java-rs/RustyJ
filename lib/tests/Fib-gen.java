@@ -16,7 +16,7 @@ class Fib {
 		y = 1;
 		int i;
 		i = 1;
-		while ((i) < (n)) {
+		while ((i) < (i)) {
 			int next;
 			next = (y) + (x);
 			x = y;
