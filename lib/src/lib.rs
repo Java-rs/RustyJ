@@ -1,5 +1,7 @@
-pub mod typechecker;
-pub mod types;
+#[cfg(test)]
+mod tests;
+mod typechecker;
+mod types;
 
 use tracing::info;
 

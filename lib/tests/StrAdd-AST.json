@@ -1,0 +1,32 @@
+{
+	"name": "StrAdd",
+	"fields": [
+		{
+			"type": "String",
+			"name": "hello",
+			"val": {
+				"val": "Hi"
+			}
+		}
+	],
+	"methods": [
+		{
+			"retType": "String",
+			"name": "helloWorld",
+			"params": [],
+			"body": {
+				"Block": [
+					{
+						"op": "Add",
+						"left": {
+							"val": "hello"
+						},
+						"right": {
+							"val": "World"
+						}
+					}
+				]
+			}
+		}
+	]
+}
