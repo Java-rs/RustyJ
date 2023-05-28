@@ -1,0 +1,26 @@
+{
+	"name": "Fields",
+	"fields": [
+		{
+			"type": "int",
+			"name": "x",
+			"val": null
+		},
+		{
+			"type": "boolean",
+			"name": "b",
+			"val": null
+		},
+		{
+			"type": "char",
+			"name": "c",
+			"val": null
+		},
+		{
+			"type": "String",
+			"name": "s",
+			"val": null
+		}
+	],
+	"methods": []
+}
