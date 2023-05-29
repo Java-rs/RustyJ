@@ -10,14 +10,14 @@ fn main() -> color_eyre::Result<()> {
     tracing_subscriber::fmt::init();
     info!("Hello RustyJ!");
     lib::hi();
-    //let mut file = File::open("tests/If-AST.json")?;
-    //let mut ast_string = String::new();
+    let mut file = File::open("lib/tests/If-AST.json")?;
+    let mut ast_string = String::new();
 
-    //file.read_to_string(&mut ast_string)?;
-    //let ast_value: Value = serde_json::from_str(&ast_string)?;
+    file.read_to_string(&mut ast_string)?;
+    let ast_value: Value = serde_json::from_str(&ast_string)?;
     //println!("{:#?}", ast_value);
-    //let ast: Class = serde_json::from_value(ast_value.clone())?;
-    //println!("{:#?}", ast);
+    let class2: Class = serde_json::from_value(ast_value.clone())?;
+    println!("{:#?}", class2);
     let class: Class = Class {
         name: "test".to_string(),
         fields: vec![
@@ -51,19 +51,13 @@ fn main() -> color_eyre::Result<()> {
         }],
     };
 
-    let program: Prg = vec![class.clone()];
+    let program: Prg = vec![class2.clone()];
     let mut typechecker = typechecker::TypeChecker::new(program).unwrap();
     typechecker.check_program().expect("ERROR");
     serde_json::to_writer_pretty(
         &mut File::create("typed_if-test.json")?,
-        &typechecker.typed_classes.get(&class.name.clone()),
+        &typechecker.typed_classes.get(&class2.name.clone()),
     )?;
-    // Create a new json file
-    let mut file = File::create("if-test-local.json")?;
-
-    serde_json::to_writer_pretty(&mut file, &class)?;
-
-    //let typed_ast_string = serde_json::to_string_pretty(&ast)?;
 
     //let mut file = File::create("typed_if-ast.txt")?;
     //file.write_all(typed_ast_string.as_bytes())?;

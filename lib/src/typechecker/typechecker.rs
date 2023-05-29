@@ -1,4 +1,5 @@
 use crate::types::*;
+use std::any::type_name;
 use std::collections::HashMap;
 
 pub struct TypeChecker {
@@ -260,11 +261,35 @@ impl TypeChecker {
     fn type_stmt(&self, stmt: &Stmt) -> Stmt {
         match stmt {
             Stmt::Block(stmts) => {
-                let typed_stmts = stmts.iter().map(|s| self.type_stmt(s)).collect();
-                Stmt::TypedStmt(Box::new(Stmt::Block(typed_stmts)), Type::Int)
+                let typed_stmts: Vec<Stmt> = stmts.iter().map(|s| self.type_stmt(s)).collect();
+
+                let mut return_stmt_types = typed_stmts.iter().filter_map(|s| match s {
+                    Stmt::TypedStmt(boxed_stmt, t) => match **boxed_stmt {
+                        Stmt::Return(_) => Some(t.clone()),
+                        _ => None,
+                    },
+                    _ => None,
+                });
+
+                let return_type = match return_stmt_types.next() {
+                    Some(first_type) => {
+                        if return_stmt_types.all(|t| t == first_type) {
+                            first_type
+                        } else {
+                            panic!("Mismatched return types in block");
+                        }
+                    }
+                    None => Type::Void,
+                };
+
+                Stmt::TypedStmt(Box::new(Stmt::Block(typed_stmts)), return_type)
             }
             Stmt::Return(expr) => {
-                Stmt::TypedStmt(Box::new(Stmt::Return(self.type_expr(expr))), Type::Int)
+                let typed_expr = match self.type_expr(expr) {
+                    Expr::TypedExpr(e, t) => (*e.clone(), t),
+                    _ => panic!("Expected typed expr"),
+                };
+                Stmt::TypedStmt(Box::new(Stmt::Return(typed_expr.0.clone())), typed_expr.1)
             }
             Stmt::While(expr, stmt) => Stmt::TypedStmt(
                 Box::new(Stmt::While(
@@ -283,7 +308,7 @@ impl TypeChecker {
                     Box::new(self.type_stmt(stmt1)),
                     stmt2.as_ref().map(|s| Box::new(self.type_stmt(s))),
                 )),
-                Type::Int,
+                Type::Bool,
             ),
             Stmt::StmtExprStmt(stmt_expr) => Stmt::TypedStmt(
                 Box::new(Stmt::StmtExprStmt(self.type_stmt_expr(stmt_expr))),
