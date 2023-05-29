@@ -87,10 +87,7 @@ impl TypeChecker {
             .unwrap();
 
         // Check for duplicate field names
-        if names
-            .iter()
-            .any((|vec_field| &vec_field.name == &field.name))
-        {
+        if names.iter().any(|vec_field| &vec_field.name == &field.name) {
             return Err(format!("Duplicate field name: {}", field.name));
         } else {
             names.push(field.clone());
@@ -226,7 +223,6 @@ impl TypeChecker {
             Expr::String(_) => Ok(()),
             Expr::Jnull => Ok(()),
             Expr::This => Ok(()),
-            Expr::Super => Ok(()),
             _ => Ok(()),
         }
     }
@@ -298,31 +294,144 @@ impl TypeChecker {
     }
 
     fn type_expr(&self, expr: &Expr) -> Expr {
-        match expr {
+        return match expr {
             Expr::This => Expr::TypedExpr(
                 Box::new(Expr::This),
                 Type::Class(self.current_class.as_ref().unwrap().name.clone()),
             ),
-            Expr::Super => Expr::TypedExpr(Box::new(Expr::Super), Type::Int),
             Expr::LocalOrFieldVar(name) => {
-                Expr::TypedExpr(Box::new(Expr::LocalOrFieldVar(name.clone())), Type::Int)
+                if let Some(t) = self.current_local_vars.get(name) {
+                    return Expr::TypedExpr(
+                        Box::new(Expr::LocalOrFieldVar(name.clone())),
+                        t.clone(),
+                    );
+                }
+                if let Some(field) = self
+                    .current_class
+                    .as_ref()
+                    .unwrap()
+                    .fields
+                    .iter()
+                    .find(|field| field.name == *name)
+                {
+                    return Expr::TypedExpr(
+                        Box::new(Expr::LocalOrFieldVar(name.clone())),
+                        field.field_type.clone(),
+                    );
+                }
+                panic!("Unknown variable: {}", name)
             }
             Expr::InstVar(expr, name) => Expr::TypedExpr(
                 Box::new(Expr::InstVar(Box::new(self.type_expr(expr)), name.clone())),
-                Type::Int,
+                match self.type_expr(expr) {
+                    Expr::TypedExpr(_, t) => t,
+                    _ => panic!("Expected typed expr"),
+                },
             ),
-            Expr::Unary(s, expr) => Expr::TypedExpr(
-                Box::new(Expr::Unary(s.clone(), Box::new(self.type_expr(expr)))),
-                Type::Int,
-            ),
-            Expr::Binary(s, expr1, expr2) => Expr::TypedExpr(
-                Box::new(Expr::Binary(
-                    s.clone(),
-                    Box::new(self.type_expr(expr1)),
-                    Box::new(self.type_expr(expr2)),
-                )),
-                Type::Int,
-            ),
+            Expr::Unary(s, expr) => {
+                let t = match self.type_expr(expr) {
+                    Expr::TypedExpr(_, t) => t,
+                    _ => panic!("Expected typed expr"),
+                };
+                let op = UnaryOp::from(s.as_str());
+                match op {
+                    UnaryOp::Pos => {
+                        if t != Type::Int {
+                            panic!("Type mismatch");
+                        }
+                        return Expr::TypedExpr(
+                            Box::new(Expr::Unary(s.clone(), Box::new(self.type_expr(expr)))),
+                            t,
+                        );
+                    }
+                    UnaryOp::Neg => {
+                        if t != Type::Int {
+                            panic!("Type mismatch");
+                        }
+                        return Expr::TypedExpr(
+                            Box::new(Expr::Unary(s.clone(), Box::new(self.type_expr(expr)))),
+                            t,
+                        );
+                    }
+                    UnaryOp::Not => {
+                        if t != Type::Bool {
+                            panic!("Type mismatch");
+                        }
+                        return Expr::TypedExpr(
+                            Box::new(Expr::Unary(s.clone(), Box::new(self.type_expr(expr)))),
+                            t,
+                        );
+                    }
+                }
+                Expr::TypedExpr(
+                    Box::new(Expr::Unary(s.clone(), Box::new(self.type_expr(expr)))),
+                    match self.type_expr(expr) {
+                        Expr::TypedExpr(_, t) => t,
+                        _ => panic!("Expected typed expr"),
+                    },
+                )
+            }
+            Expr::Binary(s, expr1, expr2) => {
+                let op = BinaryOp::from(s.as_str());
+                let t1 = match self.type_expr(expr1) {
+                    Expr::TypedExpr(_, t) => t,
+                    _ => panic!("Expected typed expr"),
+                };
+                let t2 = match self.type_expr(expr2) {
+                    Expr::TypedExpr(_, t) => t,
+                    _ => panic!("Expected typed expr"),
+                };
+                match op {
+                    BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div => {
+                        if t1 != t2 {
+                            panic!("Type mismatch");
+                        }
+                        return Expr::TypedExpr(
+                            Box::new(Expr::Binary(
+                                s.clone(),
+                                Box::new(self.type_expr(expr1)),
+                                Box::new(self.type_expr(expr2)),
+                            )),
+                            t1,
+                        );
+                    }
+                    BinaryOp::Lt | BinaryOp::Le => {
+                        if t1 != t2 {
+                            panic!("Type mismatch");
+                        }
+                        return Expr::TypedExpr(
+                            Box::new(Expr::Binary(
+                                s.clone(),
+                                Box::new(self.type_expr(expr1)),
+                                Box::new(self.type_expr(expr2)),
+                            )),
+                            Type::Bool,
+                        );
+                    }
+                    BinaryOp::Eq | BinaryOp::Ne => {
+                        if t1 != t2 {
+                            panic!("Type mismatch");
+                        }
+                        return Expr::TypedExpr(
+                            Box::new(Expr::Binary(
+                                s.clone(),
+                                Box::new(self.type_expr(expr1)),
+                                Box::new(self.type_expr(expr2)),
+                            )),
+                            Type::Bool,
+                        );
+                    }
+                    _ => {}
+                }
+                Expr::TypedExpr(
+                    Box::new(Expr::Binary(
+                        s.clone(),
+                        Box::new(self.type_expr(expr1)),
+                        Box::new(self.type_expr(expr2)),
+                    )),
+                    Type::Bool,
+                )
+            }
             Expr::Integer(i) => Expr::TypedExpr(Box::new(Expr::Integer(*i)), Type::Int),
             Expr::Bool(b) => Expr::TypedExpr(Box::new(Expr::Bool(*b)), Type::Bool),
             Expr::Char(c) => Expr::TypedExpr(Box::new(Expr::Char(*c)), Type::Char),
@@ -333,7 +442,11 @@ impl TypeChecker {
                 Type::Int,
             ),
             Expr::TypedExpr(expr, t) => Expr::TypedExpr(Box::new(self.type_expr(expr)), t.clone()),
-        }
+            Expr::LocalVar(expr, name) => Expr::TypedExpr(
+                Box::new(Expr::LocalVar(expr.clone(), name.clone())),
+                self.current_local_vars.get(name).unwrap().clone(),
+            ),
+        };
     }
 
     fn type_stmt_expr(&self, stmt_expr: &StmtExpr) -> StmtExpr {
@@ -366,10 +479,6 @@ impl TypeChecker {
         match expr {
             Expr::This => {
                 // Here we would look up the type of 'this' in the context
-                unimplemented!()
-            }
-            Expr::Super => {
-                // Here we would look up the type of 'super' in the context
                 unimplemented!()
             }
             Expr::LocalOrFieldVar(name) => {
