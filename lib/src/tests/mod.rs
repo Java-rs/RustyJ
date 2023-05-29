@@ -5,7 +5,11 @@ mod complex_if_class;
 mod empty_class;
 mod empty_method_class;
 mod fib_class;
+mod fields_class;
 mod if_class;
+mod int_fields_class;
+mod local_var_decl_class;
+mod method_call_class;
 mod to_java;
 
 use self::to_java::class_to_java;
