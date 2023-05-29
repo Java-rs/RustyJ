@@ -1,5 +1,5 @@
 Classfile /C:/Users/Administrator/Documents/Studium/Compilerbau/rustyJ/lib/tests/If.class
-  Last modified 28.05.2023; size 274 bytes
+  Last modified 29.05.2023; size 274 bytes
   SHA-256 checksum b2c4473a6768f49bc58b0d43e94c53fa4d15b04b46e21c4ee6d01edcdbfdec6d
   Compiled from "If-gen.java"
 class If

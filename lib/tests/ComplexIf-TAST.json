@@ -19,149 +19,359 @@
                 "Binary": [
                   "==",
                   {
-                    "LocalOrFieldVar": "c"
-                  },
-                  {
-                    "Char": "a"
-                  }
-                ]
-              },
-              {
-                "Block": [
-                  {
-                    "Return": {
-                      "Bool": true
-                    }
-                  }
-                ]
-              },
-              {
-                "If": [
-                  {
-                    "Binary": [
-                      "==",
+                    "TypedExpr": [
                       {
                         "LocalOrFieldVar": "c"
                       },
-                      {
-                        "Char": "b"
-                      }
+                      "Char"
                     ]
                   },
+                  {
+                    "TypedExpr": [
+                      {
+                        "Char": "a"
+                      },
+                      "Char"
+                    ]
+                  }
+                ]
+              },
+              {
+                "TypedStmt": [
                   {
                     "Block": [
                       {
-                        "Return": {
-                          "Bool": false
-                        }
+                        "TypedStmt": [
+                          {
+                            "Return": {
+                              "TypedExpr": [
+                                {
+                                  "Bool": true
+                                },
+                                "Bool"
+                              ]
+                            }
+                          },
+                          "Bool"
+                        ]
                       }
                     ]
                   },
+                  "Bool"
+                ]
+              },
+              {
+                "TypedStmt": [
                   {
                     "If": [
                       {
-                        "Binary": [
-                          "==",
+                        "TypedExpr": [
                           {
-                            "LocalOrFieldVar": "c"
-                          },
-                          {
-                            "Char": "c"
-                          }
-                        ]
-                      },
-                      {
-                        "Return": {
-                          "Bool": true
-                        }
-                      },
-                      {
-                        "Block": [
-                          {
-                            "If": [
+                            "Binary": [
+                              "==",
                               {
-                                "Binary": [
-                                  "||",
+                                "TypedExpr": [
                                   {
-                                    "Binary": [
-                                      "==",
-                                      {
-                                        "LocalOrFieldVar": "c"
-                                      },
-                                      {
-                                        "Char": "d"
-                                      }
-                                    ]
+                                    "LocalOrFieldVar": "c"
                                   },
-                                  {
-                                    "Binary": [
-                                      "==",
-                                      {
-                                        "LocalOrFieldVar": "c"
-                                      },
-                                      {
-                                        "Char": "e"
-                                      }
-                                    ]
-                                  }
+                                  "Char"
                                 ]
                               },
                               {
-                                "Return": {
-                                  "Bool": false
-                                }
-                              },
-                              {
-                                "If": [
+                                "TypedExpr": [
                                   {
-                                    "Binary": [
-                                      "||",
-                                      {
-                                        "Binary": [
-                                          "==",
-                                          {
-                                            "LocalOrFieldVar": "c"
-                                          },
-                                          {
-                                            "Char": "d"
-                                          }
-                                        ]
-                                      },
-                                      {
-                                        "Binary": [
-                                          "==",
-                                          {
-                                            "LocalOrFieldVar": "c"
-                                          },
-                                          {
-                                            "Char": "e"
-                                          }
-                                        ]
-                                      }
-                                    ]
+                                    "Char": "b"
                                   },
-                                  {
-                                    "Return": {
-                                      "Bool": true
-                                    }
-                                  },
-                                  {
-                                    "Block": [
-                                      {
-                                        "Return": {
-                                          "Bool": false
-                                        }
-                                      }
-                                    ]
-                                  }
+                                  "Char"
                                 ]
                               }
                             ]
-                          }
+                          },
+                          "Bool"
+                        ]
+                      },
+                      {
+                        "TypedStmt": [
+                          {
+                            "Block": [
+                              {
+                                "TypedStmt": [
+                                  {
+                                    "Return": {
+                                      "TypedExpr": [
+                                        {
+                                          "Bool": false
+                                        },
+                                        "Bool"
+                                      ]
+                                    }
+                                  },
+                                  "Bool"
+                                ]
+                              }
+                            ]
+                          },
+                          "Bool"
+                        ]
+                      },
+                      {
+                        "TypedStmt": [
+                          {
+                            "If": [
+                              {
+                                "TypedExpr": [
+                                  {
+                                    "Binary": [
+                                      "==",
+                                      {
+                                        "TypedExpr": [
+                                          {
+                                            "LocalOrFieldVar": "c"
+                                          },
+                                          "Char"
+                                        ]
+                                      },
+                                      {
+                                        "TypedExpr": [
+                                          {
+                                            "Char": "c"
+                                          },
+                                          "Char"
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  "Bool"
+                                ]
+                              },
+                              {
+                                "TypedStmt": [
+                                  {
+                                    "Return": {
+                                      "TypedExpr": [
+                                        {
+                                          "Bool": true
+                                        },
+                                        "Bool"
+                                      ]
+                                    }
+                                  },
+                                  "Bool"
+                                ]
+                              },
+                              {
+                                "TypedStmt": [
+                                  {
+                                    "Block": [
+                                      {
+                                        "TypedStmt": [
+                                          {
+                                            "If": [
+                                              {
+                                                "TypedExpr": [
+                                                  {
+                                                    "Binary": [
+                                                      "||",
+                                                      {
+                                                        "TypedExpr": [
+                                                          {
+                                                            "Binary": [
+                                                              "==",
+                                                              {
+                                                                "TypedExpr": [
+                                                                  {
+                                                                    "LocalOrFieldVar": "c"
+                                                                  },
+                                                                  "Char"
+                                                                ]
+                                                              },
+                                                              {
+                                                                "TypedExpr": [
+                                                                  {
+                                                                    "Char": "d"
+                                                                  },
+                                                                  "Char"
+                                                                ]
+                                                              }
+                                                            ]
+                                                          },
+                                                          "Bool"
+                                                        ]
+                                                      },
+                                                      {
+                                                        "TypedExpr": [
+                                                          {
+                                                            "Binary": [
+                                                              "==",
+                                                              {
+                                                                "TypedExpr": [
+                                                                  {
+                                                                    "LocalOrFieldVar": "c"
+                                                                  },
+                                                                  "Char"
+                                                                ]
+                                                              },
+                                                              {
+                                                                "TypedExpr": [
+                                                                  {
+                                                                    "Char": "e"
+                                                                  },
+                                                                  "Char"
+                                                                ]
+                                                              }
+                                                            ]
+                                                          },
+                                                          "Bool"
+                                                        ]
+                                                      }
+                                                    ]
+                                                  },
+                                                  "Bool"
+                                                ]
+                                              },
+                                              {
+                                                "TypedStmt": [
+                                                  {
+                                                    "Return": {
+                                                      "TypedExpr": [
+                                                        {
+                                                          "Bool": false
+                                                        },
+                                                        "Bool"
+                                                      ]
+                                                    }
+                                                  },
+                                                  "Bool"
+                                                ]
+                                              },
+                                              {
+                                                "TypedStmt": [
+                                                  {
+                                                    "If": [
+                                                      {
+                                                        "TypedExpr": [
+                                                          {
+                                                            "Binary": [
+                                                              "||",
+                                                              {
+                                                                "TypedExpr": [
+                                                                  {
+                                                                    "Binary": [
+                                                                      "==",
+                                                                      {
+                                                                        "TypedExpr": [
+                                                                          {
+                                                                            "LocalOrFieldVar": "c"
+                                                                          },
+                                                                          "Char"
+                                                                        ]
+                                                                      },
+                                                                      {
+                                                                        "TypedExpr": [
+                                                                          {
+                                                                            "Char": "d"
+                                                                          },
+                                                                          "Char"
+                                                                        ]
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  "Bool"
+                                                                ]
+                                                              },
+                                                              {
+                                                                "TypedExpr": [
+                                                                  {
+                                                                    "Binary": [
+                                                                      "==",
+                                                                      {
+                                                                        "TypedExpr": [
+                                                                          {
+                                                                            "LocalOrFieldVar": "c"
+                                                                          },
+                                                                          "Char"
+                                                                        ]
+                                                                      },
+                                                                      {
+                                                                        "TypedExpr": [
+                                                                          {
+                                                                            "Char": "e"
+                                                                          },
+                                                                          "Char"
+                                                                        ]
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  "Bool"
+                                                                ]
+                                                              }
+                                                            ]
+                                                          },
+                                                          "Bool"
+                                                        ]
+                                                      },
+                                                      {
+                                                        "TypedStmt": [
+                                                          {
+                                                            "Return": {
+                                                              "TypedExpr": [
+                                                                {
+                                                                  "Bool": true
+                                                                },
+                                                                "Bool"
+                                                              ]
+                                                            }
+                                                          },
+                                                          "Bool"
+                                                        ]
+                                                      },
+                                                      {
+                                                        "TypedStmt": [
+                                                          {
+                                                            "Block": [
+                                                              {
+                                                                "TypedStmt": [
+                                                                  {
+                                                                    "Return": {
+                                                                      "TypedExpr": [
+                                                                        {
+                                                                          "Bool": false
+                                                                        },
+                                                                        "Bool"
+                                                                      ]
+                                                                    }
+                                                                  },
+                                                                  "Bool"
+                                                                ]
+                                                              }
+                                                            ]
+                                                          },
+                                                          "Bool"
+                                                        ]
+                                                      }
+                                                    ]
+                                                  },
+                                                  "Bool"
+                                                ]
+                                              }
+                                            ]
+                                          },
+                                          "Bool"
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  "Bool"
+                                ]
+                              }
+                            ]
+                          },
+                          "Bool"
                         ]
                       }
                     ]
-                  }
+                  },
+                  "Bool"
                 ]
               }
             ]

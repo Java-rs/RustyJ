@@ -1,5 +1,5 @@
 Classfile /C:/Users/Administrator/Documents/Studium/Compilerbau/rustyJ/lib/tests/Fib.class
-  Last modified 28.05.2023; size 443 bytes
+  Last modified 29.05.2023; size 443 bytes
   SHA-256 checksum 6451c56f2b9935a3f420a52db2bcccf8d2c4d863a1e256984e6c236bdf5e95bd
   Compiled from "Fib.java"
 class Fib

@@ -20,36 +20,81 @@
         ]
       ],
       "body": {
-        "Block": [
+        "TypedStmt": [
           {
-            "Return": {
-              "Binary": [
-                "||",
-                {
-                  "Binary": [
-                    "&&",
-                    {
-                      "Binary": [
-                        "&&",
+            "Block": [
+              {
+                "TypedStmt": [
+                  {
+                    "Return": {
+                      "TypedExpr": [
                         {
-                          "LocalOrFieldVar": "a"
+                          "Binary": [
+                            "||",
+                            {
+                              "TypedExpr": [
+                                {
+                                  "Binary": [
+                                    "&&",
+                                    {
+                                      "TypedExpr": [
+                                        {
+                                          "Binary": [
+                                            "&&",
+                                            {
+                                              "TypedExpr": [
+                                                {
+                                                  "LocalOrFieldVar": "a"
+                                                },
+                                                "Bool"
+                                              ]
+                                            },
+                                            {
+                                              "TypedExpr": [
+                                                {
+                                                  "LocalOrFieldVar": "b"
+                                                },
+                                                "Bool"
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        "Bool"
+                                      ]
+                                    },
+                                    {
+                                      "TypedExpr": [
+                                        {
+                                          "LocalOrFieldVar": "c"
+                                        },
+                                        "Bool"
+                                      ]
+                                    }
+                                  ]
+                                },
+                                "Bool"
+                              ]
+                            },
+                            {
+                              "TypedExpr": [
+                                {
+                                  "LocalOrFieldVar": "c"
+                                },
+                                "Bool"
+                              ]
+                            }
+                          ]
                         },
-                        {
-                          "LocalOrFieldVar": "b"
-                        }
+                        "Bool"
                       ]
-                    },
-                    {
-                      "LocalOrFieldVar": "c"
                     }
-                  ]
-                },
-                {
-                  "LocalOrFieldVar": "c"
-                }
-              ]
-            }
-          }
+                  },
+                  "Bool"
+                ]
+              }
+            ]
+          },
+          "Bool"
         ]
       }
     }

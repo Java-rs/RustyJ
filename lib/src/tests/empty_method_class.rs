@@ -9,7 +9,7 @@ fn empty_method_class() {
             ret_type: Type::Void,
             name: "f".to_string(),
             params: vec![],
-            body: Block(vec![]),
+            body: TypedStmt(Box::new(Block(vec![])), Type::Void),
         }],
     };
     create_test_file(&tast_to_ast(&class), Some(&class), "emptyMethod");

@@ -1,5 +1,5 @@
 Classfile /C:/Users/Administrator/Documents/Studium/Compilerbau/rustyJ/lib/tests/AssignedFields.class
-  Last modified 28.05.2023; size 429 bytes
+  Last modified 29.05.2023; size 429 bytes
   SHA-256 checksum 9b8785e64d930eba6e9703e0690ac4fc9172c42e97e4a27a7af06097ce4428df
   Compiled from "AssignedFields-gen.java"
 class AssignedFields

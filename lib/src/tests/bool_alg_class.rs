@@ -13,19 +13,46 @@ fn bool_alg_class() {
                 (Type::Bool, "b".to_string()),
                 (Type::Bool, "c".to_string()),
             ],
-            body: Block(vec![Return(Binary(
-                "||".to_string(),
-                Box::new(Binary(
-                    "&&".to_string(),
-                    Box::new(Binary(
-                        "&&".to_string(),
-                        Box::new(LocalOrFieldVar("a".to_string())),
-                        Box::new(LocalOrFieldVar("b".to_string())),
-                    )),
-                    Box::new(LocalOrFieldVar("c".to_string())),
-                )),
-                Box::new(LocalOrFieldVar("c".to_string())),
-            ))]),
+            body: TypedStmt(
+                Box::new(Block(vec![TypedStmt(
+                    Box::new(Return(TypedExpr(
+                        Box::new(Binary(
+                            "||".to_string(),
+                            Box::new(TypedExpr(
+                                Box::new(Binary(
+                                    "&&".to_string(),
+                                    Box::new(TypedExpr(
+                                        Box::new(Binary(
+                                            "&&".to_string(),
+                                            Box::new(TypedExpr(
+                                                Box::new(LocalOrFieldVar("a".to_string())),
+                                                Type::Bool,
+                                            )),
+                                            Box::new(TypedExpr(
+                                                Box::new(LocalOrFieldVar("b".to_string())),
+                                                Type::Bool,
+                                            )),
+                                        )),
+                                        Type::Bool,
+                                    )),
+                                    Box::new(TypedExpr(
+                                        Box::new(LocalOrFieldVar("c".to_string())),
+                                        Type::Bool,
+                                    )),
+                                )),
+                                Type::Bool,
+                            )),
+                            Box::new(TypedExpr(
+                                Box::new(LocalOrFieldVar("c".to_string())),
+                                Type::Bool,
+                            )),
+                        )),
+                        Type::Bool,
+                    ))),
+                    Type::Bool,
+                )])),
+                Type::Bool,
+            ),
         }],
     };
     create_test_file(&tast_to_ast(&class), Some(&class), "BoolAlg");

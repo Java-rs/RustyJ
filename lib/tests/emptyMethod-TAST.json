@@ -7,7 +7,12 @@
       "name": "f",
       "params": [],
       "body": {
-        "Block": []
+        "TypedStmt": [
+          {
+            "Block": []
+          },
+          "Void"
+        ]
       }
     }
   ]
