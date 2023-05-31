@@ -12,5 +12,5 @@ fn empty_method_class() {
             body: TypedStmt(Box::new(Block(vec![])), Type::Void),
         }],
     };
-    create_test_file(&tast_to_ast(&class), Some(&class), "emptyMethod");
+    single_class_test(&tast_to_ast(&class), Some(&class), "emptyMethod");
 }

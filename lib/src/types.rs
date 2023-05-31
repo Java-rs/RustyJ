@@ -40,7 +40,7 @@ impl Default for Class {
 pub struct FieldDecl {
     pub field_type: Type,
     pub name: String,
-    pub val: Option<String>,
+    pub val: Option<String>, // @Decide: Should probably Option<Expr> instead
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -53,6 +53,7 @@ pub struct MethodDecl {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum Stmt {
+    // @Decide: What are the Types of While/If?
     Block(Vec<Stmt>),
     Return(Expr),
     While(Expr, Box<Stmt>),

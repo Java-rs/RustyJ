@@ -131,5 +131,5 @@ fn while_class() {
             ),
         }],
     };
-    create_test_file(&tast_to_ast(&class), Some(&class), "While");
+    single_class_test(&tast_to_ast(&class), Some(&class), "While");
 }

@@ -18,5 +18,5 @@ fn int_fields_class() {
         ],
         methods: vec![],
     };
-    create_test_file(&tast_to_ast(&class), Some(&class), "IntFields");
+    single_class_test(&tast_to_ast(&class), Some(&class), "IntFields");
 }

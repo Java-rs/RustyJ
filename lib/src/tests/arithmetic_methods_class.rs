@@ -205,5 +205,5 @@ fn arithmetic_methods_class() {
             },
         ],
     };
-    create_test_file(&tast_to_ast(&class), Some(&class), "ArithmeticMethods");
+    single_class_test(&tast_to_ast(&class), Some(&class), "ArithmeticMethods");
 }

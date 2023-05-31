@@ -7,5 +7,5 @@ fn empty_class() {
         fields: vec![],
         methods: vec![],
     };
-    create_test_file(&tast_to_ast(&class), Some(&class), "Empty");
+    single_class_test(&tast_to_ast(&class), Some(&class), "Empty");
 }

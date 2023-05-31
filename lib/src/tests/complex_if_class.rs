@@ -190,5 +190,5 @@ fn complex_if_class() {
             )]),
         }],
     };
-    create_test_file(&tast_to_ast(&class), Some(&class), "ComplexIf");
+    single_class_test(&tast_to_ast(&class), Some(&class), "ComplexIf");
 }
