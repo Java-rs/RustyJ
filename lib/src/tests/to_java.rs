@@ -112,20 +112,28 @@ pub fn stmt_expr_to_java(stmt_expr: &StmtExpr) -> String {
             "{}.{}({})",
             expr_to_java(expr),
             name,
-            params
-                .into_iter()
-                .map(|expr| expr_to_java(expr))
-                .reduce(|acc, s| format!("{}, {}", acc, s))
-                .unwrap()
+            if params.len() == 0 {
+                String::new()
+            } else {
+                params
+                    .into_iter()
+                    .map(|expr| expr_to_java(expr))
+                    .reduce(|acc, s| format!("{}, {}", acc, s))
+                    .unwrap()
+            }
         ),
         StmtExpr::New(typ, params) => format!(
             "new {}({})",
             typ,
-            params
-                .into_iter()
-                .map(|expr| expr_to_java(expr))
-                .reduce(|acc, s| format!("{}, {}", acc, s))
-                .unwrap()
+            if params.len() == 0 {
+                String::new()
+            } else {
+                params
+                    .into_iter()
+                    .map(|expr| expr_to_java(expr))
+                    .reduce(|acc, s| format!("{}, {}", acc, s))
+                    .unwrap()
+            }
         ),
         StmtExpr::TypedStmtExpr(stmt_expr, typ) => stmt_expr_to_java(stmt_expr),
     }
