@@ -3,6 +3,9 @@ ID = {ASCII_ALPHA_UPPER~ASCII_ALPHA+}
 Name = {ID~","~ID}
 List = {(Name~"\n")+}
 
+
+IDENTIFIER ={(ASCII_ALPHA|"_")~(ASCII_ALPHANUMERIC|"_")+ }
+
 compilationunit = {typedeclarations }
 
 typedeclarations = {typedeclaration  | typedeclarations~typedeclaration }
@@ -47,8 +50,8 @@ classmemberdeclaration = {fielddeclaration
 constructordeclaration = {constructordeclarator~constructorbody 
 		 |  modifiers~constructordeclarator~constructorbody }
 
-fielddeclaration = {type~variabledeclarators~";" 
- 		 | modifiers~type~variabledeclarators~";"} 
+fielddeclaration = {typeJ~variabledeclarators~";" 
+ 		 | modifiers~typeJ~variabledeclarators~";"} 
 
 methoddeclaration = {methodheader~methodbody }
 
@@ -63,12 +66,12 @@ constructorbody	 ={ "{"~"}"
 		|"{"~blockstatements~"}"
 		|"{"~explicitconstructorinvocation~blockstatements~"}"}
 
-methodheader	 ={ type~methoddeclarator
-		 | modifiers~type~methoddeclarator
+methodheader	 ={ typeJ~methoddeclarator
+		 | modifiers~typeJ~methoddeclarator
 		 | "void"~methoddeclarator
 		 | modifiers~"void"~methoddeclarator }
 
-type             = {primitivetype 
+typeJ             = {primitivetype 
 		 | referencetype }
 
 variabledeclarators ={ variabledeclarator 
@@ -104,7 +107,7 @@ variabledeclarator ={ variabledeclaratorid
 blockstatement	 ={ localvariabledeclarationstatement 
 		 | statement  }
 
-formalparameter  = {type~variabledeclaratorid }
+formalparameter  = {typeJ~variabledeclaratorid }
 
 argumentlist     = {expression 
 		 | argumentlist~","~expression }
@@ -128,7 +131,7 @@ expression       = {assignmentexpression }
 integraltype     ={ "int"
                  | "char" }
 
-localvariabledeclaration ={ type~variabledeclarators }
+localvariabledeclaration ={ typeJ~variabledeclarators }
 
 statementwithouttrailingsubstatement = {block 
 		 | emptystatement 
@@ -184,9 +187,9 @@ assignmentoperator = {"="
 		 | "%="
 		 | "+="
 		 | "-="
-		 | SHIFTLEFTEQUAL 
-		 | SIGNEDSHIFTRIGHTEQUAL 
-		 | UNSIGNEDSHIFTRIGHTEQUAL 
+		 | "<<="
+		 | ">>="
+		 | ">>>="
 		 | "&="
 		 | "^="
 		 | "|="}
@@ -247,6 +250,17 @@ literal		 = {INTLITERAL
 		 | CHARLITERAL
 		 | STRINGLITERAL
 		 | JNULL }
+
+CHARLITERAL = { "'"~ASCII~"'" }
+
+STRINGLITERAL = { "\""~ASCII*~"\"" }
+
+BOOLLITERAL = {"true"|"false"}
+INTLITERAL = {NUMBER+
+|
+            NUMBER+~"."~NUMBER+
+}
+
 
 castexpression	 ={ "("~primitivetype~")"~unaryexpression
  		 | "("~expression~")"~unaryexpressionnotplusminus}
