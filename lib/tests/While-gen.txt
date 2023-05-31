@@ -1,0 +1,89 @@
+Classfile /C:/Users/Administrator/Documents/Studium/Compilerbau/rustyJ/lib/tests/While.class
+  Last modified 31.05.2023; size 347 bytes
+  SHA-256 checksum f8fb5ef2f9dbc1c1d630618b65e5de8385476b3d3872f0ab2854c0ab7d7e7b7c
+  Compiled from "While-gen.java"
+class While
+  minor version: 0
+  major version: 64
+  flags: (0x0020) ACC_SUPER
+  this_class: #8                          // While
+  super_class: #2                         // java/lang/Object
+  interfaces: 0, fields: 1, methods: 2, attributes: 1
+Constant pool:
+   #1 = Methodref          #2.#3          // java/lang/Object."<init>":()V
+   #2 = Class              #4             // java/lang/Object
+   #3 = NameAndType        #5:#6          // "<init>":()V
+   #4 = Utf8               java/lang/Object
+   #5 = Utf8               <init>
+   #6 = Utf8               ()V
+   #7 = Fieldref           #8.#9          // While.n:I
+   #8 = Class              #10            // While
+   #9 = NameAndType        #11:#12        // n:I
+  #10 = Utf8               While
+  #11 = Utf8               n
+  #12 = Utf8               I
+  #13 = Utf8               Code
+  #14 = Utf8               LineNumberTable
+  #15 = Utf8               f
+  #16 = Utf8               (I)I
+  #17 = Utf8               StackMapTable
+  #18 = Utf8               SourceFile
+  #19 = Utf8               While-gen.java
+{
+  int n;
+    descriptor: I
+    flags: (0x0000)
+
+  While();
+    descriptor: ()V
+    flags: (0x0000)
+    Code:
+      stack=2, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: iconst_2
+         6: putfield      #7                  // Field n:I
+         9: return
+      LineNumberTable:
+        line 1: 0
+        line 2: 4
+
+  int f(int);
+    descriptor: (I)I
+    flags: (0x0000)
+    Code:
+      stack=2, locals=4, args_size=2
+         0: iconst_0
+         1: istore_2
+         2: aload_0
+         3: getfield      #7                  // Field n:I
+         6: istore_3
+         7: iload_2
+         8: iload_1
+         9: if_icmpge     23
+        12: iload_3
+        13: iload_3
+        14: imul
+        15: istore_3
+        16: iload_2
+        17: iconst_1
+        18: iadd
+        19: istore_2
+        20: goto          7
+        23: iload_3
+        24: ireturn
+      LineNumberTable:
+        line 5: 0
+        line 7: 2
+        line 8: 7
+        line 9: 12
+        line 10: 16
+        line 12: 23
+      StackMapTable: number_of_entries = 2
+        frame_type = 253 /* append */
+          offset_delta = 7
+          locals = [ int, int ]
+        frame_type = 15 /* same */
+}
+SourceFile: "While-gen.java"

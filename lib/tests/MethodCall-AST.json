@@ -1,23 +1,76 @@
 {
-	"name": "LocalVarDecl",
-	"fields": [],
-	"methods": [
-		{
-			"retType": "int",
-			"name": "f",
-			"params": [],
-			"body": {
-				"Block": [
-					{
-						"type": "int",
-						"name": "x",
-						"val": 69
-					},
-					{
-						"LocalOrFieldVar": "x"
-					}
-				]
-			}
-		}
-	]
+  "name": "MethodCall",
+  "fields": [],
+  "methods": [
+    {
+      "ret_type": "String",
+      "name": "world",
+      "params": [],
+      "body": {
+        "Block": [
+          {
+            "Return": {
+              "String": "World"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "ret_type": "String",
+      "name": "hello",
+      "params": [],
+      "body": {
+        "Block": [
+          {
+            "Return": {
+              "String": "Hello"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "ret_type": "String",
+      "name": "f",
+      "params": [],
+      "body": {
+        "Block": [
+          {
+            "Return": {
+              "Binary": [
+                "+",
+                {
+                  "StmtExprExpr": {
+                    "MethodCall": [
+                      "This",
+                      "hello",
+                      []
+                    ]
+                  }
+                },
+                {
+                  "Binary": [
+                    "+",
+                    {
+                      "String": " "
+                    },
+                    {
+                      "StmtExprExpr": {
+                        "MethodCall": [
+                          "This",
+                          "world",
+                          []
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
 }

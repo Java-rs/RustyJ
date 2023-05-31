@@ -1,28 +1,161 @@
 {
-	"name": "LocalVarDecl",
-	"fields": [],
-	"methods": [
-		{
-			"retType": "int",
-			"name": "f",
-			"params": [],
-			"body": {
-				"Block": [
-					{
-						"type": "int",
-						"name": "x",
-						"val": 69
-					},
-					{
-						"TypedExpr": {
-							"expr": {
-								"val": "x"
-							},
-							"type": "int"
-						}
-					}
-				]
-			}
-		}
-	]
+  "name": "MethodCall",
+  "fields": [],
+  "methods": [
+    {
+      "ret_type": "String",
+      "name": "world",
+      "params": [],
+      "body": {
+        "TypedStmt": [
+          {
+            "Block": [
+              {
+                "TypedStmt": [
+                  {
+                    "Return": {
+                      "TypedExpr": [
+                        {
+                          "String": "World"
+                        },
+                        "String"
+                      ]
+                    }
+                  },
+                  "String"
+                ]
+              }
+            ]
+          },
+          "String"
+        ]
+      }
+    },
+    {
+      "ret_type": "String",
+      "name": "hello",
+      "params": [],
+      "body": {
+        "TypedStmt": [
+          {
+            "Block": [
+              {
+                "TypedStmt": [
+                  {
+                    "Return": {
+                      "TypedExpr": [
+                        {
+                          "String": "Hello"
+                        },
+                        "String"
+                      ]
+                    }
+                  },
+                  "String"
+                ]
+              }
+            ]
+          },
+          "String"
+        ]
+      }
+    },
+    {
+      "ret_type": "String",
+      "name": "f",
+      "params": [],
+      "body": {
+        "TypedStmt": [
+          {
+            "Block": [
+              {
+                "TypedStmt": [
+                  {
+                    "Return": {
+                      "TypedExpr": [
+                        {
+                          "Binary": [
+                            "+",
+                            {
+                              "TypedExpr": [
+                                {
+                                  "StmtExprExpr": {
+                                    "TypedStmtExpr": [
+                                      {
+                                        "MethodCall": [
+                                          {
+                                            "TypedExpr": [
+                                              "This",
+                                              "String"
+                                            ]
+                                          },
+                                          "hello",
+                                          []
+                                        ]
+                                      },
+                                      "String"
+                                    ]
+                                  }
+                                },
+                                "String"
+                              ]
+                            },
+                            {
+                              "TypedExpr": [
+                                {
+                                  "Binary": [
+                                    "+",
+                                    {
+                                      "TypedExpr": [
+                                        {
+                                          "String": " "
+                                        },
+                                        "String"
+                                      ]
+                                    },
+                                    {
+                                      "TypedExpr": [
+                                        {
+                                          "StmtExprExpr": {
+                                            "TypedStmtExpr": [
+                                              {
+                                                "MethodCall": [
+                                                  {
+                                                    "TypedExpr": [
+                                                      "This",
+                                                      "String"
+                                                    ]
+                                                  },
+                                                  "world",
+                                                  []
+                                                ]
+                                              },
+                                              "String"
+                                            ]
+                                          }
+                                        },
+                                        "String"
+                                      ]
+                                    }
+                                  ]
+                                },
+                                "String"
+                              ]
+                            }
+                          ]
+                        },
+                        "String"
+                      ]
+                    }
+                  },
+                  "String"
+                ]
+              }
+            ]
+          },
+          "String"
+        ]
+      }
+    }
+  ]
 }

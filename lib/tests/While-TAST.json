@@ -1,100 +1,248 @@
 {
-	"name": "While",
-	"fields": [
-		{
-			"type": "int",
-			"name": "n",
-			"val": {
-				"Int": 2
-			}
-		}
-	],
-	"methods": [
-		{
-			"retType": "int",
-			"name": "f",
-			"params": [
-				[
-					"int",
-					"x"
-				]
-			],
-			"body": {
-				"Block": [
-					{
-						"type": "int",
-						"name": "i",
-						"val": {
-							"Int": 0
-						}
-					},
-					{
-						"type": "int",
-						"name": "a",
-						"val": {
-							"LocalOrFieldVar": "n"
-						}
-					},
-					{
-						"cond": {
-							"expr": {
-								"op": "LessThan",
-								"left": {
-									"val": "i"
-								},
-								"right": {
-									"val": "x"
-								}
-							},
-							"type": "boolean"
-						},
-						"body": [
-							{
-								"var": {
-									"val": "a"
-								},
-								"val": {
-									"expr": {
-										"op": "Mul",
-										"left": {
-											"val": "a"
-										},
-										"right": {
-											"val": "a"
-										}
-									},
-									"type": "int"
-								}
-							},
-							{
-								"var": {
-									"val": "i"
-								},
-								"val": {
-									"expr": {
-										"op": "Add",
-										"left": {
-											"val": "i"
-										},
-										"right": {
-											"val": 1
-										}
-									},
-									"type": "int"
-								}
-							}
-						]
-					},
-					{
-						"TypedExpr": {
-							"expr": {
-								"val": "a"
-							},
-							"type": "int"
-						}
-					}
-				]
-			}
-		}
-	]
+  "name": "While",
+  "fields": [
+    {
+      "field_type": "Int",
+      "name": "n",
+      "val": "2"
+    }
+  ],
+  "methods": [
+    {
+      "ret_type": "Int",
+      "name": "f",
+      "params": [
+        [
+          "Int",
+          "x"
+        ]
+      ],
+      "body": {
+        "TypedStmt": [
+          {
+            "Block": [
+              {
+                "TypedStmt": [
+                  {
+                    "LocalVarDecl": [
+                      "Int",
+                      "i"
+                    ]
+                  },
+                  "Void"
+                ]
+              },
+              {
+                "TypedStmt": [
+                  {
+                    "StmtExprStmt": {
+                      "TypedStmtExpr": [
+                        {
+                          "Assign": [
+                            "i",
+                            {
+                              "TypedExpr": [
+                                {
+                                  "Integer": 0
+                                },
+                                "Int"
+                              ]
+                            }
+                          ]
+                        },
+                        "Int"
+                      ]
+                    }
+                  },
+                  "Int"
+                ]
+              },
+              {
+                "TypedStmt": [
+                  {
+                    "LocalVarDecl": [
+                      "Int",
+                      "a"
+                    ]
+                  },
+                  "Void"
+                ]
+              },
+              {
+                "TypedStmt": [
+                  {
+                    "StmtExprStmt": {
+                      "TypedStmtExpr": [
+                        {
+                          "Assign": [
+                            "a",
+                            {
+                              "TypedExpr": [
+                                {
+                                  "LocalOrFieldVar": "n"
+                                },
+                                "Int"
+                              ]
+                            }
+                          ]
+                        },
+                        "Int"
+                      ]
+                    }
+                  },
+                  "Int"
+                ]
+              },
+              {
+                "TypedStmt": [
+                  {
+                    "While": [
+                      {
+                        "TypedExpr": [
+                          {
+                            "Binary": [
+                              "<",
+                              {
+                                "TypedExpr": [
+                                  {
+                                    "LocalOrFieldVar": "i"
+                                  },
+                                  "Int"
+                                ]
+                              },
+                              {
+                                "TypedExpr": [
+                                  {
+                                    "LocalOrFieldVar": "x"
+                                  },
+                                  "Int"
+                                ]
+                              }
+                            ]
+                          },
+                          "Bool"
+                        ]
+                      },
+                      {
+                        "TypedStmt": [
+                          {
+                            "Block": [
+                              {
+                                "TypedStmt": [
+                                  {
+                                    "StmtExprStmt": {
+                                      "TypedStmtExpr": [
+                                        {
+                                          "Assign": [
+                                            "a",
+                                            {
+                                              "TypedExpr": [
+                                                {
+                                                  "Binary": [
+                                                    "*",
+                                                    {
+                                                      "TypedExpr": [
+                                                        {
+                                                          "LocalOrFieldVar": "a"
+                                                        },
+                                                        "Int"
+                                                      ]
+                                                    },
+                                                    {
+                                                      "TypedExpr": [
+                                                        {
+                                                          "LocalOrFieldVar": "a"
+                                                        },
+                                                        "Int"
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                "Int"
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        "Int"
+                                      ]
+                                    }
+                                  },
+                                  "Int"
+                                ]
+                              },
+                              {
+                                "TypedStmt": [
+                                  {
+                                    "StmtExprStmt": {
+                                      "TypedStmtExpr": [
+                                        {
+                                          "Assign": [
+                                            "i",
+                                            {
+                                              "TypedExpr": [
+                                                {
+                                                  "Binary": [
+                                                    "+",
+                                                    {
+                                                      "TypedExpr": [
+                                                        {
+                                                          "LocalOrFieldVar": "i"
+                                                        },
+                                                        "Int"
+                                                      ]
+                                                    },
+                                                    {
+                                                      "TypedExpr": [
+                                                        {
+                                                          "Integer": 1
+                                                        },
+                                                        "Int"
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                "Int"
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        "Int"
+                                      ]
+                                    }
+                                  },
+                                  "Int"
+                                ]
+                              }
+                            ]
+                          },
+                          "Int"
+                        ]
+                      }
+                    ]
+                  },
+                  "Int"
+                ]
+              },
+              {
+                "TypedStmt": [
+                  {
+                    "Return": {
+                      "TypedExpr": [
+                        {
+                          "LocalOrFieldVar": "a"
+                        },
+                        "Int"
+                      ]
+                    }
+                  },
+                  "Int"
+                ]
+              }
+            ]
+          },
+          "Int"
+        ]
+      }
+    }
+  ]
 }
