@@ -198,4 +198,18 @@ impl Display for Type {
     }
 }
 
+impl Type {
+    pub fn to_ir_string(&self) -> &str {
+        match self {
+            Type::Int => "I",
+            Type::Char => "C",
+            Type::Bool => "Z",
+            Type::String => "Ljava/lang/String;",
+            // TODO: Either the class has the formatting `L<class>;' or we have to add it here.
+            Type::Class(name) => name,
+            _ => panic!("Invalid type: {}", self),
+        }
+    }
+}
+
 pub type Prg = Vec<Class>;

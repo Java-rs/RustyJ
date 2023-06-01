@@ -111,11 +111,11 @@ fn generate_class(class: &Class, dir: &DIR) -> IRClass {
     }
     ir_class
 }
-
+/// If this method is used the caller has to still set a NameAndType constant and a FieldRef
+/// constant, which is technically optional if the field is not used but we're lazy
 fn generate_field(field: &FieldDecl, constant_pool: &mut ConstantPool) -> IRFieldDecl {
     let name_index = constant_pool.add(Constant::Utf8(field.name.clone()));
-    // FIXME: The type is wrong. This will yield int, char etc. instead of I, C etc.
-    let type_index = constant_pool.add(Constant::Utf8(field.field_type.clone().to_string()));
+    let type_index = constant_pool.add(Constant::Utf8(field.field_type.clone().to_ir_string()));
     IRFieldDecl::new(type_index, name_index)
 }
 
