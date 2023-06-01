@@ -153,6 +153,8 @@ fn generate_method(method: &MethodDecl, dir: &DIR) -> CompiledMethod {
     compiled_method
 }
 
+struct LocalVarPool(Vec<(String, u8)>);
+
 fn generate_code_stmt(stmt: Stmt, dir: &DIR) -> Vec<Instruction> {
     let mut result = vec![];
     match stmt {
@@ -174,8 +176,13 @@ fn generate_code_stmt(stmt: Stmt, dir: &DIR) -> Vec<Instruction> {
             }
         }
         Stmt::While(expr, stmt) => {
-            // Generate bytecode for while
-            // TODO: Bene
+            // TODO: Test, Bene
+            result.append(generate_code_expr(expr));
+            // Generate bytecode for our body
+            let body = generate_code_stmt(stmt, dir);
+            result.push(Instruction::reljumpifeq(body.len() as i16));
+            result.append(&mut body);
+            result.push(Instruction::reljumpifeq(-(body.len() as i16)));
         }
         Stmt::LocalVarDecl(types, name) => {
             match types {
