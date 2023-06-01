@@ -236,9 +236,10 @@ fn generate_code_stmt(stmt: Stmt, dir: &DIR) -> Vec<Instruction> {
             // Generate bytecode for stmt expr
             // TODO: Mary
         }
-        Stmt::TypedStmt(stmt, types) => {
+        Stmt::TypedStmt(stmt, _types) => {
             // Generate bytecode for typed stmt
-            // TODO: Bene
+            // TODO: Check whether we can actually generate the same code as a normal stmt
+            result.append(generate_code_stmt(stmt, dir));
         }
     }
     return result;
