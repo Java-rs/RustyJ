@@ -83,13 +83,17 @@ pub(crate) enum Constant {
     NameAndType(String),
     Utf8(String),
 }
+
+/// The instructions for the JVM
+/// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.areturn
 pub(crate) enum Instruction {
-    aload(u8), //Load reference from local variable
-    iload(u8), //Load int from local variable
-    ifeq(u16), //Branch if int is 0
-    ireturn,   //return int, char, boolean
-    r#return,  //return void
-    areturn,   //return object(string, integer, null)
+    aload(u8),        //Load reference from local variable
+    iload(u8),        //Load int from local variable
+    ifeq(u16),        //Branch if int is 0
+    ireturn,          //return int, char, boolean
+    r#return,         //return void
+    areturn,          //return object(string, integer, null)
+    reljumpifeq(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
 }
 
 pub fn generate_dir(ast: &Prg) -> DIR {
@@ -166,11 +170,19 @@ fn generate_code_stmt(stmt: Stmt, dir: &DIR) -> Vec<Instruction> {
         }
         Stmt::If(expr, stmt1, stmt2) => {
             // Generate bytecode for if
-            // TODO: Bene
+            // TODO: Bene, testing
             // Evaluate the expression
             result.append(generate_code_expr(expr));
+            // We set a label to jump to if the expression is false
+            let if_stmt = generate_code_stmt(stmt1, dir);
             // If the expression is false, jump to the else block
-            // We need some way to get the size of the if block or mark the start of the else block
+            result.push(Instruction::reljumpifeq(if_stmt.len() as i16));
+            // If the expression is true, execute the if block
+            result.append(if_stmt);
+            // If there is an else block, execute it
+            if let Some(stmt) = stmt2 {
+                result.append(generate_code_stmt(stmt, dir));
+            }
         }
         Stmt::StmtExprStmt(stmt_expr) => {
             // Generate bytecode for stmt expr
