@@ -6,106 +6,74 @@ List = {(Name~"\n")+}
 
 IDENTIFIER ={(ASCII_ALPHA|"_")~(ASCII_ALPHANUMERIC|"_")* }
 
-compilationunit = {typedeclarations+ }
-
-typedeclarations = {typedeclaration }
+compilationunit = {classdeclaration+ }
 
 name    ={IDENTIFIER ~("."~IDENTIFIER)*}
 
-typedeclaration  = {classdeclaration }
+classdeclaration = {"class"~IDENTIFIER~classbody}
 
-classdeclaration = {"class"~IDENTIFIER~classbody
-                 | modifiers~"class"~IDENTIFIER~classbody}
+classbody        = {"{"~classbodydeclaration*~"}" }
 
-classbody        = {"{"~"}"
-		 | "{"~classbodydeclarations~"}" }
-
-modifiers        ={ modifier+}
-
-
-classbodydeclarations =  {classbodydeclaration+}
-
-modifier         = {"public"
-		 | "protected"
-                 | "private"
-                 | "static"
-                 | "abstract" }
-
-classtype        = {classorinterfacetype}
 
 classbodydeclaration = {classmemberdeclaration
 		 | constructordeclaration }
 
-classorinterfacetype = {name}
-
 classmemberdeclaration = {fielddeclaration
 		 | methoddeclaration }
 
-constructordeclaration = {constructordeclarator~constructorbody
-		 |  modifiers~constructordeclarator~constructorbody }
+constructordeclaration = {constructordeclarator~constructorbody}
 
-fielddeclaration = {typeJ~variabledeclarators~";"
- 		 | modifiers~typeJ~variabledeclarators~";"}
+fielddeclaration = {typeJ~variabledeclarators~";"}
 
 methoddeclaration = {methodheader~methodbody }
 
 block            = {"{"~"}"
-                 		 | "{"~blockstatements~"}" }
+                 		 | "{"~blockstatement+~"}" }
 
 constructordeclarator = { IDENTIFIER~"()"
 		 |  IDENTIFIER~"("~formalparameterlist~")"  }
 
 constructorbody	 ={ "{"~"}"
 		|"{"~explicitconstructorinvocation~"}"
-		|"{"~blockstatements~"}"
-		|"{"~explicitconstructorinvocation~blockstatements~"}"}
+		|"{"~blockstatement+~"}"
+		|"{"~explicitconstructorinvocation~blockstatement+~"}"}
 
 methodheader	 ={ typeJ~methoddeclarator
-		 | modifiers~typeJ~methoddeclarator
-		 | "void"~methoddeclarator
-		 | modifiers~"void"~methoddeclarator }
+		 | "void"~methoddeclarator }
 
-typeJ             = {primitivetype
-		 | referencetype }
+typeJ  = {primitivetype
+		 | name}
 
 variabledeclarators ={ variabledeclarator~(","~variabledeclarator)* }
 
 methodbody       = {block
 		 | ";" }
 
-blockstatements  = {blockstatement+}
+blockstatement	 ={ localvariabledeclarationstatement
+		 | statement  }
 
 formalparameterlist = {formalparameter~(","~formalparameter)*}
 
 explicitconstructorinvocation = {"this"~"("~")"~";"
 		 | "this"~"("~argumentlist~")"~";"}
 
-classtypelist    ={ classtype~(","~classtype)*}
-
 methoddeclarator ={ IDENTIFIER~"("~")"
 		 | IDENTIFIER~"("~formalparameterlist~")"  }
 
-primitivetype    = {"boolen"
-		 | numerictype }
+primitivetype    = {"boolean"
+		        | "int"
+                | "char"
+                |"String"}
 
-referencetype    = {classorinterfacetype }
+
+variabledeclarator ={ IDENTIFIER
+		 | IDENTIFIER~"="~expression }
 
 
-variabledeclarator ={ variabledeclaratorid
-		 | variabledeclaratorid~"="~variableinitializer }
-
-blockstatement	 ={ localvariabledeclarationstatement
-		 | statement  }
-
-formalparameter  = {typeJ~variabledeclaratorid }
+formalparameter  = {typeJ~IDENTIFIER }
 
 argumentlist     = {expression~(","~expression)*}
 
-numerictype      ={ integraltype }
-
-variabledeclaratorid = {IDENTIFIER }
-
-variableinitializer  ={ expression }
 
 localvariabledeclarationstatement = {localvariabledeclaration~";"  }
 
@@ -113,12 +81,6 @@ statement        = {statementwithouttrailingsubstatement
 		 | ifthenstatement
 		 | ifthenelsestatement
 		 | whilestatement }
-
-
-expression       = {assignmentexpression }
-
-integraltype     ={ "int"
-                 | "char" }
 
 localvariabledeclaration ={ typeJ~variabledeclarators }
 
@@ -133,7 +95,7 @@ ifthenelsestatement = {"if"~"("~expression~")"~statementnoshortif~"else"~stateme
 
 whilestatement   = {"while"~"("~expression~")"~statement }
 
-assignmentexpression = {conditionalexpression
+expression = {conditionalexpression
 		 |  assignment}
 
 emptystatement	 =  {";"  }
@@ -150,7 +112,7 @@ statementnoshortif = {statementwithouttrailingsubstatement
 conditionalexpression = {conditionalorexpression
 		 | conditionalorexpression~"?"~expression~":"~conditionalexpression }
 
-assignment       ={lefthandside~assignmentoperator~assignmentexpression }
+assignment       ={lefthandside~assignmentoperator~expression }
 
 
 statementexpression = {assignment
@@ -187,19 +149,11 @@ predecrementexpression = {"--"~unaryexpression }
 
 methodinvocation= {
 (name|fieldaccess)~"("~argumentlist?~")" }
-/*
-methodinvocation = {name~"("~")"
-		 | name~"("~argumentlist~")"
-		 | primary~"."~IDENTIFIER~"("~")"
-		 | primary~"."~IDENTIFIER~"("~argumentlist~")"  }
-*/
 
-classinstancecreationexpression ={ "new"~classtype~"("~")"
-                 | "new"~classtype~"("~argumentlist~")"  }
+classinstancecreationexpression ={ "new"~name~"("~")"
+                 | "new"~name~"("~argumentlist~")"  }
 
 conditionalandexpression ={ inclusiveorexpression }
-
-//fieldaccess      = {primary~"."~IDENTIFIER }
 
 fieldaccess ={(literal
 		 | "this"
@@ -260,7 +214,7 @@ equalityexpression = {relationalexpression~(("!=" |"==")~relationalexpression)*}
 
 
 relationalexpression = {
-shiftexpression~"instanceof"~referencetype
+shiftexpression~"instanceof"~name
 |shiftexpression~(("<"|">"|"<="|">=")~shiftexpression)*
  }
 
