@@ -69,6 +69,7 @@ impl IRFieldDecl {
         }
     }
 }
+struct LocalVarPool(Vec<(String, u8)>);
 
 pub(crate) struct CompiledMethod {
     pub(crate) name: String,
@@ -93,19 +94,9 @@ pub(crate) enum Instruction {
     ireturn,          //return int, char, boolean
     r#return,         //return void
     areturn,          //return object(string, integer, null)
-    iload_1,          //Load int from local variable 1
-    iload_2,          //Load int from local variable 2
-    iload_3,          //Load int from local variable 3
-    aload_1,          //Load reference from local variable 1
-    aload_2,          //Load reference from local variable 2
-    aload_3,          //Load reference from local variable 3
     bipush(u8),       //Push byte onto stack
-    istore_1,         //Store int into local variable 1
-    istore_2,         //Store int into local variable 2
-    istore_3,         //Store int into local variable 3
-    astore_1,         //Store reference into local variable 1
-    astore_2,         //Store reference into local variable 2
-    astore_3,         //Store reference into local variable 3
+    istore(u8),       //Store int into local variable
+    astore(u8),       //Store reference into local variable
     reljumpifeq(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
 }
 
@@ -140,22 +131,29 @@ fn generate_field(field: &FieldDecl, constant_pool: &mut ConstantPool) -> IRFiel
 
 // TODO: Parallelize this, since methods are not dependent on each other(hopefully)
 fn generate_method(method: &MethodDecl, dir: &DIR) -> CompiledMethod {
+    let mut local_var_pool = LocalVarPool(vec![]);
     let mut compiled_method = CompiledMethod {
         name: method.name.clone(),
         max_stack: 0,
         code: vec![],
     };
 
-    compiled_method
-        .code
-        .append(&mut generate_code_stmt(method.body.clone(), dir));
+    compiled_method.code.append(&mut generate_code_stmt(
+        method.body.clone(),
+        dir,
+        &mut local_var_pool,
+    ));
 
     compiled_method
 }
 
 struct LocalVarPool(Vec<(String, u8)>);
 
-fn generate_code_stmt(stmt: Stmt, dir: &DIR) -> Vec<Instruction> {
+fn generate_code_stmt(
+    stmt: Stmt,
+    dir: &DIR,
+    local_var_pool: &mut LocalVarPool,
+) -> Vec<Instruction> {
     let mut result = vec![];
     match stmt {
         Stmt::Block(stmts) => result.append(
@@ -164,17 +162,14 @@ fn generate_code_stmt(stmt: Stmt, dir: &DIR) -> Vec<Instruction> {
                 .map(|stmt| generate_code_stmt(stmt.clone(), dir))
                 .collect(),
         ),
-        Stmt::Return(expr) => {
-            match expr {
-                //TODO: Fix numbers so its not zero
-                Integer => result.push(Instruction::ireturn),
-                Boolean => result.push(Instruction::ireturn),
-                Char => result.push(Instruction::ireturn),
-                String => result.push(Instruction::areturn),
-                Jnull => result.push(Instruction::areturn),
-                _ => panic!("Invalid return type"),
-            }
-        }
+        Stmt::Return(expr) => match expr {
+            Integer => result.push(Instruction::ireturn),
+            Boolean => result.push(Instruction::ireturn),
+            Char => result.push(Instruction::ireturn),
+            String => result.push(Instruction::areturn),
+            Jnull => result.push(Instruction::areturn),
+            _ => panic!("Invalid return type"),
+        },
         Stmt::While(expr, stmt) => {
             // TODO: Test, Bene
             result.append(generate_code_expr(expr));
@@ -185,36 +180,37 @@ fn generate_code_stmt(stmt: Stmt, dir: &DIR) -> Vec<Instruction> {
             result.push(Instruction::reljumpifeq(-(body.len() as i16)));
         }
         Stmt::LocalVarDecl(types, name) => {
+            index = local_var_pool.0.len() + 1;
+            //TODO: fix bipush to "store" the value of the variable
             match types {
                 Int => result.append(&mut vec![
-                    Instruction::bipush(0),
-                    Instruction::istore_1,
-                    Instruction::iload_1,
+                    Instruction::bipush(index),
+                    Instruction::istore(index),
+                    Instruction::iload(index),
                 ]),
                 Boolean => result.append(&mut vec![
-                    Instruction::bipush(0),
-                    Instruction::istore_1,
-                    Instruction::iload_1,
+                    Instruction::bipush(index),
+                    Instruction::istore(index),
+                    Instruction::iload(index),
                 ]),
                 Char => result.append(&mut vec![
-                    Instruction::bipush(0),
-                    Instruction::istore_1,
-                    Instruction::iload_1,
+                    Instruction::bipush(index),
+                    Instruction::istore(index),
+                    Instruction::iload(index),
                 ]),
                 String => result.append(&mut vec![
-                    Instruction::bipush(0),
-                    Instruction::astore_1,
-                    Instruction::aload_1,
+                    Instruction::bipush(index),
+                    Instruction::astore(index),
+                    Instruction::aload(index),
                 ]),
                 Null => result.append(&mut vec![
-                    Instruction::bipush(0),
-                    Instruction::astore_1,
-                    Instruction::aload_1,
+                    Instruction::bipush(index),
+                    Instruction::astore(index),
+                    Instruction::aload(index),
                 ]),
                 _ => panic!("Invalid return type"),
             }
-            // Generate bytecode for local var decl
-            // TODO: Mary
+            local_var_pool.0.push((name, index));
         }
         Stmt::If(expr, stmt1, stmt2) => {
             // Generate bytecode for if
@@ -233,19 +229,18 @@ fn generate_code_stmt(stmt: Stmt, dir: &DIR) -> Vec<Instruction> {
             }
         }
         Stmt::StmtExprStmt(stmt_expr) => {
-            // Generate bytecode for stmt expr
-            // TODO: Mary
+            result.append(generate_code_stmt_expr(stmt_expr));
         }
         Stmt::TypedStmt(stmt, _types) => {
             // Generate bytecode for typed stmt
             // TODO: Check whether we can actually generate the same code as a normal stmt
-            result.append(generate_code_stmt(stmt, dir));
+            result.append(generate_code_stmt(stmt));
         }
     }
     return result;
 }
 
-fn generate_code_stmt_expr(stmt_expr: &StmtExpr, code: &mut Vec<u8>) {
+fn generate_code_stmt_expr(stmt_expr: &StmtExpr) -> Vec<u8> {
     match stmt_expr {
         StmtExpr::Assign(name, expr) => {
             // Generate bytecode for assignment
@@ -260,6 +255,7 @@ fn generate_code_stmt_expr(stmt_expr: &StmtExpr, code: &mut Vec<u8>) {
             // Generate bytecode for typed stmt expr
         }
     }
+    vec![]
 }
 
 fn generate_code_expr(expr: &Expr) -> Vec<u8> {
