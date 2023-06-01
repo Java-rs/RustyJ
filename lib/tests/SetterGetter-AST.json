@@ -1,0 +1,179 @@
+{
+	"name": "SetterGetter",
+	"fields": [
+		{
+			"type": "int",
+			"name": "x",
+			"val": null
+		},
+		{
+			"type": "boolean",
+			"name": "b",
+			"val": null
+		},
+		{
+			"type": "char",
+			"name": "c",
+			"val": null
+		},
+		{
+			"type": "String",
+			"name": "s",
+			"val": null
+		}
+	],
+	"methods": [
+		{
+			"retType": "int",
+			"name": "getX",
+			"params": [],
+			"body": {
+				"Block": [
+					{
+						"InstVar": {
+							"obj": "This",
+							"field": "x"
+						}
+					}
+				]
+			}
+		},
+		{
+			"retType": "void",
+			"name": "setX",
+			"params": [
+				[
+					"int",
+					"x"
+				]
+			],
+			"body": {
+				"Block": [
+					{
+						"var": {
+							"obj": "This",
+							"field": "x"
+						},
+						"expr": {
+							"val": "x"
+						}
+					}
+				]
+			}
+		},
+		{
+			"retType": "boolean",
+			"name": "getB",
+			"params": [],
+			"body": {
+				"Block": [
+					{
+						"InstVar": {
+							"obj": "This",
+							"field": "b"
+						}
+					}
+				]
+			}
+		},
+		{
+			"retType": "void",
+			"name": "setB",
+			"params": [
+				[
+					"boolean",
+					"b"
+				]
+			],
+			"body": {
+				"Block": [
+					{
+						"var": {
+							"obj": "This",
+							"field": "b"
+						},
+						"expr": {
+							"val": "b"
+						}
+					}
+				]
+			}
+		},
+		{
+			"retType": "char",
+			"name": "getC",
+			"params": [],
+			"body": {
+				"Block": [
+					{
+						"InstVar": {
+							"obj": "This",
+							"field": "c"
+						}
+					}
+				]
+			}
+		},
+		{
+			"retType": "void",
+			"name": "setC",
+			"params": [
+				[
+					"char",
+					"c"
+				]
+			],
+			"body": {
+				"Block": [
+					{
+						"var": {
+							"obj": "This",
+							"field": "c"
+						},
+						"expr": {
+							"val": "c"
+						}
+					}
+				]
+			}
+		},
+		{
+			"retType": "String",
+			"name": "getS",
+			"params": [],
+			"body": {
+				"Block": [
+					{
+						"InstVar": {
+							"obj": "This",
+							"field": "s"
+						}
+					}
+				]
+			}
+		},
+		{
+			"retType": "void",
+			"name": "setS",
+			"params": [
+				[
+					"String",
+					"s"
+				]
+			],
+			"body": {
+				"Block": [
+					{
+						"var": {
+							"obj": "This",
+							"field": "s"
+						},
+						"expr": {
+							"val": "s"
+						}
+					}
+				]
+			}
+		}
+	]
+}

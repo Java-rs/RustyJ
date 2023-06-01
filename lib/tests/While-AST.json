@@ -1,0 +1,86 @@
+{
+	"name": "While",
+	"fields": [
+		{
+			"type": "int",
+			"name": "n",
+			"val": {
+				"Int": 2
+			}
+		}
+	],
+	"methods": [
+		{
+			"retType": "int",
+			"name": "f",
+			"params": [
+				[
+					"int",
+					"x"
+				]
+			],
+			"body": {
+				"Block": [
+					{
+						"type": "int",
+						"name": "i",
+						"val": {
+							"Int": 0
+						}
+					},
+					{
+						"type": "int",
+						"name": "a",
+						"val": {
+							"LocalOrFieldVar": "n"
+						}
+					},
+					{
+						"cond": {
+							"op": "LessThan",
+							"left": {
+								"val": "i"
+							},
+							"right": {
+								"val": "x"
+							}
+						},
+						"body": [
+							{
+								"var": {
+									"val": "a"
+								},
+								"val": {
+									"op": "Mul",
+									"left": {
+										"val": "a"
+									},
+									"right": {
+										"val": "a"
+									}
+								}
+							},
+							{
+								"var": {
+									"val": "i"
+								},
+								"val": {
+									"op": "Add",
+									"left": {
+										"val": "i"
+									},
+									"right": {
+										"val": 3
+									}
+								}
+							}
+						]
+					},
+					{
+						"LocalOrFieldVar": "a"
+					}
+				]
+			}
+		}
+	]
+}

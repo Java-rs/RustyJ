@@ -1,7 +1,10 @@
+mod codegen;
+#[cfg(test)]
+mod tests;
+pub mod typechecker;
+pub mod types;
+
 use tracing::info;
-pub mod codegen;
-mod typechecker;
-mod types;
 
 pub fn hi() {
     info!("Hello from our library!");

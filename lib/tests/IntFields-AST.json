@@ -1,0 +1,16 @@
+{
+	"name": "IntFields",
+	"fields": [
+		{
+			"type": "int",
+			"name": "x",
+			"val": null
+		},
+		{
+			"type": "int",
+			"name": "y",
+			"val": null
+		}
+	],
+	"methods": []
+}
