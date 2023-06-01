@@ -1,0 +1,40 @@
+{
+	"name": "StrAdd",
+	"fields": [
+		{
+			"type": "String",
+			"name": "hello",
+			"val": {
+				"val": "Hi"
+			}
+		}
+	],
+	"methods": [
+		{
+			"retType": "String",
+			"name": "helloWorld",
+			"params": [],
+			"body": {
+				"Block": [
+					{
+						"TypedExpr": {
+							"expr": {
+								"op": "Add",
+								"left": {
+									"expr": {
+										"val": "hello"
+									},
+									"type": "String"
+								},
+								"right": {
+									"val": "World"
+								}
+							},
+							"type": "String"
+						}
+					}
+				]
+			}
+		}
+	]
+}

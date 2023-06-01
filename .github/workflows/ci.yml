@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  merge_group:
   push:
     branches: [main, dev]
   pull_request:
@@ -78,5 +79,5 @@ jobs:
           override: true
           components: clippy
 
-      - name: Run cargo clippy --package rusty-j --all-targets
-        run: cargo clippy --package rusty-j --all-targets
+      - name: Run cargo clippy --package rusty_J --all-targets
+        run: cargo clippy --package rusty_j --all-targets
