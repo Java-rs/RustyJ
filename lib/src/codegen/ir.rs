@@ -136,24 +136,32 @@ fn generate_method(method: &MethodDecl, dir: &DIR) -> CompiledMethod {
 
 fn generate_code_stmt(stmt: Stmt, dir: &DIR) -> Vec<Instruction> {
     match stmt {
-        Stmt::Block(stmts) => {}
+        Stmt::Block(stmts) => {
+            // TODO: Bene
+        }
         Stmt::Return(expr) => {
             // Generate bytecode for return
+            // TODO: Mary
         }
         Stmt::While(expr, stmt) => {
             // Generate bytecode for while
+            // TODO: Bene
         }
         Stmt::LocalVarDecl(types, name) => {
             // Generate bytecode for local var decl
+            // TODO: Mary
         }
         Stmt::If(expr, stmt1, stmt2) => {
             // Generate bytecode for if
+            // TODO: Bene
         }
         Stmt::StmtExprStmt(stmt_expr) => {
             // Generate bytecode for stmt expr
+            // TODO: Mary
         }
         Stmt::TypedStmt(stmt, types) => {
             // Generate bytecode for typed stmt
+            // TODO: Bene
         }
     }
     vec![]
@@ -180,9 +188,6 @@ fn generate_code_expr(expr: &Expr, code: &mut Vec<u8>) {
     match expr {
         Expr::This => {
             // Generate bytecode for this
-        }
-        Expr::Super => {
-            // Generate bytecode for super
         }
         Expr::LocalOrFieldVar(name) => {
             // Generate bytecode for local or field var
@@ -218,6 +223,9 @@ fn generate_code_expr(expr: &Expr, code: &mut Vec<u8>) {
         Expr::TypedExpr(expr, types) => {
             // Generate bytecode for typed expr
         }
+        Expr::LocalVar(expr, name) => {
+            // Generate bytecode for local var
+        }
     }
 }
 fn generate_code_type(types: &Type, code: &mut Vec<u8>) {
@@ -233,6 +241,15 @@ fn generate_code_type(types: &Type, code: &mut Vec<u8>) {
         }
         Type::String => {
             // Generate bytecode for string
+        }
+        Type::Void => {
+            // Generate bytecode for void
+        }
+        Type::Null => {
+            // Generate bytecode for null
+        }
+        Type::Class(name) => {
+            // Generate bytecode for class
         }
     }
 }
