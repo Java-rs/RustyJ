@@ -84,10 +84,12 @@ pub(crate) enum Constant {
     Utf8(String),
 }
 pub(crate) enum Instruction {
-    aload(u8),
-    iload(u8),
-    ifeq(u16),
-    Return,
+    aload(u8), //Load reference from local variable
+    iload(u8), //Load int from local variable
+    ifeq(u16), //Branch if int is 0
+    ireturn,   //return int, char, boolean
+    r#return,  //return void
+    areturn,   //return object(string, integer, null)
 }
 
 pub fn generate_dir(ast: &Prg) -> DIR {
@@ -144,8 +146,15 @@ fn generate_code_stmt(stmt: Stmt, dir: &DIR) -> Vec<Instruction> {
                 .collect(),
         ),
         Stmt::Return(expr) => {
-            // Generate bytecode for return
-            // TODO: Mary
+            match expr {
+                //TODO: Fix numbers so its not zero
+                Integer => result.push(Instruction::ireturn),
+                Boolean => result.push(Instruction::ireturn),
+                Char => result.push(Instruction::ireturn),
+                String => result.push(Instruction::areturn),
+                Jnull => result.push(Instruction::areturn),
+                _ => panic!("Invalid return type"),
+            }
         }
         Stmt::While(expr, stmt) => {
             // Generate bytecode for while
@@ -235,7 +244,9 @@ fn generate_code_expr(expr: &Expr) -> Vec<u8> {
             // Generate bytecode for local var
         }
     }
+    vec![]
 }
+
 fn generate_code_type(types: &Type, code: &mut Vec<u8>) {
     match types {
         Type::Int => {
