@@ -93,6 +93,19 @@ pub(crate) enum Instruction {
     ireturn,          //return int, char, boolean
     r#return,         //return void
     areturn,          //return object(string, integer, null)
+    iload_1,          //Load int from local variable 1
+    iload_2,          //Load int from local variable 2
+    iload_3,          //Load int from local variable 3
+    aload_1,          //Load reference from local variable 1
+    aload_2,          //Load reference from local variable 2
+    aload_3,          //Load reference from local variable 3
+    bipush(u8),       //Push byte onto stack
+    istore_1,         //Store int into local variable 1
+    istore_2,         //Store int into local variable 2
+    istore_3,         //Store int into local variable 3
+    astore_1,         //Store reference into local variable 1
+    astore_2,         //Store reference into local variable 2
+    astore_3,         //Store reference into local variable 3
     reljumpifeq(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
 }
 
@@ -165,6 +178,34 @@ fn generate_code_stmt(stmt: Stmt, dir: &DIR) -> Vec<Instruction> {
             // TODO: Bene
         }
         Stmt::LocalVarDecl(types, name) => {
+            match types {
+                Int => result.append(&mut vec![
+                    Instruction::bipush(0),
+                    Instruction::istore_1,
+                    Instruction::iload_1,
+                ]),
+                Boolean => result.append(&mut vec![
+                    Instruction::bipush(0),
+                    Instruction::istore_1,
+                    Instruction::iload_1,
+                ]),
+                Char => result.append(&mut vec![
+                    Instruction::bipush(0),
+                    Instruction::istore_1,
+                    Instruction::iload_1,
+                ]),
+                String => result.append(&mut vec![
+                    Instruction::bipush(0),
+                    Instruction::astore_1,
+                    Instruction::aload_1,
+                ]),
+                Null => result.append(&mut vec![
+                    Instruction::bipush(0),
+                    Instruction::astore_1,
+                    Instruction::aload_1,
+                ]),
+                _ => panic!("Invalid return type"),
+            }
             // Generate bytecode for local var decl
             // TODO: Mary
         }
