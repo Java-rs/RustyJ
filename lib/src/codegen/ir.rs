@@ -135,10 +135,14 @@ fn generate_method(method: &MethodDecl, dir: &DIR) -> CompiledMethod {
 }
 
 fn generate_code_stmt(stmt: Stmt, dir: &DIR) -> Vec<Instruction> {
+    let mut result = vec![];
     match stmt {
-        Stmt::Block(stmts) => {
-            // TODO: Bene
-        }
+        Stmt::Block(stmts) => result.append(
+            stmts
+                .iter()
+                .map(|stmt| generate_code_stmt(stmt.clone(), dir))
+                .collect(),
+        ),
         Stmt::Return(expr) => {
             // Generate bytecode for return
             // TODO: Mary
@@ -154,6 +158,10 @@ fn generate_code_stmt(stmt: Stmt, dir: &DIR) -> Vec<Instruction> {
         Stmt::If(expr, stmt1, stmt2) => {
             // Generate bytecode for if
             // TODO: Bene
+            // Evaluate the expression
+            result.append(generate_code_expr(expr));
+            // If the expression is false, jump to the else block
+            // We need some way to get the size of the if block or mark the start of the else block
         }
         Stmt::StmtExprStmt(stmt_expr) => {
             // Generate bytecode for stmt expr
@@ -164,7 +172,7 @@ fn generate_code_stmt(stmt: Stmt, dir: &DIR) -> Vec<Instruction> {
             // TODO: Bene
         }
     }
-    vec![]
+    return result;
 }
 
 fn generate_code_stmt_expr(stmt_expr: &StmtExpr, code: &mut Vec<u8>) {
@@ -184,7 +192,7 @@ fn generate_code_stmt_expr(stmt_expr: &StmtExpr, code: &mut Vec<u8>) {
     }
 }
 
-fn generate_code_expr(expr: &Expr, code: &mut Vec<u8>) {
+fn generate_code_expr(expr: &Expr) -> Vec<u8> {
     match expr {
         Expr::This => {
             // Generate bytecode for this
