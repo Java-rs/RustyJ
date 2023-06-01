@@ -1,10 +1,16 @@
 use crate::typechecker::*;
 use crate::types::*;
+use std::io::Bytes;
 /// The DIR(Duck Intermediate Representation) is our IR for generating Java Bytecode
 /// from our TAST
 pub struct DIR {
     pub(crate) constant_pool: Vec<Constant>,
     pub(crate) classes: Vec<IRClass>,
+}
+impl DIR {
+    pub const fn as_bytes(&self) -> &[u8] {
+        vec![].as_slice()
+    }
 }
 struct ConstantPool(Vec<Constant>);
 impl ConstantPool {
@@ -147,8 +153,6 @@ fn generate_method(method: &MethodDecl, dir: &DIR) -> CompiledMethod {
     compiled_method
 }
 
-struct LocalVarPool(Vec<(String, u8)>);
-
 fn generate_code_stmt(
     stmt: Stmt,
     dir: &DIR,
@@ -244,90 +248,22 @@ fn generate_code_stmt_expr(stmt_expr: &StmtExpr) -> Vec<u8> {
     match stmt_expr {
         StmtExpr::Assign(name, expr) => {
             // Generate bytecode for assignment
+            // TODO: Bene
         }
         StmtExpr::New(types, exprs) => {
             // Generate bytecode for new
+            // TODO: Mary
         }
         StmtExpr::MethodCall(expr, name, exprs) => {
             // Generate bytecode for method call
+            // TODO: Bene
         }
         StmtExpr::TypedStmtExpr(stmt_expr, types) => {
+            // TODO: Mary
             // Generate bytecode for typed stmt expr
         }
     }
     vec![]
-}
-
-fn generate_code_expr(expr: &Expr) -> Vec<u8> {
-    match expr {
-        Expr::This => {
-            // Generate bytecode for this
-        }
-        Expr::LocalOrFieldVar(name) => {
-            // Generate bytecode for local or field var
-        }
-        Expr::InstVar(expr, name) => {
-            // Generate bytecode for inst var
-        }
-        Expr::Unary(op, expr) => {
-            // Generate bytecode for unary
-        }
-        Expr::Binary(op, expr1, expr2) => {
-            // Generate bytecode for binary
-        }
-
-        Expr::Integer(value) => {
-            // Generate bytecode for int literal
-        }
-        Expr::Bool(value) => {
-            // Generate bytecode for bool literal
-        }
-        Expr::Char(value) => {
-            // Generate bytecode for char literal
-        }
-        Expr::String(value) => {
-            // Generate bytecode for string literal
-        }
-        Expr::Jnull => {
-            // Generate bytecode for null literal
-        }
-        Expr::StmtExprExpr(stmt_expr) => {
-            // Generate bytecode for stmt expr
-        }
-        Expr::TypedExpr(expr, types) => {
-            // Generate bytecode for typed expr
-        }
-        Expr::LocalVar(expr, name) => {
-            // Generate bytecode for local var
-        }
-    }
-    vec![]
-}
-
-fn generate_code_type(types: &Type, code: &mut Vec<u8>) {
-    match types {
-        Type::Int => {
-            // Generate bytecode for int
-        }
-        Type::Bool => {
-            // Generate bytecode for bool
-        }
-        Type::Char => {
-            // Generate bytecode for char
-        }
-        Type::String => {
-            // Generate bytecode for string
-        }
-        Type::Void => {
-            // Generate bytecode for void
-        }
-        Type::Null => {
-            // Generate bytecode for null
-        }
-        Type::Class(name) => {
-            // Generate bytecode for class
-        }
-    }
 }
 
 #[cfg(test)]
