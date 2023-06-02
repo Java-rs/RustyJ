@@ -402,6 +402,7 @@ impl TypeChecker {
                 Type::Class(self.current_class.as_ref().unwrap().name.clone()),
             ),
             Expr::LocalOrFieldVar(name) => {
+                //TODO: Replace with InstVar/LocalVar
                 if let Some(t) = self.current_local_vars.get(name) {
                     return Expr::TypedExpr(
                         Box::new(Expr::LocalOrFieldVar(name.clone())),
