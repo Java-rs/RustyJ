@@ -62,7 +62,7 @@ pub enum Stmt {
     TypedStmt(Box<Stmt>, Type),
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum StmtExpr {
     Assign(String, Expr),
     New(Type, Vec<Expr>),
@@ -70,12 +70,13 @@ pub enum StmtExpr {
     TypedStmtExpr(Box<StmtExpr>, Type),
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum Expr {
     This,
-    Super,
     LocalOrFieldVar(String),
     InstVar(Box<Expr>, String),
+    LocalVar(String),
+    FieldVar(String),
     Unary(String, Box<Expr>),
     Binary(String, Box<Expr>, Box<Expr>),
     Integer(i32),
@@ -85,6 +86,92 @@ pub enum Expr {
     Jnull,
     StmtExprExpr(Box<StmtExpr>),
     TypedExpr(Box<Expr>, Type),
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum UnaryOp {
+    Pos,
+    Neg,
+    Not,
+}
+
+impl Display for UnaryOp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            UnaryOp::Pos => write!(f, "+"),
+            UnaryOp::Neg => write!(f, "-"),
+            UnaryOp::Not => write!(f, "!"),
+        }
+    }
+}
+
+impl From<&str> for UnaryOp {
+    fn from(s: &str) -> Self {
+        match s {
+            "+" => UnaryOp::Pos,
+            "-" => UnaryOp::Neg,
+            "!" => UnaryOp::Not,
+            _ => panic!("Invalid unary operator: {}", s),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum BinaryOp {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Mod,
+    And,
+    Or,
+    Le,
+    Ge,
+    Lt,
+    Gt,
+    Eq,
+    Ne,
+}
+
+impl Display for BinaryOp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BinaryOp::Add => write!(f, "+"),
+            BinaryOp::Sub => write!(f, "-"),
+            BinaryOp::Mul => write!(f, "*"),
+            BinaryOp::Div => write!(f, "/"),
+            BinaryOp::Mod => write!(f, "%"),
+            BinaryOp::And => write!(f, "&&"),
+            BinaryOp::Or => write!(f, "||"),
+            BinaryOp::Le => write!(f, "<="),
+            BinaryOp::Ge => write!(f, ">="),
+            BinaryOp::Lt => write!(f, "<"),
+            BinaryOp::Gt => write!(f, ">"),
+            BinaryOp::Eq => write!(f, "=="),
+            BinaryOp::Ne => write!(f, "!="),
+        }
+    }
+}
+
+impl From<&str> for BinaryOp {
+    fn from(s: &str) -> Self {
+        match s {
+            "+" => BinaryOp::Add,
+            "-" => BinaryOp::Sub,
+            "*" => BinaryOp::Mul,
+            "/" => BinaryOp::Div,
+            "%" => BinaryOp::Mod,
+            "&&" => BinaryOp::And,
+            "||" => BinaryOp::Or,
+            "<=" => BinaryOp::Le,
+            ">=" => BinaryOp::Ge,
+            "<" => BinaryOp::Lt,
+            ">" => BinaryOp::Gt,
+            "==" => BinaryOp::Eq,
+            "!=" => BinaryOp::Ne,
+            _ => panic!("Invalid binary operator: {}", s),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Hash, Eq)]

@@ -1,1 +1,1 @@
-mod typechecker;
+pub mod typechecker;
