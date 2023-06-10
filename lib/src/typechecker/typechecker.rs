@@ -402,7 +402,7 @@ impl TypeChecker {
                 Type::Class(self.current_class.as_ref().unwrap().name.clone()),
             ),
             Expr::LocalOrFieldVar(name) => {
-                //TODO: Replace with InstVar/LocalVar
+                //TODO: Replace with FieldVar/LocalVar
                 if let Some(t) = self.current_local_vars.get(name) {
                     return Expr::TypedExpr(
                         Box::new(Expr::LocalOrFieldVar(name.clone())),
@@ -545,10 +545,26 @@ impl TypeChecker {
                 Type::Int,
             ),
             Expr::TypedExpr(expr, t) => Expr::TypedExpr(Box::new(self.type_expr(expr)), t.clone()),
-            Expr::LocalVar(expr, name) => Expr::TypedExpr(
-                Box::new(Expr::LocalVar(expr.clone(), name.clone())),
+            Expr::LocalVar(name) => Expr::TypedExpr(
+                Box::new(Expr::LocalVar(name.clone())),
                 self.current_local_vars.get(name).unwrap().clone(),
             ),
+            Expr::FieldVar(name) => {
+                let fields = self
+                    .fields
+                    .get(&self.current_class.clone().unwrap().name)
+                    .unwrap()
+                    .clone();
+                for field in fields {
+                    if field.name == *name {
+                        return Expr::TypedExpr(
+                            Box::new(Expr::FieldVar(name.clone())),
+                            field.field_type.clone(),
+                        );
+                    }
+                }
+                panic!("Field not found");
+            }
         };
     }
 

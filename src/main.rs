@@ -10,6 +10,12 @@ fn main() -> color_eyre::Result<()> {
     tracing_subscriber::fmt::init();
     info!("Hello RustyJ!");
     lib::hi();
+
+    Ok(())
+}
+
+#[test]
+fn test_typechecker() -> color_eyre::Result<()> {
     let mut file = File::open("lib/tests/If-AST.json")?;
     let mut ast_string = String::new();
 

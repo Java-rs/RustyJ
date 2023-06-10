@@ -62,7 +62,7 @@ pub enum Stmt {
     TypedStmt(Box<Stmt>, Type),
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum StmtExpr {
     Assign(String, Expr),
     New(Type, Vec<Expr>),
@@ -70,12 +70,13 @@ pub enum StmtExpr {
     TypedStmtExpr(Box<StmtExpr>, Type),
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum Expr {
     This,
     LocalOrFieldVar(String),
     InstVar(Box<Expr>, String),
-    LocalVar(Box<Expr>, String),
+    LocalVar(String),
+    FieldVar(String),
     Unary(String, Box<Expr>),
     Binary(String, Box<Expr>, Box<Expr>),
     Integer(i32),
