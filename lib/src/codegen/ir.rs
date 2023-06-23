@@ -2,6 +2,7 @@
 
 use crate::typechecker::*;
 use crate::types;
+use crate::types::Expr::InstVar;
 use crate::types::*;
 use std::io::Bytes;
 
@@ -386,7 +387,6 @@ fn generate_code_stmt_expr(
     constant_pool: &mut ConstantPool,
     local_var_pool: &mut LocalVarPool,
 ) -> Vec<Instruction> {
-    //TODO: Was geht hier ab
     let mut result = vec![];
     match stmt_expr {
         StmtExpr::Assign(name, expr) => {
@@ -405,7 +405,6 @@ fn generate_code_stmt_expr(
             // Generate bytecode for method call
             // TODO: Bene
         }
-        //TODO: Steht nicht in der Vorlesung
         StmtExpr::TypedStmtExpr(stmt_expr, types) => {
             result.append(&mut generate_code_stmt_expr(
                 stmt_expr,
@@ -430,20 +429,34 @@ fn generate_code_expr(expr: Expr) -> Vec<Instruction> {
         Expr::Char(c) => {
             result.push(Instruction::bipush(c as u8));
         }
-        Expr::String(s) => {}
+        Expr::String(s) => {
+            // TODO: Mary
+        }
         Expr::Jnull => {
             result.push(Instruction::aconst_null);
         }
         Expr::This => {
-            // TODO: This is just a guess. It may or may not work
-            result.push(Instruction::aload_0);
+            //TODO: Bene
+            result.push(Instruction::aload(0))
         }
-        Expr::InstVar(exprs, name) => {}
-        Expr::Binary(op, left, right) => {}
-        Expr::Unary(op, expr) => {}
-        Expr::TypedExpr(expr, r#type) => {}
-        Expr::StmtExprExpr(stmt_expr) => {}
-        Expr::LocalVar(name) => {}
+        Expr::InstVar(exprs, name) => {
+            //TODO: Mary
+        }
+        Expr::Binary(op, left, right) => {
+            //TODO: Bene
+        }
+        Expr::Unary(op, expr) => {
+            //TODO: Mary
+        }
+        Expr::LocalVar(name) => {
+            //TODO: Bene
+        }
+        Expr::TypedExpr(expr, r#type) => {
+            //TODO: Mary
+        }
+        Expr::StmtExprExpr(stmt_expr) => {
+            //TODO: Bene
+        }
         unexpected => panic!("Unexpected expression: {:?}", unexpected),
     }
     result
