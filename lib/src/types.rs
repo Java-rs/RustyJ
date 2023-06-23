@@ -40,7 +40,7 @@ impl Default for Class {
 pub struct FieldDecl {
     pub field_type: Type,
     pub name: String,
-    pub val: Option<String>,
+    pub val: Option<String>, // @Decide: Should probably Option<Expr> instead
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -55,30 +55,30 @@ pub struct MethodDecl {
 pub enum Stmt {
     Block(Vec<Stmt>),
     Return(Expr),
-    While(Expr, Box<Stmt>),
-    LocalVarDecl(Type, String),
-    If(Expr, Box<Stmt>, Option<Box<Stmt>>),
+    While(Expr, Box<Stmt>), // first condition, then body of the while-statement
+    LocalVarDecl(Type, String), // first type of the local variable, then it's name
+    If(Expr, Box<Stmt>, Option<Box<Stmt>>), // first condition, then body ofthe if-statement and lastly the optional body of the else-statement
     StmtExprStmt(StmtExpr),
     TypedStmt(Box<Stmt>, Type),
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum StmtExpr {
-    Assign(String, Expr),
-    New(Type, Vec<Expr>),
-    MethodCall(Expr, String, Vec<Expr>),
+    Assign(String, Expr), // first the name of the variable, then the value it is being assigned to
+    New(Type, Vec<Expr>), // first the class type, that should be instantiated, then the list of arguments for the constructor
+    MethodCall(Expr, String, Vec<Expr>), // first the object to which the method belongs (e.g. Expr::This), then the name of the method and lastly the list of arguments for the method call
     TypedStmtExpr(Box<StmtExpr>, Type),
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum Expr {
     This,
-    LocalOrFieldVar(String),
+    LocalOrFieldVar(String), // name of the variable
     InstVar(Box<Expr>, String),
-    LocalVar(String),
-    FieldVar(String),
-    Unary(String, Box<Expr>),
-    Binary(String, Box<Expr>, Box<Expr>),
+    LocalVar(String),                     // name of the variable
+    FieldVar(String),                     // name of the variable
+    Unary(String, Box<Expr>),             // operation first, then operand
+    Binary(String, Box<Expr>, Box<Expr>), // operation first, then left and right operands
     Integer(i32),
     Bool(bool),
     Char(char),

@@ -1,0 +1,220 @@
+IDENTIFIER ={(ASCII_ALPHA|"_")~(ASCII_ALPHANUMERIC|"_")* }
+
+compilationunit = {classdeclaration+ }
+
+name    ={IDENTIFIER ~("."~IDENTIFIER)*}
+
+classdeclaration = {"class"~IDENTIFIER~classbody}
+
+classbody        = {"{"~classbodydeclaration*~"}" }
+
+
+classbodydeclaration = {classmemberdeclaration
+		 | constructordeclaration }
+
+classmemberdeclaration = {fielddeclaration
+		 | methoddeclaration }
+
+constructordeclaration = {constructordeclarator~constructorbody}
+
+fielddeclaration = {typeJ~variabledeclarators~";"}
+
+methoddeclaration = {methodheader~methodbody }
+
+block            = {"{"~"}"
+                 		 | "{"~blockstatement+~"}" }
+
+constructordeclarator = { IDENTIFIER~"()"
+		 |  IDENTIFIER~"("~formalparameterlist~")"  }
+
+constructorbody	 ={ "{"~"}"
+		|"{"~explicitconstructorinvocation~"}"
+		|"{"~blockstatement+~"}"
+		|"{"~explicitconstructorinvocation~blockstatement+~"}"}
+
+methodheader	 ={ typeJ~methoddeclarator
+		 | "void"~methoddeclarator }
+
+typeJ  = {primitivetype
+		 | name}
+
+variabledeclarators ={ variabledeclarator~(","~variabledeclarator)* }
+
+methodbody       = {block
+		 | ";" }
+
+blockstatement	 ={ localvariabledeclarationstatement
+		 | statement  }
+
+formalparameterlist = {formalparameter~(","~formalparameter)*}
+
+explicitconstructorinvocation = {"this"~"("~")"~";"
+		 | "this"~"("~argumentlist~")"~";"}
+
+methoddeclarator ={ IDENTIFIER~"("~")"
+		 | IDENTIFIER~"("~formalparameterlist~")"  }
+
+primitivetype    = {"boolean"
+		        | "int"
+                | "char"
+                |"String"}
+
+
+variabledeclarator ={ IDENTIFIER
+		 | IDENTIFIER~"="~expression }
+
+
+formalparameter  = {typeJ~IDENTIFIER }
+
+argumentlist     = {expression~(","~expression)*}
+
+
+localvariabledeclarationstatement = {localvariabledeclaration~";"  }
+
+statement        = {statementwithouttrailingsubstatement
+		 | ifthenstatement
+		 | ifthenelsestatement
+		 | whilestatement }
+
+localvariabledeclaration ={ typeJ~variabledeclarators }
+
+statementwithouttrailingsubstatement = {block
+		 | emptystatement
+		 | expressionstatement
+		 | returnstatement }
+
+ifthenstatement  ={ "if"~"("~expression~")"~statement }
+
+ifthenelsestatement = {"if"~"("~expression~")"~statementnoshortif~"else"~statement  }
+
+whilestatement   = {"while"~"("~expression~")"~statement }
+
+expression = {conditionalexpression
+		 |  assignment}
+
+emptystatement	 =  {";"  }
+
+expressionstatement ={ statementexpression~";" }
+
+returnstatement  ={ "return"~";"
+		 | "return"~expression~";" }
+
+statementnoshortif = {statementwithouttrailingsubstatement
+		 | ifthenelsestatementnoshortif
+		 | whilestatementnoshortif }
+
+conditionalexpression = {conditionalorexpression
+		 | conditionalorexpression~"?"~expression~":"~conditionalexpression }
+
+assignment       ={lefthandside~assignmentoperator~expression }
+
+
+statementexpression = {assignment
+		 | preincrementexpression
+		 | predecrementexpression
+		 | postfixexpression
+		 | methodinvocation
+		 | classinstancecreationexpression }
+
+ifthenelsestatementnoshortif ={"if"~"("~expression~")"~statementnoshortif~"else"~statementnoshortif  }
+
+whilestatementnoshortif = {"while"~"("~expression~")"~statementnoshortif }
+
+conditionalorexpression ={ conditionalandexpression~("||"~conditionalandexpression)+}
+
+lefthandside     = {name }
+
+assignmentoperator = {"="
+		 | "*="
+		 | "/="
+		 | "%="
+		 | "+="
+		 | "-="
+		 | "<<="
+		 | ">>="
+		 | ">>>="
+		 | "&="
+		 | "^="
+		 | "|="}
+
+preincrementexpression = {"++"~unaryexpression }
+
+predecrementexpression = {"--"~unaryexpression }
+
+methodinvocation= {
+(name|fieldaccess)~"("~argumentlist?~")" }
+
+classinstancecreationexpression ={ "new"~name~"("~")"
+                 | "new"~name~"("~argumentlist~")"  }
+
+conditionalandexpression ={ inclusiveorexpression }
+
+fieldaccess ={(literal
+		 | "this"
+		 | "("~expression~")"
+         | classinstancecreationexpression)~"."~idorfield
+}
+idorfield={fieldaccess|IDENTIFIER}
+
+unaryexpression	 = {preincrementexpression
+		 | predecrementexpression
+		 | "+"~unaryexpression
+		 | "-"~unaryexpression
+		 | unaryexpressionnotplusminus }
+
+postfixexpression = {(primary
+		 | name)~("++"|"--" )}
+
+inclusiveorexpression = {exclusiveorexpression~("|"~exclusiveorexpression)*}
+
+primary = {literal
+		 | "this"
+		 | "("~expression~")"
+                 | classinstancecreationexpression
+		 | fieldaccess
+		 | methodinvocation }
+
+unaryexpressionnotplusminus = {postfixexpression
+	         | "~"~unaryexpression
+		 | "!"~unaryexpression                          // EXCLMARK wurde mit "!" replaced
+		 | castexpression}
+
+exclusiveorexpression ={ andexpression~("^"~andexpression)*}
+
+
+literal		 = {INTLITERAL
+		 | BOOLLITERAL
+		 | CHARLITERAL
+		 | STRINGLITERAL
+		 | "null" }
+
+CHARLITERAL = { "'"~ASCII~"'" }
+
+STRINGLITERAL = { "\""~ASCII*~"\"" }
+
+BOOLLITERAL = {"true"|"false"}
+INTLITERAL = {NUMBER+
+|
+            NUMBER+~"."~NUMBER+
+}
+
+
+castexpression	 ={ "("~primitivetype~")"~unaryexpression
+ 		 | "("~expression~")"~unaryexpressionnotplusminus}
+
+andexpression    = {equalityexpression~("&"~equalityexpression )*}
+
+equalityexpression = {relationalexpression~(("!=" |"==")~relationalexpression)*}
+
+
+relationalexpression = {
+shiftexpression~"instanceof"~name
+|shiftexpression~(("<"|">"|"<="|">=")~shiftexpression)*
+ }
+
+shiftexpression	 = {additiveexpression }
+
+additiveexpression ={ multiplicativeexpression~(("+"|"-")~multiplicativeexpression)*}
+
+multiplicativeexpression ={ unaryexpression~(("*"|"/"|"%")~unaryexpression)*}
+

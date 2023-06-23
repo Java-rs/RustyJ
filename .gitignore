@@ -3,5 +3,7 @@ Cargo.lock
 .idea
 .vscode
 *.log
-lib/target
 *.class
+lib/testcases/*.json
+lib/testcases/*.txt
+lib/testcases/*-gen.java

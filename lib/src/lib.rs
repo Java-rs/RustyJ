@@ -1,3 +1,4 @@
+mod parser;
 mod codegen;
 #[cfg(test)]
 mod tests;
