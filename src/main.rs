@@ -9,6 +9,7 @@ fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
     tracing_subscriber::fmt::init();
     info!("Hello RustyJ!");
+
     lib::hi();
     let mut file = File::open("lib/tests/If-AST.json")?;
     let mut ast_string = String::new();

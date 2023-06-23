@@ -33,5 +33,5 @@ fn assigned_fields_class() {
         ],
         methods: vec![],
     };
-    create_test_file(&tast_to_ast(&class), Some(&class), "AssignedFields");
+    single_class_test(&tast_to_ast(&class), Some(&class), "AssignedFields");
 }

@@ -183,7 +183,7 @@ fn fib_class() {
                                             Type::Int,
                                         )),
                                         Box::new(TypedExpr(
-                                            Box::new(LocalOrFieldVar("i".to_string())),
+                                            Box::new(LocalOrFieldVar("n".to_string())),
                                             Type::Int,
                                         )),
                                     )),
@@ -294,5 +294,5 @@ fn fib_class() {
             },
         ],
     };
-    create_test_file(&tast_to_ast(&class), Some(&class), "Fib");
+    single_class_test(&tast_to_ast(&class), Some(&class), "Fib");
 }

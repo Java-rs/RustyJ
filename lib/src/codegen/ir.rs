@@ -2,6 +2,7 @@
 
 use crate::typechecker::*;
 use crate::types;
+use crate::types::Expr::InstVar;
 use crate::types::*;
 use std::io::Bytes;
 
@@ -203,6 +204,7 @@ pub struct NameAndType {
 /// The instructions for the JVM
 /// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.areturn
 pub(crate) enum Instruction {
+    aload_0,
     aload(u8),        //Load reference from local variable
     iload(u8),        //Load int from local variable
     ifeq(u16),        //Branch if int is 0
@@ -250,7 +252,7 @@ fn generate_field(field: &FieldDecl, constant_pool: &mut ConstantPool) -> IRFiel
     IRFieldDecl::new(type_index, name_index)
 }
 
-// TODO: Parallelize this, since methods are not dependent on each other(hopefully)
+/// Generates a Vector of instructions for a given method
 fn generate_method(
     method: &MethodDecl,
     dir: &DIR,
@@ -419,26 +421,35 @@ fn generate_code_expr(expr: Expr) -> Vec<Instruction> {
     let mut result = vec![];
     // TODO
     match expr {
-        Expr::Integer(i) => {}
-        Expr::Bool(b) => {}
-        Expr::Char(c) => {}
-        Expr::String(s) => {}
+        Expr::Integer(i) => {
+            result.push(Instruction::bipush(i as u8));
+        }
+        Expr::Bool(b) => {
+            result.push(Instruction::bipush(b as u8));
+        }
+        Expr::Char(c) => {
+            result.push(Instruction::bipush(c as u8));
+        }
+        Expr::String(s) => {
+            // TODO: Mary
+        }
         Expr::Jnull => {
             result.push(Instruction::aconst_null);
         }
         Expr::This => {
-            //TODO: Bene2
+            //TODO: Bene
+            result.push(Instruction::aload(0))
         }
         Expr::InstVar(exprs, name) => {
             //TODO: Mary
         }
-        Expr::Binary(expr1, op, expr2) => {
+        Expr::Binary(op, left, right) => {
             //TODO: Bene
         }
         Expr::Unary(op, expr) => {
             //TODO: Mary
         }
-        Expr::LocalVar(expr, name) => {
+        Expr::LocalVar(name) => {
             //TODO: Bene
         }
         Expr::TypedExpr(expr, r#type) => {
