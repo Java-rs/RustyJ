@@ -61,8 +61,17 @@ impl TypeChecker {
 
         self.methods.insert(class.name.clone(), vec![]);
         for method in &class.methods {
-            let types_method = self.check_method(method)?;
-            self.current_typed_class.methods.push(types_method);
+            if self.methods.get(&class.name).unwrap().contains(&method) {
+                return Err(format!("Duplicatess method name: {}", method.name));
+            } else {
+                self.methods
+                    .get_mut(&class.name)
+                    .unwrap()
+                    .push(method.clone());
+            }
+
+            let typed_method = self.check_method(method)?;
+            self.current_typed_class.methods.push(typed_method);
             self.current_local_vars.clear();
         }
 
@@ -149,19 +158,6 @@ impl TypeChecker {
         self.check_stmt(&typed_method.body)?;
 
         let name = self.current_class.as_ref().unwrap().name.clone();
-
-        if let Some(methods) = self.methods.get_mut(&name) {
-            if methods
-                .iter()
-                .any(|vec_method| vec_method.name == method.name)
-            {
-                return Err(format!("Duplicate method name: {}", method.name));
-            } else {
-                methods.push(method.clone());
-            }
-        } else {
-            self.methods.insert(name.clone(), vec![method.clone()]);
-        }
 
         Ok(typed_method.clone())
     }
@@ -279,24 +275,28 @@ impl TypeChecker {
                 }
                 let typed_stmts: Vec<Stmt> = stmts.iter().map(|s| self.type_stmt(s)).collect();
 
-                let mut return_stmt_types = typed_stmts.iter().filter_map(|s| match s {
-                    Stmt::TypedStmt(boxed_stmt, t) => match **boxed_stmt {
-                        Stmt::Return(_) => Some(t.clone()),
+                let mut return_stmt_types: Vec<Type> = typed_stmts
+                    .iter()
+                    .filter_map(|s| match s {
+                        Stmt::TypedStmt(boxed_stmt, t) => match **boxed_stmt {
+                            Stmt::Return(_) => Some(t.clone()),
+                            _ => None,
+                        },
                         _ => None,
-                    },
-                    _ => None,
-                });
+                    })
+                    .collect();
 
-                let return_type = match return_stmt_types.next() {
-                    Some(first_type) => {
-                        if return_stmt_types.all(|t| t == first_type) {
-                            first_type
-                        } else {
-                            panic!("Mismatched return types in block");
-                        }
+                let mut return_type = Type::Void;
+                println!("return_stmt_types: {:?}", return_stmt_types);
+                return_stmt_types.iter().for_each(|t| {
+                    if *t != Type::Void {
+                        return_type = t.clone();
                     }
-                    None => Type::Void,
-                };
+                });
+                // Check if return type is same in return_stmt_types
+                if return_stmt_types.iter().any(|t| *t != return_type) {
+                    panic!("Return types must be same");
+                }
 
                 Stmt::TypedStmt(Box::new(Stmt::Block(typed_stmts)), return_type)
             }
@@ -578,7 +578,7 @@ impl TypeChecker {
                 method.retain(|m| m.name == *name);
 
                 match method.len() {
-                    0 => panic!("Method not found"),
+                    0 => panic!("Method not found: {}", name),
                     1 => {
                         let current_method = method[0].clone();
                         let typed_expr: Vec<Expr> =
@@ -612,3 +612,7 @@ impl TypeChecker {
         }
     }
 }
+
+// TODO: Work with results
+// TODO: Binary Op String to Enum (maybe later)
+// TODO: Function Rename

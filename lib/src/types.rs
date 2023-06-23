@@ -43,7 +43,7 @@ pub struct FieldDecl {
     pub val: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct MethodDecl {
     pub ret_type: Type,
     pub name: String,
@@ -51,7 +51,7 @@ pub struct MethodDecl {
     pub body: Stmt,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub enum Stmt {
     Block(Vec<Stmt>),
     Return(Expr),
