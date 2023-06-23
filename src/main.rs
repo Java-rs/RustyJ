@@ -10,7 +10,7 @@ fn main() -> color_eyre::Result<()> {
     tracing_subscriber::fmt::init();
     info!("Hello RustyJ!");
     lib::hi();
-    let mut file = File::open("lib/tests/If-AST.json")?;
+    let mut file = File::open("lib/tests/Fib-AST.json")?;
     let mut ast_string = String::new();
 
     file.read_to_string(&mut ast_string)?;
@@ -61,12 +61,12 @@ fn main() -> color_eyre::Result<()> {
         }],
     };
 
-    let program: Prg = vec![class.clone()];
+    let program: Prg = vec![class2.clone()];
     let mut typechecker = typechecker::TypeChecker::new(program).unwrap();
     typechecker.check_program().expect("ERROR");
     serde_json::to_writer_pretty(
         &mut File::create("typed_if-test.json")?,
-        &typechecker.typed_classes.get(&class.name.clone()),
+        &typechecker.typed_classes.get(&class2.name.clone()),
     )?;
 
     //let mut file = File::create("typed_if-ast.txt")?;

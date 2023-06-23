@@ -275,27 +275,29 @@ impl TypeChecker {
                 }
                 let typed_stmts: Vec<Stmt> = stmts.iter().map(|s| self.type_stmt(s)).collect();
 
-                let mut return_stmt_types: Vec<Type> = typed_stmts
-                    .iter()
-                    .filter_map(|s| match s {
-                        Stmt::TypedStmt(boxed_stmt, t) => match **boxed_stmt {
-                            Stmt::Return(_) => Some(t.clone()),
-                            _ => None,
-                        },
-                        _ => None,
-                    })
-                    .collect();
+                let mut return_stmt_types: Vec<Type> = vec![];
+
+                typed_stmts.iter().for_each(|s| match s {
+                    Stmt::TypedStmt(boxed_stmt, t) => match **boxed_stmt {
+                        Stmt::While(_, _) => return_stmt_types.push(t.clone()),
+                        Stmt::If(_, _, _) => return_stmt_types.push(t.clone()),
+                        Stmt::Return(_) => return_stmt_types.push(t.clone()),
+
+                        _ => {}
+                    },
+                    _ => {}
+                });
 
                 let mut return_type = Type::Void;
-                println!("return_stmt_types: {:?}", return_stmt_types);
-                return_stmt_types.iter().for_each(|t| {
-                    if *t != Type::Void {
-                        return_type = t.clone();
+                if !return_stmt_types.is_empty() {
+                    let last_type = return_stmt_types.pop().unwrap();
+                    return_type = last_type.clone();
+                    if return_stmt_types
+                        .iter()
+                        .any(|t| *t != last_type && *t != Type::Void)
+                    {
+                        panic!("Return types must be same");
                     }
-                });
-                // Check if return type is same in return_stmt_types
-                if return_stmt_types.iter().any(|t| *t != return_type) {
-                    panic!("Return types must be same");
                 }
 
                 Stmt::TypedStmt(Box::new(Stmt::Block(typed_stmts)), return_type)
@@ -612,7 +614,3 @@ impl TypeChecker {
         }
     }
 }
-
-// TODO: Work with results
-// TODO: Binary Op String to Enum (maybe later)
-// TODO: Function Rename
