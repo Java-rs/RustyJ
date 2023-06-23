@@ -120,9 +120,7 @@ pub fn single_class_test(ast: &Class, tast: Option<&Class>, name: &str) {
     let res = test_helper(ast, tast, name, &og_java_code);
 
     if let Err(msg) = res {
-        let mut file = OpenOptions::new()
-            .write(true)
-            .open(format!("tests/{name}.java"))
+        let mut file = File::create(format!("tests/{name}.java"))
             .expect("failed to open original java file for writing");
         file.write(og_java_code.as_bytes())
             .expect("failed to write the original java code back into its file");
@@ -138,9 +136,7 @@ fn test_helper(
 ) -> Result<(), std::string::String> {
     // Generate Java Code from AST and write to file
     let class_code = class_to_java(ast);
-    let mut file = OpenOptions::new()
-        .write(true)
-        .open(format!("tests/{name}.java"))
+    let mut file = File::create(format!("tests/{name}.java"))
         .expect("failed to open original java file for writing generated code");
     file.write(class_code.as_bytes())
         .map_err(|x| "failed to write generated java code".to_string())?;
@@ -170,9 +166,7 @@ fn test_helper(
     assert!(ecode.success());
 
     // Compile original java code
-    let mut file = OpenOptions::new()
-        .write(true)
-        .open(format!("tests/{name}.java"))
+    let mut file = File::create(format!("tests/{name}.java"))
         .expect("failed to open original java file for writing");
     file.write(og_java_code.as_bytes())
         .map_err(|x| "failed to write original java code back".to_string())?;
