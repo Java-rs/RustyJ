@@ -22,21 +22,11 @@ fn bool_alg_class() {
                                 Box::new(Binary(
                                     "&&".to_string(),
                                     Box::new(TypedExpr(
-                                        Box::new(Binary(
-                                            "&&".to_string(),
-                                            Box::new(TypedExpr(
-                                                Box::new(LocalOrFieldVar("a".to_string())),
-                                                Type::Bool,
-                                            )),
-                                            Box::new(TypedExpr(
-                                                Box::new(LocalOrFieldVar("b".to_string())),
-                                                Type::Bool,
-                                            )),
-                                        )),
+                                        Box::new(LocalOrFieldVar("a".to_string())),
                                         Type::Bool,
                                     )),
                                     Box::new(TypedExpr(
-                                        Box::new(LocalOrFieldVar("c".to_string())),
+                                        Box::new(LocalOrFieldVar("b".to_string())),
                                         Type::Bool,
                                     )),
                                 )),

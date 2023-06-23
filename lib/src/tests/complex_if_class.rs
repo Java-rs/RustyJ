@@ -120,7 +120,7 @@ fn complex_if_class() {
                                                 Box::new(If(
                                                     TypedExpr(
                                                         Box::new(Binary(
-                                                            "||".to_string(),
+                                                            "&&".to_string(),
                                                             Box::new(TypedExpr(
                                                                 Box::new(Binary(
                                                                     "==".to_string(),
@@ -131,7 +131,7 @@ fn complex_if_class() {
                                                                         Type::Char,
                                                                     )),
                                                                     Box::new(TypedExpr(
-                                                                        Box::new(Expr::Char('d')),
+                                                                        Box::new(Expr::Char('f')),
                                                                         Type::Char,
                                                                     )),
                                                                 )),
@@ -147,7 +147,7 @@ fn complex_if_class() {
                                                                         Type::Char,
                                                                     )),
                                                                     Box::new(TypedExpr(
-                                                                        Box::new(Expr::Char('e')),
+                                                                        Box::new(Expr::Char('g')),
                                                                         Type::Char,
                                                                     )),
                                                                 )),
