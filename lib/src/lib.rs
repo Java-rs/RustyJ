@@ -1,3 +1,4 @@
+mod parser;
 #[cfg(test)]
 mod tests;
 mod typechecker;
