@@ -37,19 +37,19 @@ impl TypeChecker {
         })
     }
 
-    pub fn check_program(&mut self) -> Result<(), String> {
+    pub fn check_and_type_program(&mut self) -> Result<(), String> {
         let classes = self.classes.clone();
         for (_, class) in &classes {
             self.current_class = Some(class.clone());
 
-            self.check_class(class)?;
+            self.check_and_type_class(class)?;
             self.fields.clear();
         }
         println!("Program successfully type checked!🎉🧙\n\n");
         Ok(())
     }
 
-    fn check_class(&mut self, class: &Class) -> Result<(), String> {
+    fn check_and_type_class(&mut self, class: &Class) -> Result<(), String> {
         self.current_typed_class.name = class.name.clone();
 
         self.fields.insert(class.name.clone(), vec![]);
@@ -61,8 +61,17 @@ impl TypeChecker {
 
         self.methods.insert(class.name.clone(), vec![]);
         for method in &class.methods {
-            let types_method = self.check_method(method)?;
-            self.current_typed_class.methods.push(types_method);
+            if self.methods.get(&class.name).unwrap().contains(&method) {
+                return Err(format!("Duplicatess method name: {}", method.name));
+            } else {
+                self.methods
+                    .get_mut(&class.name)
+                    .unwrap()
+                    .push(method.clone());
+            }
+
+            let typed_method = self.check_and_type_method(method)?;
+            self.current_typed_class.methods.push(typed_method);
             self.current_local_vars.clear();
         }
 
@@ -98,8 +107,6 @@ impl TypeChecker {
         Ok(())
     }
 
-    // write a function that checks if the optional val is of the same type as the field_type
-    // if it is, return Ok(())
     fn check_field_type(&self, field_type: &Type, val: &Option<String>) -> Result<(), String> {
         if let Some(val) = val {
             match field_type {
@@ -139,7 +146,7 @@ impl TypeChecker {
         Ok(())
     }
 
-    fn check_method(&mut self, method: &MethodDecl) -> Result<MethodDecl, String> {
+    fn check_and_type_method(&mut self, method: &MethodDecl) -> Result<MethodDecl, String> {
         method.params.iter().for_each(|(t, name)| {
             self.current_local_vars.insert(name.clone(), t.clone());
         });
@@ -149,19 +156,6 @@ impl TypeChecker {
         self.check_stmt(&typed_method.body)?;
 
         let name = self.current_class.as_ref().unwrap().name.clone();
-
-        if let Some(methods) = self.methods.get_mut(&name) {
-            if methods
-                .iter()
-                .any(|vec_method| vec_method.name == method.name)
-            {
-                return Err(format!("Duplicate method name: {}", method.name));
-            } else {
-                methods.push(method.clone());
-            }
-        } else {
-            self.methods.insert(name.clone(), vec![method.clone()]);
-        }
 
         Ok(typed_method.clone())
     }
@@ -192,6 +186,7 @@ impl TypeChecker {
                 Ok(())
             }
             Stmt::StmtExprStmt(stmt_expr) => self.check_stmt_expr(stmt_expr),
+            // Why does it work??
             _ => Ok(()),
         }
     }
@@ -237,7 +232,10 @@ impl TypeChecker {
             Expr::String(_) => Ok(()),
             Expr::Jnull => Ok(()),
             Expr::This => Ok(()),
-            _ => Ok(()),
+            Expr::LocalVar(_) => Ok(()),
+            Expr::FieldVar(_) => Ok(()),
+            // Why part two?
+            Expr::TypedExpr(expr, _) => self.check_expr(expr),
         }
     }
 
@@ -264,7 +262,7 @@ impl TypeChecker {
                 Ok(())
             }
             StmtExpr::TypedStmtExpr(expr, _) => {
-                !unimplemented!(); //TODO: check expr
+                panic!("TypedStmtExpr not expected here: {:?}", expr);
                 Ok(())
             }
             _ => Ok(()),
@@ -279,24 +277,30 @@ impl TypeChecker {
                 }
                 let typed_stmts: Vec<Stmt> = stmts.iter().map(|s| self.type_stmt(s)).collect();
 
-                let mut return_stmt_types = typed_stmts.iter().filter_map(|s| match s {
+                let mut return_stmt_types: Vec<Type> = vec![];
+
+                typed_stmts.iter().for_each(|s| match s {
                     Stmt::TypedStmt(boxed_stmt, t) => match **boxed_stmt {
-                        Stmt::Return(_) => Some(t.clone()),
-                        _ => None,
+                        Stmt::While(_, _) => return_stmt_types.push(t.clone()),
+                        Stmt::If(_, _, _) => return_stmt_types.push(t.clone()),
+                        Stmt::Return(_) => return_stmt_types.push(t.clone()),
+
+                        _ => {}
                     },
-                    _ => None,
+                    _ => {}
                 });
 
-                let return_type = match return_stmt_types.next() {
-                    Some(first_type) => {
-                        if return_stmt_types.all(|t| t == first_type) {
-                            first_type
-                        } else {
-                            panic!("Mismatched return types in block");
-                        }
+                let mut return_type = Type::Void;
+                if !return_stmt_types.is_empty() {
+                    let last_type = return_stmt_types.pop().unwrap();
+                    return_type = last_type.clone();
+                    if return_stmt_types
+                        .iter()
+                        .any(|t| *t != last_type && *t != Type::Void)
+                    {
+                        panic!("Return types must be same");
                     }
-                    None => Type::Void,
-                };
+                }
 
                 Stmt::TypedStmt(Box::new(Stmt::Block(typed_stmts)), return_type)
             }
@@ -402,12 +406,8 @@ impl TypeChecker {
                 Type::Class(self.current_class.as_ref().unwrap().name.clone()),
             ),
             Expr::LocalOrFieldVar(name) => {
-                //TODO: Replace with FieldVar/LocalVar
                 if let Some(t) = self.current_local_vars.get(name) {
-                    return Expr::TypedExpr(
-                        Box::new(Expr::LocalOrFieldVar(name.clone())),
-                        t.clone(),
-                    );
+                    return Expr::TypedExpr(Box::new(Expr::LocalVar(name.clone())), t.clone());
                 }
                 if let Some(field) = self
                     .current_class
@@ -418,7 +418,7 @@ impl TypeChecker {
                     .find(|field| field.name == *name)
                 {
                     return Expr::TypedExpr(
-                        Box::new(Expr::LocalOrFieldVar(name.clone())),
+                        Box::new(Expr::FieldVar(name.clone())),
                         field.field_type.clone(),
                     );
                 }
@@ -545,26 +545,8 @@ impl TypeChecker {
                 Type::Int,
             ),
             Expr::TypedExpr(expr, t) => Expr::TypedExpr(Box::new(self.type_expr(expr)), t.clone()),
-            Expr::LocalVar(name) => Expr::TypedExpr(
-                Box::new(Expr::LocalVar(name.clone())),
-                self.current_local_vars.get(name).unwrap().clone(),
-            ),
-            Expr::FieldVar(name) => {
-                let fields = self
-                    .fields
-                    .get(&self.current_class.clone().unwrap().name)
-                    .unwrap()
-                    .clone();
-                for field in fields {
-                    if field.name == *name {
-                        return Expr::TypedExpr(
-                            Box::new(Expr::FieldVar(name.clone())),
-                            field.field_type.clone(),
-                        );
-                    }
-                }
-                panic!("Field not found");
-            }
+            Expr::LocalVar(name) => panic!("Expected LocalOrFieldVar, got LocalVar"),
+            Expr::FieldVar(name) => panic!("Expected LocalOrFieldVar, got FieldVar"),
         };
     }
 
@@ -600,7 +582,7 @@ impl TypeChecker {
                 method.retain(|m| m.name == *name);
 
                 match method.len() {
-                    0 => panic!("Method not found"),
+                    0 => panic!("Method not found: {}", name),
                     1 => {
                         let current_method = method[0].clone();
                         let typed_expr: Vec<Expr> =
