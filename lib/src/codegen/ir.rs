@@ -386,7 +386,6 @@ fn generate_code_stmt_expr(
     constant_pool: &mut ConstantPool,
     local_var_pool: &mut LocalVarPool,
 ) -> Vec<Instruction> {
-    //TODO: Was geht hier ab
     let mut result = vec![];
     match stmt_expr {
         StmtExpr::Assign(name, expr) => {
@@ -405,7 +404,6 @@ fn generate_code_stmt_expr(
             // Generate bytecode for method call
             // TODO: Bene
         }
-        //TODO: Steht nicht in der Vorlesung
         StmtExpr::TypedStmtExpr(stmt_expr, types) => {
             result.append(&mut generate_code_stmt_expr(
                 stmt_expr,
@@ -428,13 +426,27 @@ fn generate_code_expr(expr: Expr) -> Vec<Instruction> {
         Expr::Jnull => {
             result.push(Instruction::aconst_null);
         }
-        Expr::This => {}
-        Expr::InstVar(exprs, name) => {}
-        Expr::Binary(expr1, op, expr2) => {}
-        Expr::Unary(op, expr) => {}
-        Expr::LocalVar(expr, name) => {}
-        Expr::TypedExpr(expr, r#type) => {}
-        Expr::StmtExprExpr(stmt_expr) => {}
+        Expr::This => {
+            //TODO: Bene
+        }
+        Expr::InstVar(exprs, name) => {
+            //TODO: Mary
+        }
+        Expr::Binary(expr1, op, expr2) => {
+            //TODO: Bene
+        }
+        Expr::Unary(op, expr) => {
+            //TODO: Mary
+        }
+        Expr::LocalVar(expr, name) => {
+            //TODO: Bene
+        }
+        Expr::TypedExpr(expr, r#type) => {
+            //TODO: Mary
+        }
+        Expr::StmtExprExpr(stmt_expr) => {
+            //TODO: Bene
+        }
         unexpected => panic!("Unexpected expression: {:?}", unexpected),
     }
     result
