@@ -264,7 +264,7 @@ impl TypeChecker {
                 Ok(())
             }
             StmtExpr::TypedStmtExpr(expr, _) => {
-                !unimplemented!(); //TODO: check expr
+                panic!("TypedStmtExpr not expected here: {:?}", expr);
                 Ok(())
             }
             _ => Ok(()),
@@ -402,12 +402,8 @@ impl TypeChecker {
                 Type::Class(self.current_class.as_ref().unwrap().name.clone()),
             ),
             Expr::LocalOrFieldVar(name) => {
-                //TODO: Replace with InstVar/LocalVar
                 if let Some(t) = self.current_local_vars.get(name) {
-                    return Expr::TypedExpr(
-                        Box::new(Expr::LocalOrFieldVar(name.clone())),
-                        t.clone(),
-                    );
+                    return Expr::TypedExpr(Box::new(Expr::LocalVar(name.clone())), t.clone());
                 }
                 if let Some(field) = self
                     .current_class
@@ -418,7 +414,7 @@ impl TypeChecker {
                     .find(|field| field.name == *name)
                 {
                     return Expr::TypedExpr(
-                        Box::new(Expr::LocalOrFieldVar(name.clone())),
+                        Box::new(Expr::FieldVar(name.clone())),
                         field.field_type.clone(),
                     );
                 }
@@ -545,10 +541,8 @@ impl TypeChecker {
                 Type::Int,
             ),
             Expr::TypedExpr(expr, t) => Expr::TypedExpr(Box::new(self.type_expr(expr)), t.clone()),
-            Expr::LocalVar(expr, name) => Expr::TypedExpr(
-                Box::new(Expr::LocalVar(expr.clone(), name.clone())),
-                self.current_local_vars.get(name).unwrap().clone(),
-            ),
+            Expr::LocalVar(name) => panic!("Expected LocalOrFieldVar, got LocalVar"),
+            Expr::FieldVar(name) => panic!("Expected LocalOrFieldVar, got FieldVar"),
         };
     }
 
