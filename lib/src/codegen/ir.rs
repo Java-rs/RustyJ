@@ -11,19 +11,35 @@ pub struct DIR {
 }
 impl DIR {
     /// Because this involves crating the constant pool, this is a mutable method
+    /// https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.1
     pub fn as_bytes(&mut self) -> Vec<u8> {
         let mut result = vec![0xCA, 0xFE, 0xBA, 0xBE];
         // Minor version, always 0
         result.extend_from_slice(&[0, 0]);
         // Major version, always 52
         result.extend_from_slice(&[0, 52]);
+        // TODO: Add the this_class to the constant pool before building it
         // Constant pool count. For some unknow reason, this is 1-indexed and we have to add 1 to
         // the size
         result.extend_from_slice(&(self.constant_pool.0.len() as u16 + 1).to_be_bytes());
         // Constant pool
         result.append(&mut self.constant_pool.as_bytes());
         result.extend_from_slice(&self.constant_pool.as_bytes());
-        // TODO: Functions
+        // The class access flags are just gonna be public
+        result.extend_from_slice(&[0, 1]);
+        // TODO: This class and super class
+        // TODO: Interfaces count, being 0
+        // TODO: Field count
+        // TODO: Fields
+        // TODO: Method count
+        // TODO: Attributes count(probably 0 idk)
+        result.extend_from_slice(
+            self.classes
+                .iter()
+                .map(|c| c.as_bytes())
+                .flatten()
+                .collect(),
+        );
         result
     }
 }
@@ -115,6 +131,11 @@ impl IRClass {
             methods,
         }
     }
+    fn as_bytes(&self) -> Vec<u8> {
+        let mut result = vec![];
+        // TODO
+        result
+    }
 }
 
 #[derive(Debug)]
@@ -138,7 +159,13 @@ impl IRFieldDecl {
         }
     }
 }
-struct LocalVarPool(Vec<(String, u8)>);
+struct LocalVarPool(Vec<String>);
+impl LocalVarPool {
+    pub fn add(&mut self, name: String) -> u16 {
+        self.0.push(name);
+        self.0.len() as u16
+    }
+}
 
 pub(crate) struct CompiledMethod {
     pub(crate) name: String,
@@ -327,10 +354,15 @@ fn generate_code_stmt(
     return result;
 }
 
-fn generate_code_stmt_expr(stmt_expr: &StmtExpr) -> Vec<Instruction> {
+fn generate_code_stmt_expr(
+    stmt_expr: &StmtExpr,
+    local_var_pool: &mut LocalVarPool,
+) -> Vec<Instruction> {
+    let mut result = vec![];
     match stmt_expr {
         StmtExpr::Assign(name, expr) => {
             // Generate bytecode for assignment
+            result.append(&mut generate_code_expr(expr));
             // TODO: Bene
         }
         StmtExpr::New(types, exprs) => {
@@ -346,7 +378,7 @@ fn generate_code_stmt_expr(stmt_expr: &StmtExpr) -> Vec<Instruction> {
             // Generate bytecode for typed stmt expr
         }
     }
-    vec![]
+    result
 }
 
 fn generate_code_expr(expr: Expr) -> Vec<Instruction> {
