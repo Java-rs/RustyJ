@@ -104,23 +104,24 @@ fn tast_to_ast(class: &Class) -> Class {
 pub fn single_class_test(ast: &Class, tast: Option<&Class>, name: &str) {
     // Write AST & TAST to files
     let mut file =
-        File::create(format!("tests/{name}-AST.json")).expect("File failed to be created");
+        File::create(format!("testcases/{name}-AST.json")).expect("File failed to be created");
     serde_json::to_writer_pretty(&mut file, &ast).expect("failed to serialize class");
 
     if let Some(tast) = tast {
         let mut file =
-            File::create(format!("tests/{name}-TAST.json")).expect("File failed to be created");
+            File::create(format!("testcases/{name}-TAST.json")).expect("File failed to be created");
         serde_json::to_writer_pretty(&mut file, tast).expect("failed to serialize class");
     };
 
     // Load orignal java code
-    let file = File::open(format!("tests/{name}.java")).expect("failed to open original java file");
+    let file =
+        File::open(format!("testcases/{name}.java")).expect("failed to open original java file");
     let og_java_code = read_to_string(file).expect("failed to read original java file");
 
     let res = test_helper(ast, tast, name, &og_java_code);
 
     if let Err(msg) = res {
-        let mut file = File::create(format!("tests/{name}.java"))
+        let mut file = File::create(format!("testcases/{name}.java"))
             .expect("failed to open original java file for writing");
         file.write(og_java_code.as_bytes())
             .expect("failed to write the original java code back into its file");
@@ -136,18 +137,18 @@ fn test_helper(
 ) -> Result<(), std::string::String> {
     // Generate Java Code from AST and write to file
     let class_code = class_to_java(ast);
-    let mut file = File::create(format!("tests/{name}.java"))
+    let mut file = File::create(format!("testcases/{name}.java"))
         .expect("failed to open original java file for writing generated code");
     file.write(class_code.as_bytes())
         .map_err(|x| "failed to write generated java code in original java file".to_string())?;
-    let mut file = File::create(format!("tests/{name}-gen.java")) // Only for debugging tests
+    let mut file = File::create(format!("testcases/{name}-gen.java")) // Only for debugging tests
         .expect("failed to open generated java file for writing generated code");
     file.write(class_code.as_bytes())
         .map_err(|x| "failed to write generated java code in generated java file".to_string())?;
 
     // Compile generated java code
     let mut child = Command::new("javac")
-        .arg(format!("tests/{name}.java"))
+        .arg(format!("testcases/{name}.java"))
         .arg("-g:none")
         .spawn()
         .map_err(|x| "failed to compile generated java-code".to_string())?;
@@ -155,13 +156,13 @@ fn test_helper(
         .wait()
         .map_err(|x| "failed to wait on child compiling generated java code".to_string())?;
     assert!(ecode.success());
-    let gen_clz_file = read(format!("tests/{name}.class"))
+    let gen_clz_file = read(format!("testcases/{name}.class"))
         .map_err(|x| "failed to read generated java class file".to_string())?;
-    let mut file = File::create(format!("tests/{name}-gen.txt")).unwrap();
+    let mut file = File::create(format!("testcases/{name}-gen.txt")).unwrap();
     let mut child = Command::new("javap")
         .arg("-v")
         .arg("-c")
-        .arg(format!("tests/{name}.class"))
+        .arg(format!("testcases/{name}.class"))
         .stdout(Stdio::from(file))
         .spawn()
         .map_err(|x| "failed to disassemble generated java class file".to_string())?;
@@ -171,12 +172,12 @@ fn test_helper(
     assert!(ecode.success());
 
     // Compile original java code
-    let mut file = File::create(format!("tests/{name}.java"))
+    let mut file = File::create(format!("testcases/{name}.java"))
         .expect("failed to open original java file for writing");
     file.write(og_java_code.as_bytes())
         .map_err(|x| "failed to write original java code back".to_string())?;
     let mut child = Command::new("javac")
-        .arg(format!("tests/{name}.java"))
+        .arg(format!("testcases/{name}.java"))
         .arg("-g:none")
         .spawn()
         .map_err(|x| "failed to compile original java-code".to_string())?;
@@ -184,13 +185,13 @@ fn test_helper(
         .wait()
         .map_err(|x| "failed to wait on child compiling original java code".to_string())?;
     assert!(ecode.success());
-    let og_clz_file = read(format!("tests/{name}.class"))
+    let og_clz_file = read(format!("testcases/{name}.class"))
         .map_err(|x| "failed to read original java class file".to_string())?;
-    let mut file = File::create(format!("tests/{name}.txt")).unwrap();
+    let mut file = File::create(format!("testcases/{name}.txt")).unwrap();
     let mut child = Command::new("javap")
         .arg("-v")
         .arg("-c")
-        .arg(format!("tests/{name}.class"))
+        .arg(format!("testcases/{name}.class"))
         .stdout(Stdio::from(file))
         .spawn()
         .map_err(|x| "failed to disassemble original java class file".to_string())?;
