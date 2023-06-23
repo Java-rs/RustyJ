@@ -1,6 +1,7 @@
 use crate::typechecker::*;
 use crate::types;
 use crate::types::*;
+use std::fmt::Debug;
 use std::io::Bytes;
 
 /// The DIR(Duck Intermediate Representation) is our IR for generating Java Bytecode
@@ -19,7 +20,7 @@ impl DIR {
         // Major version, always 52
         result.extend_from_slice(&[0, 52]);
         // TODO: Add the this_class to the constant pool before building it
-        // Constant pool count. For some unknow reason, this is 1-indexed and we have to add 1 to
+        // Constant pool count. For some unknown reason, this is 1-indexed and we have to add 1 to
         // the size
         result.extend_from_slice(&(self.constant_pool.0.len() as u16 + 1).to_be_bytes());
         // Constant pool
@@ -224,12 +225,15 @@ pub fn generate_dir(ast: &Prg) -> DIR {
 }
 
 fn generate_class(class: &Class, dir: &DIR) -> IRClass {
+    let mut constant_pool = ConstantPool::new();
     let mut ir_class = IRClass::new(class.name.clone(), vec![], vec![]);
     for field in &class.fields {
         ir_class.fields.push(field.clone());
     }
     for method in &class.methods {
-        ir_class.methods.push(generate_method(method, dir));
+        ir_class
+            .methods
+            .push(generate_method(method, dir, &mut constant_pool));
     }
     ir_class
 }
@@ -244,7 +248,11 @@ fn generate_field(field: &FieldDecl, constant_pool: &mut ConstantPool) -> IRFiel
 }
 
 // TODO: Parallelize this, since methods are not dependent on each other(hopefully)
-fn generate_method(method: &MethodDecl, dir: &DIR) -> CompiledMethod {
+fn generate_method(
+    method: &MethodDecl,
+    dir: &DIR,
+    constant_pool: &mut ConstantPool,
+) -> CompiledMethod {
     let mut local_var_pool = LocalVarPool(vec![]);
     let mut compiled_method = CompiledMethod {
         name: method.name.clone(),
@@ -255,6 +263,7 @@ fn generate_method(method: &MethodDecl, dir: &DIR) -> CompiledMethod {
     compiled_method.code.append(&mut generate_code_stmt(
         method.body.clone(),
         dir,
+        constant_pool,
         &mut local_var_pool,
     ));
 
@@ -264,6 +273,7 @@ fn generate_method(method: &MethodDecl, dir: &DIR) -> CompiledMethod {
 fn generate_code_stmt(
     stmt: Stmt,
     dir: &DIR,
+    constant_pool: &mut ConstantPool,
     local_var_pool: &mut LocalVarPool,
 ) -> Vec<Instruction> {
     let mut result = vec![];
@@ -271,7 +281,7 @@ fn generate_code_stmt(
         Stmt::Block(stmts) => result.append(
             &mut stmts
                 .iter()
-                .map(|stmt| generate_code_stmt(stmt.clone(), dir, local_var_pool))
+                .map(|stmt| generate_code_stmt(stmt.clone(), dir, constant_pool, local_var_pool))
                 // Flatten to avoid vecs in our vec
                 .flatten()
                 .collect(),
@@ -288,7 +298,7 @@ fn generate_code_stmt(
             // TODO: Test, Bene
             result.append(&mut generate_code_expr(expr));
             // Generate bytecode for our body
-            let mut body = generate_code_stmt(*stmt, dir, local_var_pool);
+            let mut body = generate_code_stmt(*stmt, dir, constant_pool, local_var_pool);
             result.push(Instruction::reljumpifeq(body.len() as i16));
             result.append(&mut body);
             result.push(Instruction::reljumpifeq(-(body.len() as i16)));
@@ -332,23 +342,37 @@ fn generate_code_stmt(
             // Evaluate the expression
             result.append(&mut generate_code_expr(expr));
             // We set a label to jump to if the expression is false
-            let mut if_stmt = generate_code_stmt(*stmt1, dir, local_var_pool);
+            let mut if_stmt = generate_code_stmt(*stmt1, dir, constant_pool, local_var_pool);
             // If the expression is false, jump to the else block
             result.push(Instruction::reljumpifeq(if_stmt.len() as i16));
             // If the expression is true, execute the if block
             result.append(&mut if_stmt);
             // If there is an else block, execute it
             if let Some(stmt) = stmt2 {
-                result.append(&mut generate_code_stmt(*stmt, dir, local_var_pool));
+                result.append(&mut generate_code_stmt(
+                    *stmt,
+                    dir,
+                    constant_pool,
+                    local_var_pool,
+                ));
             }
         }
         Stmt::StmtExprStmt(stmt_expr) => {
-            result.append(&mut generate_code_stmt_expr(&stmt_expr));
+            result.append(&mut generate_code_stmt_expr(
+                &stmt_expr,
+                constant_pool,
+                local_var_pool,
+            ));
         }
         Stmt::TypedStmt(stmt, _types) => {
             // Generate bytecode for typed stmt
             // TODO: Check whether we can actually generate the same code as a normal stmt
-            result.append(&mut generate_code_stmt(*stmt, &dir, local_var_pool));
+            result.append(&mut generate_code_stmt(
+                *stmt,
+                &dir,
+                constant_pool,
+                local_var_pool,
+            ));
         }
     }
     return result;
@@ -356,8 +380,10 @@ fn generate_code_stmt(
 
 fn generate_code_stmt_expr(
     stmt_expr: &StmtExpr,
+    constant_pool: &mut ConstantPool,
     local_var_pool: &mut LocalVarPool,
 ) -> Vec<Instruction> {
+    //TODO: Was geht hier ab
     let mut result = vec![];
     match stmt_expr {
         StmtExpr::Assign(name, expr) => {
@@ -367,15 +393,22 @@ fn generate_code_stmt_expr(
         }
         StmtExpr::New(types, exprs) => {
             // Generate bytecode for new
-            // TODO: Mary
+            constant_pool.add(Constant::Class(types.to_ir_string().to_string()));
+            exprs.iter().for_each(|expr| {
+                result.append(&mut generate_code_expr(expr.clone()));
+            });
         }
         StmtExpr::MethodCall(expr, name, exprs) => {
             // Generate bytecode for method call
             // TODO: Bene
         }
+        //TODO: Steht nicht in der Vorlesung
         StmtExpr::TypedStmtExpr(stmt_expr, types) => {
-            // TODO: Mary
-            // Generate bytecode for typed stmt expr
+            result.append(&mut generate_code_stmt_expr(
+                stmt_expr,
+                constant_pool,
+                local_var_pool,
+            ));
         }
     }
     result
@@ -397,6 +430,7 @@ mod tests {
         let field = FieldDecl {
             field_type: Type::Int,
             name: String::from("test"),
+            val: None,
         };
         let ir_field = generate_field(&field, &mut constant_pool);
         assert_eq!(ir_field.name_index, 1);
