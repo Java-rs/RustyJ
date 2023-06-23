@@ -10,10 +10,15 @@ mod if_class;
 mod int_fields_class;
 mod local_var_decl_class;
 mod method_call_class;
+mod tast_to_ast;
 mod to_java;
 mod while_class;
 
 use self::to_java::class_to_java;
+use crate::codegen;
+use crate::codegen::*;
+use crate::parser;
+use crate::typechecker::typechecker::TypeChecker;
 use crate::types::Expr::*;
 use crate::types::Stmt::*;
 use crate::types::StmtExpr::*;
@@ -25,6 +30,7 @@ use std::io::read_to_string;
 use std::io::Write;
 use std::process::Command;
 use std::process::Stdio;
+use tast_to_ast::*;
 
 fn normalize_str(s: std::string::String) -> std::string::String {
     s.split('\n')
@@ -33,75 +39,29 @@ fn normalize_str(s: std::string::String) -> std::string::String {
         .fold("".to_string(), |acc, s| acc + s)
 }
 
-fn stmt_tast_to_ast(stmt: &Stmt) -> Stmt {
-    match stmt {
-        Stmt::TypedStmt(x, typ) => stmt_tast_to_ast(x),
-        Stmt::Block(stmts) => Block(stmts.iter().map(|x| stmt_tast_to_ast(x)).collect()),
-        Stmt::Return(expr) => Return(expr_tast_to_ast(expr)),
-        Stmt::While(cond, body) => While(expr_tast_to_ast(cond), Box::new(stmt_tast_to_ast(body))),
-        Stmt::If(cond, body, elze) => If(
-            expr_tast_to_ast(cond),
-            Box::new(stmt_tast_to_ast(body)),
-            match elze {
-                Some(x) => Some(Box::new(stmt_tast_to_ast(x))),
-                None => None,
-            },
-        ),
-        Stmt::StmtExprStmt(stmt_expr) => StmtExprStmt(stmt_expr_tast_to_ast(stmt_expr)),
-        default => stmt.clone(),
-    }
+pub fn parser_test(ast: &Class, name: &str) {
+    // Call parser with java code
+    // TODO: Can only be done, once we have a parsing method that returns a Class
+    // let parse_res = parser::parse(&read_to_string(File::open(format!("testcases/{name}.java"))));
+    // assert_eq!(parse_res, ast);
 }
 
-fn stmt_expr_tast_to_ast(stmt_expr: &StmtExpr) -> StmtExpr {
-    match stmt_expr {
-        StmtExpr::Assign(var, val) => Assign(var.clone(), expr_tast_to_ast(val)),
-        StmtExpr::New(typ, params) => New(
-            typ.clone(),
-            params.iter().map(|x| expr_tast_to_ast(x)).collect(),
-        ),
-        StmtExpr::MethodCall(obj, method, params) => MethodCall(
-            expr_tast_to_ast(obj),
-            method.clone(),
-            params.iter().map(|x| expr_tast_to_ast(x)).collect(),
-        ),
-        StmtExpr::TypedStmtExpr(x, typ) => stmt_expr_tast_to_ast(x),
-    }
+pub fn typechecker_test(ast: &Class, tast: &Class) {
+    // TODO: Errors are just ignored for now, oops
+    let mut tc = TypeChecker::new(vec![ast.clone()]).unwrap();
+    tc.check_program().unwrap();
+    let v: Vec<&Class> = tc.typed_classes.values().collect();
+    let typed = v[0];
+    println!("{}", typed);
+    assert_eq!(*typed, *ast);
 }
 
-fn expr_tast_to_ast(expr: &Expr) -> Expr {
-    match expr {
-        Expr::InstVar(x, s) => InstVar(Box::new(expr_tast_to_ast(x)), s.clone()),
-        Expr::Unary(s, x) => Unary(s.clone(), Box::new(expr_tast_to_ast(x))),
-        Expr::Binary(op, l, r) => Binary(
-            op.clone(),
-            Box::new(expr_tast_to_ast(l)),
-            Box::new(expr_tast_to_ast(r)),
-        ),
-        Expr::StmtExprExpr(x) => StmtExprExpr(Box::new(stmt_expr_tast_to_ast(x))),
-        Expr::TypedExpr(x, t) => expr_tast_to_ast(x),
-        default => expr.clone(),
-    }
+pub fn codegen_test(tast: &Class, name: &str) {
+    // TODO: I have not decided to how to test the codegen yet
+    // ir = generate_dir(&vec![tast]);
 }
 
-fn tast_to_ast(class: &Class) -> Class {
-    Class {
-        name: class.name.clone(),
-        fields: class.fields.clone(),
-        methods: class
-            .methods
-            .clone()
-            .into_iter()
-            .map(|method| MethodDecl {
-                ret_type: method.ret_type.clone(),
-                name: method.name.clone(),
-                params: method.params.clone(),
-                body: stmt_tast_to_ast(&method.body),
-            })
-            .collect(),
-    }
-}
-
-pub fn single_class_test(ast: &Class, tast: Option<&Class>, name: &str) {
+pub fn class_test(ast: &Class, tast: Option<&Class>, name: &str) {
     // Write AST & TAST to files
     let mut file =
         File::create(format!("testcases/{name}-AST.json")).expect("File failed to be created");
@@ -204,62 +164,72 @@ fn test_helper(
     Ok(())
 }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn Fields_class() {
 //     let class = Class {};
-//     single_class_test(&tast_to_ast(&class), Some(&class), "Fields");
+//     class_test(&tast_to_ast(&class), Some(&class), "Fields");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn IntFields_class() {
 //     let class = Class {};
-//     single_class_test(&tast_to_ast(&class), Some(&class), "IntFields");
+//     class_test(&tast_to_ast(&class), Some(&class), "IntFields");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn LocalVarDecl_class() {
 //     let class = Class {};
-//     single_class_test(&tast_to_ast(&class), Some(&class), "LocalVarDecl");
+//     class_test(&tast_to_ast(&class), Some(&class), "LocalVarDecl");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn MethodCall_class() {
 //     let class = Class {};
-//     single_class_test(&tast_to_ast(&class), Some(&class), "MethodCall");
+//     class_test(&tast_to_ast(&class), Some(&class), "MethodCall");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn NamingConflict_class() {
 //     let class = Class {};
-//     single_class_test(&tast_to_ast(&class), Some(&class), "NamingConflict");
+//     class_test(&tast_to_ast(&class), Some(&class), "NamingConflict");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn Negator_class() {
 //     let class = Class {};
-//     single_class_test(&tast_to_ast(&class), Some(&class), "Negator");
+//     class_test(&tast_to_ast(&class), Some(&class), "Negator");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn Return_class() {
 //     let class = Class {};
-//     single_class_test(&tast_to_ast(&class), Some(&class), "Return");
+//     class_test(&tast_to_ast(&class), Some(&class), "Return");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn SetterGetter_class() {
 //     let class = Class {};
-//     single_class_test(&tast_to_ast(&class), Some(&class), "SetterGetter");
+//     class_test(&tast_to_ast(&class), Some(&class), "SetterGetter");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn StrAdd_class() {
 //     let class = Class {};
-//     single_class_test(&tast_to_ast(&class), Some(&class), "StrAdd");
+//     class_test(&tast_to_ast(&class), Some(&class), "StrAdd");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn While_class() {
 //     let class = Class {};
-//     single_class_test(&tast_to_ast(&class), Some(&class), "While");
+//     class_test(&tast_to_ast(&class), Some(&class), "While");
 // }

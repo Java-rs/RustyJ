@@ -1,8 +1,31 @@
 use super::*;
 
 #[test]
-fn method_call_class() {
-    let class = Class {
+fn test_class() {
+    let class = method_call_class();
+    class_test(&tast_to_ast(&class), Some(&class), "MethodCall");
+}
+
+#[test]
+fn test_parser() {
+    let class = method_call_class();
+    parser_test(&tast_to_ast(&class), "MethodCall");
+}
+
+#[test]
+fn test_typechecker() {
+    let class = method_call_class();
+    typechecker_test(&tast_to_ast(&class), &class);
+}
+
+#[test]
+fn test_codegen() {
+    let class = method_call_class();
+    codegen_test(&class, "MethodCall");
+}
+
+fn method_call_class() -> Class {
+    Class {
         name: "MethodCall".to_string(),
         fields: vec![],
         methods: vec![
@@ -86,6 +109,5 @@ fn method_call_class() {
                 ),
             },
         ],
-    };
-    single_class_test(&tast_to_ast(&class), Some(&class), "MethodCall");
+    }
 }

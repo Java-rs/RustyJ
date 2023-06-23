@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Class {
     pub name: String,
     pub fields: Vec<FieldDecl>,
@@ -36,14 +36,14 @@ impl Default for Class {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct FieldDecl {
     pub field_type: Type,
     pub name: String,
     pub val: Option<String>, // @Decide: Should probably Option<Expr> instead
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct MethodDecl {
     pub ret_type: Type,
     pub name: String,
@@ -51,7 +51,7 @@ pub struct MethodDecl {
     pub body: Stmt,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub enum Stmt {
     Block(Vec<Stmt>),
     Return(Expr),

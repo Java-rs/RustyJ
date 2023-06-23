@@ -1,8 +1,31 @@
 use super::*;
 
 #[test]
-fn bool_alg_class() {
-    let class = Class {
+fn test_class() {
+    let class = bool_alg_class();
+    class_test(&tast_to_ast(&class), Some(&class), "BoolAlg");
+}
+
+#[test]
+fn test_parser() {
+    let class = bool_alg_class();
+    parser_test(&tast_to_ast(&class), "BoolAlg");
+}
+
+#[test]
+fn test_typechecker() {
+    let class = bool_alg_class();
+    typechecker_test(&tast_to_ast(&class), &class);
+}
+
+#[test]
+fn test_codegen() {
+    let class = bool_alg_class();
+    codegen_test(&class, "BoolAlg");
+}
+
+fn bool_alg_class() -> Class {
+    Class {
         name: "BoolAlg".to_string(),
         fields: vec![],
         methods: vec![MethodDecl {
@@ -44,6 +67,5 @@ fn bool_alg_class() {
                 Type::Bool,
             ),
         }],
-    };
-    single_class_test(&tast_to_ast(&class), Some(&class), "BoolAlg");
+    }
 }

@@ -1,8 +1,31 @@
 use super::*;
 
 #[test]
-fn arithmetic_methods_class() {
-    let class = Class {
+fn test_class() {
+    let class = arithmetic_methods_class();
+    class_test(&tast_to_ast(&class), Some(&class), "ArithmeticMethods");
+}
+
+#[test]
+fn test_parser() {
+    let class = arithmetic_methods_class();
+    parser_test(&tast_to_ast(&class), "ArithmeticMethods");
+}
+
+#[test]
+fn test_typechecker() {
+    let class = arithmetic_methods_class();
+    typechecker_test(&tast_to_ast(&class), &class);
+}
+
+#[test]
+fn test_codegen() {
+    let class = arithmetic_methods_class();
+    codegen_test(&class, "ArithmeticMethods");
+}
+
+fn arithmetic_methods_class() -> Class {
+    Class {
         name: "ArithmeticMethods".to_string(),
         fields: vec![
             FieldDecl {
@@ -204,6 +227,5 @@ fn arithmetic_methods_class() {
                 ),
             },
         ],
-    };
-    single_class_test(&tast_to_ast(&class), Some(&class), "ArithmeticMethods");
+    }
 }
