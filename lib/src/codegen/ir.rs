@@ -1,3 +1,5 @@
+#![allow(non_camel_case_types)]
+
 use crate::typechecker::*;
 use crate::types;
 use crate::types::*;
@@ -211,6 +213,7 @@ pub(crate) enum Instruction {
     istore(u8),       //Store int into local variable
     astore(u8),       //Store reference into local variable
     reljumpifeq(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
+    aconst_null,      //Push null onto stack
 }
 
 pub fn generate_dir(ast: &Prg) -> DIR {
@@ -303,7 +306,7 @@ fn generate_code_stmt(
                     Instruction::istore(index),
                     Instruction::iload(index),
                 ]),
-                Boolean => result.append(&mut vec![
+                types::Type::Bool => result.append(&mut vec![
                     Instruction::bipush(index),
                     Instruction::istore(index),
                     Instruction::iload(index),
@@ -390,7 +393,9 @@ fn generate_code_expr(expr: Expr) -> Vec<Instruction> {
         Expr::Bool(b) => {}
         Expr::Char(c) => {}
         Expr::String(s) => {}
-        Expr::Jnull => {}
+        Expr::Jnull => {
+            result.push(Instruction::aconst_null);
+        }
         Expr::This => {}
         Expr::InstVar(exprs, name) => {}
         Expr::Binary(expr1, op, expr2) => {}
