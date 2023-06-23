@@ -1,9 +1,3 @@
-//! Grammar~doc
-ID = {ASCII_ALPHA_UPPER~ASCII_ALPHA+}
-Name = {ID~","~ID}
-List = {(Name~"\n")+}
-
-
 IDENTIFIER ={(ASCII_ALPHA|"_")~(ASCII_ALPHANUMERIC|"_")* }
 
 compilationunit = {classdeclaration+ }

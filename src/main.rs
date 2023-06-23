@@ -1,5 +1,3 @@
-use parser::Example;
-use parser::*;
 use lib::typechecker::typechecker;
 use lib::types::{Class, Expr, FieldDecl, MethodDecl, Prg, Stmt, StmtExpr, Type};
 use serde_json::Value;

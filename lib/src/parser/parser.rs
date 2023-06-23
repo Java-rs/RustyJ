@@ -1,15 +1,15 @@
 extern crate pest;
 extern crate pest_derive;
 
+use super::*;
 use pest::error::Error;
+use pest::iterators::Pair;
 use pest::Parser;
 use pest_derive::Parser;
 use serde::{Deserialize, Serialize};
-use pest::iterators::Pair;
-
 
 #[derive(Parser)]
-#[grammar = "JavaGrammar.pest"]
+#[grammar = "src/parser/ExampleGrammar.pest"]
 struct ExampleParser;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,21 +22,20 @@ pub enum Example {
 pub fn parse_Example(file: &str) -> Result<Example, Error<Rule>> {
     let example: Pair<Rule> = ExampleParser::parse(Rule::List, file)?.next().unwrap();
 
-
-    fn parse_value(pair: Pair<Rule>) -> Example {
-        match pair.as_rule() {
-            Rule::ID => Example::ID(String::from(pair.as_str())),
-            Rule::Name => Name(pair: Pair<Rule>),
-            Rule::List => Example::List(pair.into_inner().map(parse_value).collect()),
-        }
-    }
-
     Ok(parse_value(example))
 }
-pub fn Name(pair: Pair<Rule>)->Example::Name
-{
+
+fn parse_value(pair: Pair<Rule>) -> Example {
+    match pair.as_rule() {
+        Rule::ID => Example::ID(String::from(pair.as_str())),
+        Rule::Name => Name(pair),
+        Rule::List => Example::List(pair.into_inner().map(parse_value).collect()),
+    }
+}
+
+pub fn Name(pair: Pair<Rule>) -> Example {
     let mut pairs = pair.into_inner();
     let a = parse_value(pairs.next().unwrap());
     let b = parse_value(pairs.next().unwrap());
-  return  Example::Name(Box::new(a), Box::new(b))
+    return Example::Name(Box::new(a), Box::new(b));
 }

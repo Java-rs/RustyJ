@@ -203,6 +203,7 @@ pub struct NameAndType {
 /// The instructions for the JVM
 /// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.areturn
 pub(crate) enum Instruction {
+    aload_0,
     aload(u8),        //Load reference from local variable
     iload(u8),        //Load int from local variable
     ifeq(u16),        //Branch if int is 0
@@ -427,6 +428,7 @@ mod tests {
         let field = FieldDecl {
             field_type: Type::Int,
             name: String::from("test"),
+            val: None,
         };
         let ir_field = generate_field(&field, &mut constant_pool);
         assert_eq!(ir_field.name_index, 1);
