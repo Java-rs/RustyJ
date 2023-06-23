@@ -138,9 +138,12 @@ fn test_helper(
     let class_code = class_to_java(ast);
     let mut file = File::create(format!("tests/{name}.java"))
         .expect("failed to open original java file for writing generated code");
-    println!("Generated code: {class_code}");
     file.write(class_code.as_bytes())
-        .map_err(|x| "failed to write generated java code".to_string())?;
+        .map_err(|x| "failed to write generated java code in original java file".to_string())?;
+    let mut file = File::create(format!("tests/{name}-gen.java")) // Only for debugging tests
+        .expect("failed to open generated java file for writing generated code");
+    file.write(class_code.as_bytes())
+        .map_err(|x| "failed to write generated java code in generated java file".to_string())?;
 
     // Compile generated java code
     let mut child = Command::new("javac")
