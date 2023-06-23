@@ -299,7 +299,7 @@ fn fib_class() -> Class {
                                             Type::Int,
                                         ),
                                     ])),
-                                    Type::Int,
+                                    Type::Void,
                                 )),
                             )),
                             Type::Int,
