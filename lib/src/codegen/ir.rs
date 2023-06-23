@@ -251,7 +251,7 @@ fn generate_field(field: &FieldDecl, constant_pool: &mut ConstantPool) -> IRFiel
     IRFieldDecl::new(type_index, name_index)
 }
 
-// TODO: Parallelize this, since methods are not dependent on each other(hopefully)
+/// Generates a Vector of instructions for a given method
 fn generate_method(
     method: &MethodDecl,
     dir: &DIR,
