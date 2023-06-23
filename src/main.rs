@@ -63,7 +63,7 @@ fn main() -> color_eyre::Result<()> {
 
     let program: Prg = vec![class2.clone()];
     let mut typechecker = typechecker::TypeChecker::new(program).unwrap();
-    typechecker.check_program().expect("ERROR");
+    typechecker.check_and_type_program().expect("ERROR");
     serde_json::to_writer_pretty(
         &mut File::create("typed_if-test.json")?,
         &typechecker.typed_classes.get(&class2.name.clone()),

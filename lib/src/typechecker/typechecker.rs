@@ -37,19 +37,19 @@ impl TypeChecker {
         })
     }
 
-    pub fn check_program(&mut self) -> Result<(), String> {
+    pub fn check_and_type_program(&mut self) -> Result<(), String> {
         let classes = self.classes.clone();
         for (_, class) in &classes {
             self.current_class = Some(class.clone());
 
-            self.check_class(class)?;
+            self.check_and_type_class(class)?;
             self.fields.clear();
         }
         println!("Program successfully type checked!🎉🧙\n\n");
         Ok(())
     }
 
-    fn check_class(&mut self, class: &Class) -> Result<(), String> {
+    fn check_and_type_class(&mut self, class: &Class) -> Result<(), String> {
         self.current_typed_class.name = class.name.clone();
 
         self.fields.insert(class.name.clone(), vec![]);
@@ -70,7 +70,7 @@ impl TypeChecker {
                     .push(method.clone());
             }
 
-            let typed_method = self.check_method(method)?;
+            let typed_method = self.check_and_type_method(method)?;
             self.current_typed_class.methods.push(typed_method);
             self.current_local_vars.clear();
         }
@@ -107,8 +107,6 @@ impl TypeChecker {
         Ok(())
     }
 
-    // write a function that checks if the optional val is of the same type as the field_type
-    // if it is, return Ok(())
     fn check_field_type(&self, field_type: &Type, val: &Option<String>) -> Result<(), String> {
         if let Some(val) = val {
             match field_type {
@@ -148,7 +146,7 @@ impl TypeChecker {
         Ok(())
     }
 
-    fn check_method(&mut self, method: &MethodDecl) -> Result<MethodDecl, String> {
+    fn check_and_type_method(&mut self, method: &MethodDecl) -> Result<MethodDecl, String> {
         method.params.iter().for_each(|(t, name)| {
             self.current_local_vars.insert(name.clone(), t.clone());
         });
@@ -188,6 +186,7 @@ impl TypeChecker {
                 Ok(())
             }
             Stmt::StmtExprStmt(stmt_expr) => self.check_stmt_expr(stmt_expr),
+            // Why does it work??
             _ => Ok(()),
         }
     }
@@ -233,7 +232,10 @@ impl TypeChecker {
             Expr::String(_) => Ok(()),
             Expr::Jnull => Ok(()),
             Expr::This => Ok(()),
-            _ => Ok(()),
+            Expr::LocalVar(_) => Ok(()),
+            Expr::FieldVar(_) => Ok(()),
+            // Why part two?
+            Expr::TypedExpr(expr, _) => self.check_expr(expr),
         }
     }
 
