@@ -49,7 +49,7 @@ pub fn parser_test(ast: &Class, name: &str) {
 pub fn typechecker_test(ast: &Class, tast: &Class) {
     // TODO: Errors are just ignored for now, oops
     let mut tc = TypeChecker::new(vec![ast.clone()]).unwrap();
-    tc.check_program().unwrap();
+    tc.check_and_type_program().unwrap();
     let v: Vec<&Class> = tc.typed_classes.values().collect();
     let typed = v[0];
     println!("{}", typed);
