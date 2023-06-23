@@ -34,11 +34,12 @@ impl DIR {
         // TODO: Method count
         // TODO: Attributes count(probably 0 idk)
         result.extend_from_slice(
-            self.classes
+            &self
+                .classes
                 .iter()
                 .map(|c| c.as_bytes())
                 .flatten()
-                .collect(),
+                .collect::<Vec<u8>>(),
         );
         result
     }
@@ -324,7 +325,7 @@ fn generate_code_stmt(
                 ]),
                 _ => panic!("Invalid return type"),
             }
-            local_var_pool.0.push((name, index));
+            local_var_pool.0.push(name);
         }
         Stmt::If(expr, stmt1, stmt2) => {
             // Generate bytecode for if
@@ -343,7 +344,7 @@ fn generate_code_stmt(
             }
         }
         Stmt::StmtExprStmt(stmt_expr) => {
-            result.append(&mut generate_code_stmt_expr(&stmt_expr));
+            result.append(&mut generate_code_stmt_expr(&stmt_expr, local_var_pool));
         }
         Stmt::TypedStmt(stmt, _types) => {
             // Generate bytecode for typed stmt
@@ -362,8 +363,8 @@ fn generate_code_stmt_expr(
     match stmt_expr {
         StmtExpr::Assign(name, expr) => {
             // Generate bytecode for assignment
-            result.append(&mut generate_code_expr(expr));
-            // TODO: Bene
+            result.append(&mut generate_code_expr(expr.clone()));
+            local_var_pool.add(name.clone());
         }
         StmtExpr::New(types, exprs) => {
             // Generate bytecode for new
