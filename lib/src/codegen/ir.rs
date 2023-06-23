@@ -389,20 +389,29 @@ fn generate_code_expr(expr: Expr) -> Vec<Instruction> {
     let mut result = vec![];
     // TODO
     match expr {
-        Expr::Integer(i) => {}
-        Expr::Bool(b) => {}
-        Expr::Char(c) => {}
+        Expr::Integer(i) => {
+            result.push(Instruction::bipush(i as u8));
+        }
+        Expr::Bool(b) => {
+            result.push(Instruction::bipush(b as u8));
+        }
+        Expr::Char(c) => {
+            result.push(Instruction::bipush(c as u8));
+        }
         Expr::String(s) => {}
         Expr::Jnull => {
             result.push(Instruction::aconst_null);
         }
-        Expr::This => {}
+        Expr::This => {
+            // TODO: This is just a guess. It may or may not work
+            result.push(Instruction::aload_0);
+        }
         Expr::InstVar(exprs, name) => {}
-        Expr::Binary(expr1, op, expr2) => {}
+        Expr::Binary(op, left, right) => {}
         Expr::Unary(op, expr) => {}
-        Expr::LocalVar(expr, name) => {}
         Expr::TypedExpr(expr, r#type) => {}
         Expr::StmtExprExpr(stmt_expr) => {}
+        Expr::LocalVar(name) => {}
         unexpected => panic!("Unexpected expression: {:?}", unexpected),
     }
     result
