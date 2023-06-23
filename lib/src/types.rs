@@ -1,3 +1,4 @@
+use crate::codegen::ir::ConstantPool;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
@@ -41,6 +42,21 @@ pub struct FieldDecl {
     pub field_type: Type,
     pub name: String,
     pub val: Option<String>, // @Decide: Should probably Option<Expr> instead
+}
+
+impl FieldDecl {
+    /// See https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.5
+    pub fn as_bytes(&self, constant_pool: &mut ConstantPool) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        // Public access modifier
+        bytes.extend_from_slice(&[0x0, 0x1]);
+        bytes.extend_from_slice(&self.field_type.as_bytes());
+        bytes.extend_from_slice(&self.name.as_bytes());
+        if let Some(val) = &self.val {
+            bytes.extend_from_slice(&val.as_bytes());
+        }
+        bytes
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -200,6 +216,9 @@ impl Display for Type {
 }
 
 impl Type {
+    fn as_bytes(&self) -> Vec<u8> {
+        todo!()
+    }
     pub fn to_ir_string(&self) -> &str {
         match self {
             Type::Int => "I",
