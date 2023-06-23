@@ -1,5 +1,5 @@
 use lib::typechecker::typechecker;
-use lib::types::{Class, Expr, FieldDecl, MethodDecl, Prg, Stmt, Type};
+use lib::types::{Class, Expr, FieldDecl, MethodDecl, Prg, Stmt, StmtExpr, Type};
 use serde_json::Value;
 use std::fs::File;
 use std::io::Read;
@@ -10,6 +10,12 @@ fn main() -> color_eyre::Result<()> {
     tracing_subscriber::fmt::init();
     info!("Hello RustyJ!");
     lib::hi();
+
+    Ok(())
+}
+
+#[test]
+fn test_typechecker() -> color_eyre::Result<()> {
     let mut file = File::open("lib/tests/If-AST.json")?;
     let mut ast_string = String::new();
 
@@ -37,6 +43,16 @@ fn main() -> color_eyre::Result<()> {
             params: vec![(Type::Char, "c".to_string())],
             ret_type: Type::Bool,
             body: Stmt::Block(vec![
+                Stmt::LocalVarDecl(Type::Int, "x".to_string()),
+                Stmt::StmtExprStmt(StmtExpr::Assign(
+                    "c".to_string(),
+                    Expr::Binary(
+                        "+".to_string(),
+                        Box::new(Expr::LocalOrFieldVar("x".to_string())),
+                        Box::new(Expr::Integer(1)),
+                    ),
+                )),
+                Stmt::LocalVarDecl(Type::Int, "d".to_string()),
                 Stmt::If(
                     Expr::Binary(
                         "==".to_string(),
@@ -51,12 +67,12 @@ fn main() -> color_eyre::Result<()> {
         }],
     };
 
-    let program: Prg = vec![class2.clone()];
+    let program: Prg = vec![class.clone()];
     let mut typechecker = typechecker::TypeChecker::new(program).unwrap();
     typechecker.check_program().expect("ERROR");
     serde_json::to_writer_pretty(
         &mut File::create("typed_if-test.json")?,
-        &typechecker.typed_classes.get(&class2.name.clone()),
+        &typechecker.typed_classes.get(&class.name.clone()),
     )?;
 
     //let mut file = File::create("typed_if-ast.txt")?;
