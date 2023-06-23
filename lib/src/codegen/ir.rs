@@ -1,7 +1,8 @@
+#![allow(non_camel_case_types)]
+
 use crate::typechecker::*;
 use crate::types;
 use crate::types::*;
-use std::fmt::Debug;
 use std::io::Bytes;
 
 /// The DIR(Duck Intermediate Representation) is our IR for generating Java Bytecode
@@ -35,11 +36,12 @@ impl DIR {
         // TODO: Method count
         // TODO: Attributes count(probably 0 idk)
         result.extend_from_slice(
-            self.classes
+            &self
+                .classes
                 .iter()
                 .map(|c| c.as_bytes())
                 .flatten()
-                .collect(),
+                .collect::<Vec<u8>>(),
         );
         result
     }
@@ -211,6 +213,7 @@ pub(crate) enum Instruction {
     istore(u8),       //Store int into local variable
     astore(u8),       //Store reference into local variable
     reljumpifeq(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
+    aconst_null,      //Push null onto stack
 }
 
 pub fn generate_dir(ast: &Prg) -> DIR {
@@ -312,7 +315,7 @@ fn generate_code_stmt(
                     Instruction::istore(index),
                     Instruction::iload(index),
                 ]),
-                Boolean => result.append(&mut vec![
+                types::Type::Bool => result.append(&mut vec![
                     Instruction::bipush(index),
                     Instruction::istore(index),
                     Instruction::iload(index),
@@ -334,7 +337,7 @@ fn generate_code_stmt(
                 ]),
                 _ => panic!("Invalid return type"),
             }
-            local_var_pool.0.push((name, index));
+            local_var_pool.0.push(name);
         }
         Stmt::If(expr, stmt1, stmt2) => {
             // Generate bytecode for if
@@ -388,8 +391,8 @@ fn generate_code_stmt_expr(
     match stmt_expr {
         StmtExpr::Assign(name, expr) => {
             // Generate bytecode for assignment
-            result.append(&mut generate_code_expr(expr));
-            // TODO: Bene
+            result.append(&mut generate_code_expr(expr.clone()));
+            local_var_pool.add(name.clone());
         }
         StmtExpr::New(types, exprs) => {
             // Generate bytecode for new
@@ -416,7 +419,24 @@ fn generate_code_stmt_expr(
 
 fn generate_code_expr(expr: Expr) -> Vec<Instruction> {
     let mut result = vec![];
-    todo!();
+    // TODO
+    match expr {
+        Expr::Integer(i) => {}
+        Expr::Bool(b) => {}
+        Expr::Char(c) => {}
+        Expr::String(s) => {}
+        Expr::Jnull => {
+            result.push(Instruction::aconst_null);
+        }
+        Expr::This => {}
+        Expr::InstVar(exprs, name) => {}
+        Expr::Binary(expr1, op, expr2) => {}
+        Expr::Unary(op, expr) => {}
+        Expr::LocalVar(expr, name) => {}
+        Expr::TypedExpr(expr, r#type) => {}
+        Expr::StmtExprExpr(stmt_expr) => {}
+        unexpected => panic!("Unexpected expression: {:?}", unexpected),
+    }
     result
 }
 
