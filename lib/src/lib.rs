@@ -1,8 +1,8 @@
 mod parser;
 #[cfg(test)]
 mod tests;
-mod typechecker;
-mod types;
+pub mod typechecker;
+pub mod types;
 
 use tracing::info;
 
