@@ -384,7 +384,22 @@ fn generate_code_stmt_expr(
 
 fn generate_code_expr(expr: Expr) -> Vec<Instruction> {
     let mut result = vec![];
-    todo!();
+    // TODO
+    match expr {
+        Expr::Integer(i) => {}
+        Expr::Bool(b) => {}
+        Expr::Char(c) => {}
+        Expr::String(s) => {}
+        Expr::Jnull => {}
+        Expr::This => {}
+        Expr::InstVar(exprs, name) => {}
+        Expr::Binary(expr1, op, expr2) => {}
+        Expr::Unary(op, expr) => {}
+        Expr::LocalVar(expr, name) => {}
+        Expr::TypedExpr(expr, r#type) => {}
+        Expr::StmtExprExpr(stmt_expr) => {}
+        unexpected => panic!("Unexpected expression: {:?}", unexpected),
+    }
     result
 }
 
