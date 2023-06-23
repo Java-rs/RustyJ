@@ -138,12 +138,14 @@ fn test_helper(
     let class_code = class_to_java(ast);
     let mut file = File::create(format!("tests/{name}.java"))
         .expect("failed to open original java file for writing generated code");
+    println!("Generated code: {class_code}");
     file.write(class_code.as_bytes())
         .map_err(|x| "failed to write generated java code".to_string())?;
 
     // Compile generated java code
     let mut child = Command::new("javac")
         .arg(format!("tests/{name}.java"))
+        .arg("-g:none")
         .spawn()
         .map_err(|x| "failed to compile generated java-code".to_string())?;
     let ecode = child
@@ -171,12 +173,13 @@ fn test_helper(
     file.write(og_java_code.as_bytes())
         .map_err(|x| "failed to write original java code back".to_string())?;
     let mut child = Command::new("javac")
-        .arg(format!("tests/{name}-gen.java"))
+        .arg(format!("tests/{name}.java"))
+        .arg("-g:none")
         .spawn()
-        .map_err(|x| "failed to compile generated java-code".to_string())?;
+        .map_err(|x| "failed to compile original java-code".to_string())?;
     let ecode = child
         .wait()
-        .map_err(|x| "failed to wait on child compiling generated java code".to_string())?;
+        .map_err(|x| "failed to wait on child compiling original java code".to_string())?;
     assert!(ecode.success());
     let og_clz_file = read(format!("tests/{name}.class"))
         .map_err(|x| "failed to read original java class file".to_string())?;

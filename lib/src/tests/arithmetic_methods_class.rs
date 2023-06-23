@@ -79,14 +79,14 @@ fn arithmetic_methods_class() {
                                     "a".to_string(),
                                     TypedExpr(
                                         Box::new(Binary(
-                                            "*".to_string(),
-                                            Box::new(TypedExpr(
-                                                Box::new(LocalOrFieldVar("y".to_string())),
-                                                Type::Int,
-                                            )),
+                                            "/".to_string(),
                                             Box::new(TypedExpr(
                                                 Box::new(Binary(
-                                                    "/".to_string(),
+                                                    "*".to_string(),
+                                                    Box::new(TypedExpr(
+                                                        Box::new(LocalOrFieldVar("y".to_string())),
+                                                        Type::Int,
+                                                    )),
                                                     Box::new(TypedExpr(
                                                         Box::new(Binary(
                                                             "+".to_string(),
@@ -105,11 +105,11 @@ fn arithmetic_methods_class() {
                                                         )),
                                                         Type::Int,
                                                     )),
-                                                    Box::new(TypedExpr(
-                                                        Box::new(LocalOrFieldVar("x".to_string())),
-                                                        Type::Int,
-                                                    )),
                                                 )),
+                                                Type::Int,
+                                            )),
+                                            Box::new(TypedExpr(
+                                                Box::new(LocalOrFieldVar("x".to_string())),
                                                 Type::Int,
                                             )),
                                         )),
