@@ -57,7 +57,7 @@ impl DIR {
         result.extend_from_slice(&(current_class.methods.len() as u16).to_be_bytes());
         // TODO: Method info
         for method in &current_class.methods {
-            result.append(&mut method.as_bytes(&mut self.constant_pool));
+            result.append(&mut method.as_bytes());
         }
         // Attributes count. TODO: Put Methods in here
         result.extend_from_slice(&[0, 0]);
@@ -214,6 +214,10 @@ impl CompiledMethod {
                 .to_be_bytes(),
         );
         // TODO: Attributes count and attributes
+        result
+    }
+    fn as_bytes(&self) -> Vec<u8> {
+        todo!()
     }
 }
 
@@ -301,6 +305,7 @@ fn generate_method(
 ) -> CompiledMethod {
     let mut local_var_pool = LocalVarPool(vec![]);
     let mut compiled_method = CompiledMethod {
+        return_type: method.ret_type.clone(),
         name: method.name.clone(),
         max_stack: 0,
         code: vec![],
