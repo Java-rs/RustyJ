@@ -1,4 +1,4 @@
-use crate::codegen::ir::ConstantPool;
+use crate::codegen::ConstantPool;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
