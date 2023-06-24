@@ -90,7 +90,7 @@ fn while_class() -> Class {
                                                 "a".to_string(),
                                                 TypedExpr(
                                                     Box::new(Binary(
-                                                        "*".to_string(),
+                                                        "+".to_string(),
                                                         Box::new(TypedExpr(
                                                             Box::new(LocalOrFieldVar(
                                                                 "a".to_string(),
