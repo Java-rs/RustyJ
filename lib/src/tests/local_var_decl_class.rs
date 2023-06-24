@@ -1,8 +1,31 @@
 use super::*;
 
 #[test]
-fn local_var_decl_class() {
-    let class = Class {
+fn test_class() {
+    let class = local_var_decl_class();
+    class_test(&tast_to_ast(&class), Some(&class), "LocalVarDecl");
+}
+
+#[test]
+fn test_parser() {
+    let class = local_var_decl_class();
+    parser_test(&tast_to_ast(&class), "LocalVarDecl");
+}
+
+#[test]
+fn test_typechecker() {
+    let class = local_var_decl_class();
+    typechecker_test(&tast_to_ast(&class), &class);
+}
+
+#[test]
+fn test_codegen() {
+    let class = local_var_decl_class();
+    codegen_test(&class, "LocalVarDecl");
+}
+
+fn local_var_decl_class() -> Class {
+    Class {
         name: "LocalVarDecl".to_string(),
         fields: vec![],
         methods: vec![MethodDecl {
@@ -36,6 +59,5 @@ fn local_var_decl_class() {
                 Type::Int,
             ),
         }],
-    };
-    single_class_test(&tast_to_ast(&class), Some(&class), "LocalVarDecl");
+    }
 }

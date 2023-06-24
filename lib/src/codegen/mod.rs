@@ -1,1 +1,3 @@
-pub mod ir;
+mod ir;
+
+pub use ir::*;
