@@ -1,3 +1,4 @@
+use crate::codegen::ConstantPool;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
@@ -43,12 +44,35 @@ pub struct FieldDecl {
     pub val: Option<String>, // @Decide: Should probably Option<Expr> instead
 }
 
+impl FieldDecl {
+    /// See https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.5
+    pub fn as_bytes(&self, constant_pool: &mut ConstantPool) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        // Public access modifier
+        bytes.extend_from_slice(&[0x0, 0x1]);
+        bytes.extend_from_slice(&self.field_type.as_bytes());
+        bytes.extend_from_slice(&self.name.as_bytes());
+        if let Some(val) = &self.val {
+            bytes.extend_from_slice(&val.as_bytes());
+        }
+        bytes
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct MethodDecl {
     pub ret_type: Type,
     pub name: String,
     pub params: Vec<(Type, String)>,
     pub body: Stmt,
+}
+
+impl MethodDecl {
+    pub fn as_bytes(&self, constant_pool: &mut ConstantPool) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        // TODO
+        bytes
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
@@ -200,12 +224,16 @@ impl Display for Type {
 }
 
 impl Type {
+    fn as_bytes(&self) -> Vec<u8> {
+        todo!()
+    }
     pub fn to_ir_string(&self) -> &str {
         match self {
             Type::Int => "I",
             Type::Char => "C",
             Type::Bool => "Z",
             Type::String => "Ljava/lang/String;",
+            Type::Void => "V",
             // TODO: Either the class has the formatting `L<class>;' or we have to add it here.
             Type::Class(name) => name,
             _ => panic!("Invalid type: {}", self),
