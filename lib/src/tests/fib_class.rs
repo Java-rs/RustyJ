@@ -1,8 +1,31 @@
 use super::*;
 
 #[test]
-fn fib_class() {
-    let class = Class {
+fn test_class() {
+    let class = fib_class();
+    class_test(&tast_to_ast(&class), Some(&class), "Fib");
+}
+
+#[test]
+fn test_parser() {
+    let class = fib_class();
+    parser_test(&tast_to_ast(&class), "Fib");
+}
+
+#[test]
+fn test_typechecker() {
+    let class = fib_class();
+    typechecker_test(&tast_to_ast(&class), &class);
+}
+
+#[test]
+fn test_codegen() {
+    let class = fib_class();
+    codegen_test(&class, "Fib");
+}
+
+fn fib_class() -> Class {
+    Class {
         name: "Fib".to_string(),
         fields: vec![],
         methods: vec![
@@ -183,7 +206,7 @@ fn fib_class() {
                                             Type::Int,
                                         )),
                                         Box::new(TypedExpr(
-                                            Box::new(LocalOrFieldVar("i".to_string())),
+                                            Box::new(LocalOrFieldVar("n".to_string())),
                                             Type::Int,
                                         )),
                                     )),
@@ -276,7 +299,7 @@ fn fib_class() {
                                             Type::Int,
                                         ),
                                     ])),
-                                    Type::Int,
+                                    Type::Void,
                                 )),
                             )),
                             Type::Int,
@@ -293,6 +316,5 @@ fn fib_class() {
                 ),
             },
         ],
-    };
-    create_test_file(&tast_to_ast(&class), Some(&class), "Fib");
+    }
 }

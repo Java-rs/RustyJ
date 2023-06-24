@@ -5,19 +5,32 @@ mod complex_if_class;
 mod empty_class;
 mod empty_method_class;
 mod fib_class;
+mod fields_class;
 mod if_class;
+mod int_fields_class;
+mod local_var_decl_class;
+mod method_call_class;
+mod tast_to_ast;
 mod to_java;
+mod while_class;
 
 use self::to_java::class_to_java;
+use crate::codegen;
+use crate::codegen::*;
+use crate::parser;
+use crate::typechecker::typechecker::TypeChecker;
 use crate::types::Expr::*;
 use crate::types::Stmt::*;
 use crate::types::StmtExpr::*;
 use crate::types::*;
 use std::fs::read;
 use std::fs::File;
+use std::fs::OpenOptions;
+use std::io::read_to_string;
 use std::io::Write;
 use std::process::Command;
 use std::process::Stdio;
+use tast_to_ast::*;
 
 fn normalize_str(s: std::string::String) -> std::string::String {
     s.split('\n')
@@ -26,200 +39,197 @@ fn normalize_str(s: std::string::String) -> std::string::String {
         .fold("".to_string(), |acc, s| acc + s)
 }
 
-fn stmt_tast_to_ast(stmt: &Stmt) -> Stmt {
-    match stmt {
-        Stmt::TypedStmt(x, typ) => stmt_tast_to_ast(x),
-        Stmt::Block(stmts) => Block(stmts.iter().map(|x| stmt_tast_to_ast(x)).collect()),
-        Stmt::Return(expr) => Return(expr_tast_to_ast(expr)),
-        Stmt::While(cond, body) => While(expr_tast_to_ast(cond), Box::new(stmt_tast_to_ast(body))),
-        Stmt::If(cond, body, elze) => If(
-            expr_tast_to_ast(cond),
-            Box::new(stmt_tast_to_ast(body)),
-            match elze {
-                Some(x) => Some(Box::new(stmt_tast_to_ast(x))),
-                None => None,
-            },
-        ),
-        Stmt::StmtExprStmt(stmt_expr) => StmtExprStmt(stmt_expr_tast_to_ast(stmt_expr)),
-        default => stmt.clone(),
-    }
+pub fn parser_test(ast: &Class, name: &str) {
+    // Call parser with java code
+    // TODO: Can only be done, once we have a parsing method that returns a Class
+    // let parse_res = parser::parse(&read_to_string(File::open(format!("testcases/{name}.java"))));
+    // assert_eq!(parse_res, ast);
 }
 
-fn stmt_expr_tast_to_ast(stmt_expr: &StmtExpr) -> StmtExpr {
-    match stmt_expr {
-        StmtExpr::Assign(var, val) => Assign(var.clone(), expr_tast_to_ast(val)),
-        StmtExpr::New(typ, params) => New(
-            typ.clone(),
-            params.iter().map(|x| expr_tast_to_ast(x)).collect(),
-        ),
-        StmtExpr::MethodCall(obj, method, params) => MethodCall(
-            expr_tast_to_ast(obj),
-            method.clone(),
-            params.iter().map(|x| expr_tast_to_ast(x)).collect(),
-        ),
-        StmtExpr::TypedStmtExpr(x, typ) => stmt_expr_tast_to_ast(x),
-    }
+pub fn typechecker_test(ast: &Class, tast: &Class) {
+    // TODO: Errors are just ignored for now, oops
+    let mut tc = TypeChecker::new(vec![ast.clone()]).unwrap();
+    tc.check_and_type_program().unwrap();
+    let v: Vec<&Class> = tc.typed_classes.values().collect();
+    let typed = v[0];
+    println!("{}", typed);
+    assert_eq!(*typed, *ast);
 }
 
-fn expr_tast_to_ast(expr: &Expr) -> Expr {
-    match expr {
-        Expr::InstVar(x, s) => InstVar(Box::new(expr_tast_to_ast(x)), s.clone()),
-        Expr::Unary(s, x) => Unary(s.clone(), Box::new(expr_tast_to_ast(x))),
-        Expr::Binary(op, l, r) => Binary(
-            op.clone(),
-            Box::new(expr_tast_to_ast(l)),
-            Box::new(expr_tast_to_ast(r)),
-        ),
-        Expr::StmtExprExpr(x) => StmtExprExpr(Box::new(stmt_expr_tast_to_ast(x))),
-        Expr::TypedExpr(x, t) => expr_tast_to_ast(x),
-        default => expr.clone(),
-    }
+pub fn codegen_test(tast: &Class, name: &str) {
+    // TODO: I have not decided to how to test the codegen yet
+    // ir = generate_dir(&vec![tast]);
 }
 
-fn tast_to_ast(class: &Class) -> Class {
-    Class {
-        name: class.name.clone(),
-        fields: class.fields.clone(),
-        methods: class
-            .methods
-            .clone()
-            .into_iter()
-            .map(|method| MethodDecl {
-                ret_type: method.ret_type.clone(),
-                name: method.name.clone(),
-                params: method.params.clone(),
-                body: stmt_tast_to_ast(&method.body),
-            })
-            .collect(),
-    }
-}
-
-fn create_test_file(ast: &Class, tast: Option<&Class>, name: &str) {
-    let file_path = format!("tests/{name}.java");
-    let gen_file_path = format!("tests/{name}-gen.java");
-    let class_file_path = format!("tests/{name}.class");
-
-    // Generate Java Code from AST and write to file
-    let class_code = class_to_java(ast);
-    let mut file =
-        File::create(gen_file_path.clone()).expect("File for generated code couldn't be created");
-    file.write(class_code.as_bytes())
-        .expect("Couldn't write generate java code");
-
-    // TODO: Check that generated java code and original java code are equivalent to javac
-    let mut child = Command::new("javac")
-        .arg(file_path)
-        .spawn()
-        .expect("failed to compile original java-code");
-    let ecode = child
-        .wait()
-        .expect("failed to wait on child compiling original java code");
-    assert!(ecode.success());
-    let mut file = File::create(format!("tests/{name}.txt")).unwrap();
-    let mut child = Command::new("javap")
-        .arg("-v")
-        .arg("-c")
-        .arg(format!("tests/{}.class", name))
-        .stdout(Stdio::from(file))
-        .spawn()
-        .expect("failed to disassemble original java class file");
-    let ecode = child
-        .wait()
-        .expect("failed to wait on child compiling original java code");
-    assert!(ecode.success());
-    // let og_clz_file =
-    //     read(class_file_path.clone()).expect("failed to read original java class file");
-    let mut child = Command::new("javac")
-        .arg(gen_file_path)
-        .spawn()
-        .expect("failed to compile generated java-code");
-    let ecode = child
-        .wait()
-        .expect("failed to wait on child compiling generated java code");
-    assert!(ecode.success());
-    let mut file = File::create(format!("tests/{name}-gen.txt")).unwrap();
-    let mut child = Command::new("javap")
-        .arg("-v")
-        .arg("-c")
-        .arg(format!("tests/{}.class", name))
-        .stdout(Stdio::from(file))
-        .spawn()
-        .expect("failed to disassemble original java class file");
-    let ecode = child
-        .wait()
-        .expect("failed to wait on child compiling original java code");
-    assert!(ecode.success());
-    // let gen_clz_file = read(class_file_path).expect("failed to read generated java class file");
-    // assert_eq!(og_clz_file, gen_clz_file);
-
+pub fn class_test(ast: &Class, tast: Option<&Class>, name: &str) {
     // Write AST & TAST to files
     let mut file =
-        File::create(format!("tests/{name}-AST.json")).expect("File couldn't be created");
-    serde_json::to_writer_pretty(&mut file, &ast).expect("Couldn't serialize class");
+        File::create(format!("testcases/{name}-AST.json")).expect("File failed to be created");
+    serde_json::to_writer_pretty(&mut file, &ast).expect("failed to serialize class");
 
     if let Some(tast) = tast {
         let mut file =
-            File::create(format!("tests/{name}-TAST.json")).expect("File couldn't be created");
-        serde_json::to_writer_pretty(&mut file, tast).expect("Couldn't serialize class");
+            File::create(format!("testcases/{name}-TAST.json")).expect("File failed to be created");
+        serde_json::to_writer_pretty(&mut file, tast).expect("failed to serialize class");
+    };
+
+    // Load orignal java code
+    let file =
+        File::open(format!("testcases/{name}.java")).expect("failed to open original java file");
+    let og_java_code = read_to_string(file).expect("failed to read original java file");
+
+    let res = test_helper(ast, tast, name, &og_java_code);
+
+    if let Err(msg) = res {
+        let mut file = File::create(format!("testcases/{name}.java"))
+            .expect("failed to open original java file for writing");
+        file.write(og_java_code.as_bytes())
+            .expect("failed to write the original java code back into its file");
+        panic!("{msg}");
     }
 }
 
-// use super::*\n#[test]
+fn test_helper(
+    ast: &Class,
+    tast: Option<&Class>,
+    name: &str,
+    og_java_code: &str,
+) -> Result<(), std::string::String> {
+    // Generate Java Code from AST and write to file
+    let class_code = class_to_java(ast);
+    let mut file = File::create(format!("testcases/{name}.java"))
+        .expect("failed to open original java file for writing generated code");
+    file.write(class_code.as_bytes())
+        .map_err(|x| "failed to write generated java code in original java file".to_string())?;
+    let mut file = File::create(format!("testcases/{name}-gen.java")) // Only for debugging tests
+        .expect("failed to open generated java file for writing generated code");
+    file.write(class_code.as_bytes())
+        .map_err(|x| "failed to write generated java code in generated java file".to_string())?;
+
+    // Compile generated java code
+    let mut child = Command::new("javac")
+        .arg(format!("testcases/{name}.java"))
+        .arg("-g:none")
+        .spawn()
+        .map_err(|x| "failed to compile generated java-code".to_string())?;
+    let ecode = child
+        .wait()
+        .map_err(|x| "failed to wait on child compiling generated java code".to_string())?;
+    assert!(ecode.success());
+    let gen_clz_file = read(format!("testcases/{name}.class"))
+        .map_err(|x| "failed to read generated java class file".to_string())?;
+    let mut file = File::create(format!("testcases/{name}-gen.txt")).unwrap();
+    let mut child = Command::new("javap")
+        .arg("-v")
+        .arg("-c")
+        .arg(format!("testcases/{name}.class"))
+        .stdout(Stdio::from(file))
+        .spawn()
+        .map_err(|x| "failed to disassemble generated java class file".to_string())?;
+    let ecode = child
+        .wait()
+        .map_err(|x| "failed to wait on child decompiling generated java code".to_string())?;
+    assert!(ecode.success());
+
+    // Compile original java code
+    let mut file = File::create(format!("testcases/{name}.java"))
+        .expect("failed to open original java file for writing");
+    file.write(og_java_code.as_bytes())
+        .map_err(|x| "failed to write original java code back".to_string())?;
+    let mut child = Command::new("javac")
+        .arg(format!("testcases/{name}.java"))
+        .arg("-g:none")
+        .spawn()
+        .map_err(|x| "failed to compile original java-code".to_string())?;
+    let ecode = child
+        .wait()
+        .map_err(|x| "failed to wait on child compiling original java code".to_string())?;
+    assert!(ecode.success());
+    let og_clz_file = read(format!("testcases/{name}.class"))
+        .map_err(|x| "failed to read original java class file".to_string())?;
+    let mut file = File::create(format!("testcases/{name}.txt")).unwrap();
+    let mut child = Command::new("javap")
+        .arg("-v")
+        .arg("-c")
+        .arg(format!("testcases/{name}.class"))
+        .stdout(Stdio::from(file))
+        .spawn()
+        .map_err(|x| "failed to disassemble original java class file".to_string())?;
+    let ecode = child
+        .wait()
+        .map_err(|x| "failed to wait on child compiling original java code".to_string())?;
+    assert!(ecode.success());
+
+    assert_eq!(og_clz_file, gen_clz_file);
+    Ok(())
+}
+
+// use super::*
+// #[test]
 // fn Fields_class() {
 //     let class = Class {};
-//     create_test_file(&tast_to_ast(&class), Some(&class), "Fields");
+//     class_test(&tast_to_ast(&class), Some(&class), "Fields");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn IntFields_class() {
 //     let class = Class {};
-//     create_test_file(&tast_to_ast(&class), Some(&class), "IntFields");
+//     class_test(&tast_to_ast(&class), Some(&class), "IntFields");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn LocalVarDecl_class() {
 //     let class = Class {};
-//     create_test_file(&tast_to_ast(&class), Some(&class), "LocalVarDecl");
+//     class_test(&tast_to_ast(&class), Some(&class), "LocalVarDecl");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn MethodCall_class() {
 //     let class = Class {};
-//     create_test_file(&tast_to_ast(&class), Some(&class), "MethodCall");
+//     class_test(&tast_to_ast(&class), Some(&class), "MethodCall");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn NamingConflict_class() {
 //     let class = Class {};
-//     create_test_file(&tast_to_ast(&class), Some(&class), "NamingConflict");
+//     class_test(&tast_to_ast(&class), Some(&class), "NamingConflict");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn Negator_class() {
 //     let class = Class {};
-//     create_test_file(&tast_to_ast(&class), Some(&class), "Negator");
+//     class_test(&tast_to_ast(&class), Some(&class), "Negator");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn Return_class() {
 //     let class = Class {};
-//     create_test_file(&tast_to_ast(&class), Some(&class), "Return");
+//     class_test(&tast_to_ast(&class), Some(&class), "Return");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn SetterGetter_class() {
 //     let class = Class {};
-//     create_test_file(&tast_to_ast(&class), Some(&class), "SetterGetter");
+//     class_test(&tast_to_ast(&class), Some(&class), "SetterGetter");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn StrAdd_class() {
 //     let class = Class {};
-//     create_test_file(&tast_to_ast(&class), Some(&class), "StrAdd");
+//     class_test(&tast_to_ast(&class), Some(&class), "StrAdd");
 // }
 
-// use super::*\n#[test]
+// use super::*
+// #[test]
 // fn While_class() {
 //     let class = Class {};
-//     create_test_file(&tast_to_ast(&class), Some(&class), "While");
+//     class_test(&tast_to_ast(&class), Some(&class), "While");
 // }

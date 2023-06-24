@@ -105,6 +105,14 @@ pub fn stmt_to_java(stmt: &Stmt, indent: u8) -> String {
     }
 }
 
+pub fn params_to_java(params: &Vec<Expr>) -> String {
+    params
+        .into_iter()
+        .map(|expr| expr_to_java(expr))
+        .reduce(|acc, s| format!("{}, {}", acc, s))
+        .unwrap_or(String::new())
+}
+
 pub fn stmt_expr_to_java(stmt_expr: &StmtExpr) -> String {
     match stmt_expr {
         StmtExpr::Assign(var, expr) => format!("{} = {}", var, expr_to_java(expr)),
@@ -112,21 +120,9 @@ pub fn stmt_expr_to_java(stmt_expr: &StmtExpr) -> String {
             "{}.{}({})",
             expr_to_java(expr),
             name,
-            params
-                .into_iter()
-                .map(|expr| expr_to_java(expr))
-                .reduce(|acc, s| format!("{}, {}", acc, s))
-                .unwrap()
+            params_to_java(params)
         ),
-        StmtExpr::New(typ, params) => format!(
-            "new {}({})",
-            typ,
-            params
-                .into_iter()
-                .map(|expr| expr_to_java(expr))
-                .reduce(|acc, s| format!("{}, {}", acc, s))
-                .unwrap()
-        ),
+        StmtExpr::New(typ, params) => format!("new {}({})", typ, params_to_java(params)),
         StmtExpr::TypedStmtExpr(stmt_expr, typ) => stmt_expr_to_java(stmt_expr),
     }
 }
@@ -140,9 +136,10 @@ pub fn expr_to_java(expr: &Expr) -> String {
         Expr::Integer(i) => i.to_string(),
         Expr::Jnull => "null".to_string(),
         Expr::LocalOrFieldVar(var) => var.to_owned(),
+        Expr::LocalVar(var) => var.to_owned(),
+        Expr::FieldVar(var) => var.to_owned(),
         Expr::StmtExprExpr(stmt_expr) => stmt_expr_to_java(stmt_expr),
         Expr::String(s) => format!("\"{}\"", s),
-        Expr::Super => "super".to_string(),
         Expr::This => "this".to_string(),
         Expr::TypedExpr(expr, typ) => expr_to_java(expr),
         Expr::Unary(op, expr) => format!("{}({})", op, expr_to_java(expr)),

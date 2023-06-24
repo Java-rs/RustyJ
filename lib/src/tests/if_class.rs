@@ -1,8 +1,31 @@
 use super::*;
 
 #[test]
-fn if_class() {
-    let class = Class {
+fn test_class() {
+    let class = if_class();
+    class_test(&tast_to_ast(&class), Some(&class), "If");
+}
+
+#[test]
+fn test_parser() {
+    let class = if_class();
+    parser_test(&tast_to_ast(&class), "If");
+}
+
+#[test]
+fn test_typechecker() {
+    let class = if_class();
+    typechecker_test(&tast_to_ast(&class), &class);
+}
+
+#[test]
+fn test_codegen() {
+    let class = if_class();
+    codegen_test(&class, "If");
+}
+
+fn if_class() -> Class {
+    Class {
         name: "If".to_string(),
         fields: vec![],
         methods: vec![MethodDecl {
@@ -40,6 +63,5 @@ fn if_class() {
                 Type::Bool,
             ),
         }],
-    };
-    create_test_file(&tast_to_ast(&class), Some(&class), "If");
+    }
 }
