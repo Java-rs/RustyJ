@@ -15,6 +15,7 @@ pub struct DIR {
 impl DIR {
     /// Because this involves crating the constant pool, this is a mutable method
     /// https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.1
+    /// Since we have a DIR we can assume the methods have been expanded into Vectors of Instructions
     pub fn as_bytes(&mut self) -> Vec<u8> {
         // TODO: We should really check if all of these have the right size. Most lengths are u16
         // Only one class for now
@@ -54,8 +55,11 @@ impl DIR {
         result.extend_from_slice(&(current_class.fields.len() as u16).to_be_bytes());
         result.append(&mut field_infos);
         result.extend_from_slice(&(current_class.methods.len() as u16).to_be_bytes());
-        // TODO: Methods
-        // Attributes count, being 0
+        // TODO: Method info
+        for method in &current_class.methods {
+            result.append(&mut method.as_bytes(&mut self.constant_pool));
+        }
+        // Attributes count. TODO: Put Methods in here
         result.extend_from_slice(&[0, 0]);
         result
     }
@@ -186,9 +190,33 @@ impl LocalVarPool {
 
 pub(crate) struct CompiledMethod {
     pub(crate) name: String,
+    pub(crate) return_type: Type,
     pub(crate) max_stack: u16,
     pub(crate) code: Vec<Instruction>,
 }
+
+impl CompiledMethod {
+    /// Get the method info as raw bytes as described in https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.6
+    fn get_method_info(&self, constant_pool: &mut ConstantPool) -> Vec<u8> {
+        let mut result = vec![];
+        // Access flags, always public
+        result.extend_from_slice(&[0, 1]);
+        // Name index
+        result.extend_from_slice(
+            &(constant_pool.add(Constant::Utf8(self.name.clone())) as u16).to_be_bytes(),
+        );
+        // Descriptor index. ()V for void, ()I for int and ()Z for bool because java developers are insane
+        result.extend_from_slice(
+            &(constant_pool.add(Constant::Utf8(format!(
+                "(){}",
+                self.return_type.to_ir_string()
+            ))) as u16)
+                .to_be_bytes(),
+        );
+        // TODO: Attributes count and attributes
+    }
+}
+
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub(crate) enum Constant {
     Class(String),
