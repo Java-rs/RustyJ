@@ -1,8 +1,31 @@
 use super::*;
 
 #[test]
-fn while_class() {
-    let class = Class {
+fn test_class() {
+    let class = while_class();
+    class_test(&tast_to_ast(&class), Some(&class), "While");
+}
+
+#[test]
+fn test_parser() {
+    let class = while_class();
+    parser_test(&tast_to_ast(&class), "While");
+}
+
+#[test]
+fn test_typechecker() {
+    let class = while_class();
+    typechecker_test(&tast_to_ast(&class), &class);
+}
+
+#[test]
+fn test_codegen() {
+    let class = while_class();
+    codegen_test(&class, "While");
+}
+
+fn while_class() -> Class {
+    Class {
         name: "While".to_string(),
         fields: vec![FieldDecl {
             field_type: Type::Int,
@@ -130,6 +153,5 @@ fn while_class() {
                 Type::Int,
             ),
         }],
-    };
-    single_class_test(&tast_to_ast(&class), Some(&class), "While");
+    }
 }

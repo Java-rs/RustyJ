@@ -1,8 +1,31 @@
 use super::*;
 
 #[test]
-fn int_fields_class() {
-    let class = Class {
+fn test_class() {
+    let class = int_fields_class();
+    class_test(&tast_to_ast(&class), Some(&class), "IntFields");
+}
+
+#[test]
+fn test_parser() {
+    let class = int_fields_class();
+    parser_test(&tast_to_ast(&class), "IntFields");
+}
+
+#[test]
+fn test_typechecker() {
+    let class = int_fields_class();
+    typechecker_test(&tast_to_ast(&class), &class);
+}
+
+#[test]
+fn test_codegen() {
+    let class = int_fields_class();
+    codegen_test(&class, "IntFields");
+}
+
+fn int_fields_class() -> Class {
+    Class {
         name: "IntFields".to_string(),
         fields: vec![
             FieldDecl {
@@ -17,6 +40,5 @@ fn int_fields_class() {
             },
         ],
         methods: vec![],
-    };
-    single_class_test(&tast_to_ast(&class), Some(&class), "IntFields");
+    }
 }
