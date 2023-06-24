@@ -14,35 +14,52 @@ pub struct DIR {
 impl DIR {
     /// Because this involves crating the constant pool, this is a mutable method
     /// https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.1
+    /// Since we have a DIR we can assume the methods have been expanded into Vectors of Instructions
     pub fn as_bytes(&mut self) -> Vec<u8> {
+        // TODO: We should really check if all of these have the right size. Most lengths are u16
+        // Only one class for now
+        let current_class = &self.classes[0];
         let mut result = vec![0xCA, 0xFE, 0xBA, 0xBE];
         // Minor version, always 0
         result.extend_from_slice(&[0, 0]);
         // Major version, always 52
         result.extend_from_slice(&[0, 52]);
-        // TODO: Add the this_class to the constant pool before building it
+        // Add this_class and super class to constant pool. Super class is always java/lang/Object
+        let this_class_index = self
+            .constant_pool
+            .add(Constant::Class(current_class.name.clone()));
+        let super_class_index = self
+            .constant_pool
+            .add(Constant::Class("java/lang/Object".to_string()));
+        let mut field_infos = current_class
+            .fields
+            .iter()
+            .map(|f| f.as_bytes(&mut self.constant_pool))
+            .flatten()
+            .collect();
         // Constant pool count. For some unknown reason, this is 1-indexed and we have to add 1 to
         // the size
         result.extend_from_slice(&(self.constant_pool.0.len() as u16 + 1).to_be_bytes());
-        // Constant pool
+        // Constant pool. All constants should be present here, otherwise they will NOT be in the
+        // resulting bytecode
         result.append(&mut self.constant_pool.as_bytes());
         result.extend_from_slice(&self.constant_pool.as_bytes());
         // The class access flags are just gonna be public
         result.extend_from_slice(&[0, 1]);
-        // TODO: This class and super class
-        // TODO: Interfaces count, being 0
-        // TODO: Field count
-        // TODO: Fields
-        // TODO: Method count
-        // TODO: Attributes count(probably 0 idk)
-        result.extend_from_slice(
-            &self
-                .classes
-                .iter()
-                .map(|c| c.as_bytes())
-                .flatten()
-                .collect::<Vec<u8>>(),
-        );
+        result.extend_from_slice(&(this_class_index as u16).to_be_bytes());
+        result.extend_from_slice(&(super_class_index as u16).to_be_bytes());
+        // Interfaces count, being 0
+        result.append(&mut [0, 0].to_vec());
+        // Field count and fields
+        result.extend_from_slice(&(current_class.fields.len() as u16).to_be_bytes());
+        result.append(&mut field_infos);
+        result.extend_from_slice(&(current_class.methods.len() as u16).to_be_bytes());
+        // TODO: Method info
+        for method in &current_class.methods {
+            result.append(&mut method.as_bytes(&mut self.constant_pool));
+        }
+        // Attributes count. TODO: Put Methods in here
+        result.extend_from_slice(&[0, 0]);
         result
     }
 }
@@ -178,9 +195,33 @@ impl LocalVarPool {
 
 pub(crate) struct CompiledMethod {
     pub(crate) name: String,
+    pub(crate) return_type: Type,
     pub(crate) max_stack: u16,
     pub(crate) code: Vec<Instruction>,
 }
+
+impl CompiledMethod {
+    /// Get the method info as raw bytes as described in https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.6
+    fn get_method_info(&self, constant_pool: &mut ConstantPool) -> Vec<u8> {
+        let mut result = vec![];
+        // Access flags, always public
+        result.extend_from_slice(&[0, 1]);
+        // Name index
+        result.extend_from_slice(
+            &(constant_pool.add(Constant::Utf8(self.name.clone())) as u16).to_be_bytes(),
+        );
+        // Descriptor index. ()V for void, ()I for int and ()Z for bool because java developers are insane
+        result.extend_from_slice(
+            &(constant_pool.add(Constant::Utf8(format!(
+                "(){}",
+                self.return_type.to_ir_string()
+            ))) as u16)
+                .to_be_bytes(),
+        );
+        // TODO: Attributes count and attributes
+    }
+}
+
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub(crate) enum Constant {
     Class(String),
