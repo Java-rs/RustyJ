@@ -2,7 +2,6 @@
 
 use crate::typechecker::*;
 use crate::types;
-use crate::types::Expr::InstVar;
 use crate::types::*;
 use std::io::Bytes;
 
@@ -102,6 +101,7 @@ impl ConstantPool {
                     );
                 }
                 Constant::FieldRef(FieldRef { class, field }) => {
+                    //TODO: Maybe this should be moved
                     result.push(9);
                     result.extend_from_slice(
                         &(self.add(Constant::Class(class)) as u16).to_be_bytes(),
@@ -109,6 +109,11 @@ impl ConstantPool {
                     result.extend_from_slice(
                         &(self.add(Constant::NameAndType(field)) as u16).to_be_bytes(),
                     );
+                }
+                Constant::String(val) => {
+                    result.push(8);
+                    result
+                        .extend_from_slice(&(self.add(Constant::String(val)) as u16).to_be_bytes());
                 }
             }
         }
@@ -183,6 +188,7 @@ pub(crate) enum Constant {
     /// This has to be of format class_name.method_name. If it is later found to be beneficial however we could split this into two Strings
     MethodRef(MethodRef),
     NameAndType(NameAndType),
+    String(u16),
     Utf8(String),
 }
 #[derive(PartialEq, Eq, Debug, Clone)]
@@ -216,6 +222,12 @@ pub(crate) enum Instruction {
     astore(u8),       //Store reference into local variable
     reljumpifeq(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
     aconst_null,      //Push null onto stack
+    ldc(u16),         //Push item from constant pool onto stack
+    ineg,             //Negate int
+    goto(u16),        //Jump to instruction
+    relgoto(i16),     //Jump to instruction relative to current instruction
+    ifne(u16),        //Branch if int is not 0
+    reljumpifne(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
 }
 
 pub fn generate_dir(ast: &Prg) -> DIR {
@@ -301,7 +313,7 @@ fn generate_code_stmt(
         },
         Stmt::While(expr, stmt) => {
             // TODO: Test, Bene
-            result.append(&mut generate_code_expr(expr));
+            result.append(&mut generate_code_expr(expr, constant_pool));
             // Generate bytecode for our body
             let mut body = generate_code_stmt(*stmt, dir, constant_pool, local_var_pool);
             result.push(Instruction::reljumpifeq(body.len() as i16));
@@ -345,7 +357,7 @@ fn generate_code_stmt(
             // Generate bytecode for if
             // TODO: Bene, testing
             // Evaluate the expression
-            result.append(&mut generate_code_expr(expr));
+            result.append(&mut generate_code_expr(expr, constant_pool));
             // We set a label to jump to if the expression is false
             let mut if_stmt = generate_code_stmt(*stmt1, dir, constant_pool, local_var_pool);
             // If the expression is false, jump to the else block
@@ -392,14 +404,14 @@ fn generate_code_stmt_expr(
     match stmt_expr {
         StmtExpr::Assign(name, expr) => {
             // Generate bytecode for assignment
-            result.append(&mut generate_code_expr(expr.clone()));
+            result.append(&mut generate_code_expr(expr.clone(), constant_pool));
             local_var_pool.add(name.clone());
         }
         StmtExpr::New(types, exprs) => {
             // Generate bytecode for new
             constant_pool.add(Constant::Class(types.to_ir_string().to_string()));
             exprs.iter().for_each(|expr| {
-                result.append(&mut generate_code_expr(expr.clone()));
+                result.append(&mut generate_code_expr(expr.clone(), constant_pool));
             });
         }
         StmtExpr::MethodCall(expr, name, exprs) => {
@@ -417,7 +429,7 @@ fn generate_code_stmt_expr(
     result
 }
 
-fn generate_code_expr(expr: Expr) -> Vec<Instruction> {
+fn generate_code_expr(expr: Expr, constant_pool: &mut ConstantPool) -> Vec<Instruction> {
     let mut result = vec![];
     // TODO
     match expr {
@@ -431,7 +443,9 @@ fn generate_code_expr(expr: Expr) -> Vec<Instruction> {
             result.push(Instruction::bipush(c as u8));
         }
         Expr::String(s) => {
-            // TODO: Mary
+            let ind = constant_pool.add(Constant::Utf8(s.to_string()));
+            let index = constant_pool.add(Constant::String(ind));
+            result.push(Instruction::ldc(index));
         }
         Expr::Jnull => {
             result.push(Instruction::aconst_null);
@@ -441,19 +455,31 @@ fn generate_code_expr(expr: Expr) -> Vec<Instruction> {
             result.push(Instruction::aload(0))
         }
         Expr::InstVar(exprs, name) => {
-            //TODO: Mary
+            panic!("This should not happen")
         }
         Expr::Binary(op, left, right) => {
             //TODO: Bene
         }
         Expr::Unary(op, expr) => {
-            //TODO: Mary
+            result.append(&mut generate_code_expr(*expr, constant_pool));
+            match UnaryOp::from(&op as &str) {
+                UnaryOp::Not => {
+                    result.push(Instruction::reljumpifne(3));
+                    result.push(Instruction::bipush(1));
+                    result.push(Instruction::relgoto(2));
+                    result.push(Instruction::bipush(0));
+                }
+                UnaryOp::Neg => {
+                    result.push(Instruction::ineg);
+                }
+                UnaryOp::Pos => {}
+            }
         }
         Expr::LocalVar(name) => {
             //TODO: Bene
         }
         Expr::TypedExpr(expr, r#type) => {
-            //TODO: Mary
+            result.append(&mut generate_code_expr(*expr, constant_pool));
         }
         Expr::StmtExprExpr(stmt_expr) => {
             //TODO: Bene
