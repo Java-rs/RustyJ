@@ -59,7 +59,7 @@ impl FieldDecl {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct MethodDecl {
     pub ret_type: Type,
     pub name: String,
@@ -67,7 +67,7 @@ pub struct MethodDecl {
     pub body: Stmt,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum Stmt {
     Block(Vec<Stmt>),
     Return(Expr),
