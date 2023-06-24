@@ -215,7 +215,13 @@ impl CompiledMethod {
         );
         // TODO: Attributes count and attributes
 
-        vec![] // TODO: Replace with actual return value
+        result
+    }
+
+    fn as_bytes(&self, constant_pool: &mut ConstantPool) -> Vec<u8> {
+        let mut result = vec![];
+        // TODO
+        result
     }
 }
 
