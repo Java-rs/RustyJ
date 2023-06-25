@@ -1,218 +1,99 @@
-WHITESPACE = _{ " " | "\t" | "\n" }
+// @Note: WHITESPACE and COMMENT are implicit rules and thus can always be matched
+// in between "~". However, sometimes there has to be some whitespace between
+// characters (e.g. "class Name" is allowed, but "className" is not allowed).
+// In that case you should explicitly put WHITESPACE in between the "~"
+WHITESPACE = _{ WHITE_SPACE }
 COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
 
+Program = {ClassDecl+}
+
+ClassDecl = {"class" ~ Identifier ~ "{" ~ (MethodDecl|FieldDecl)* ~ "}"}
+
+FieldDecl = {JType ~ FieldVarDecl+}
+
+MethodDecl = {JType ~ Identifier ~ "(" ~ ParamDeclList? ~ ")" ~ BlockStmt}
+
+ParamDeclList = {ParamDecl ~ (","~ParamDecl)*}
+
+ParamDecl = {JType ~ Identifier}
+
+FieldVarDecl = {Identifier ~ ("="~Expr)?}
+
+JType = {PrimitiveType | Identifier}
+
+PrimitiveType = {"int" | "boolean" | "char" | "String" | "void" | "null"}
+
 //ipmlemented
-IDENTIFIER ={(ASCII_ALPHA|"_")~(ASCII_ALPHANUMERIC|"_")* }
-//ipmlemented
-compilationunit = {classdeclaration+}
+Identifier ={ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 
-name    ={IDENTIFIER ~("."~IDENTIFIER)*}
-//implemented
-classdeclaration = {"class"~IDENTIFIER~"{"~(fielddeclaration|methoddeclaration|constructordeclaration)*~"}"}
+BlockStmt = {"{" ~ Stmt* ~ "}"}
 
-//ignored for now
-constructordeclaration = {constructordeclarator~constructorbody}
-//implemented
-fielddeclaration = {typeJ~variabledeclarators~";"}
-//implemented
-methoddeclaration = {typeJ~methoddeclarator
-                    ~(block| ";" )}
-//implemented
-methoddeclarator ={ IDENTIFIER~"("~")"
-		 | IDENTIFIER~"("~formalparameterlist~")"  }
-//declared
-block            = {"{"~blockstatement*~"}" }
+Stmt = {  WhileStmt
+		| IfElseStmt
+		| IfStmt
+		| ReturnStmt
+		| LocalVarDeclStmt
+		| StmtExpr ~ ";"
+		| BlockStmt }
 
-constructordeclarator = { IDENTIFIER~"()"
-		 |  IDENTIFIER~"("~formalparameterlist~")"  }
+ReturnStmt = {"return" ~ Expr ~ ";"}
 
-constructorbody	 ={ "{"~"}"
-		|"{"~explicitconstructorinvocation~"}"
-		|"{"~blockstatement+~"}"
-		|"{"~explicitconstructorinvocation~blockstatement+~"}"}
+WhileStmt = {"while" ~ "(" ~ Expr ~ ")" ~ Stmt}
 
+// @Question: Is this a correct and easy-to-use definition?
+IfElseStmt = {IfStmt ~ "else" ~ IfStmt}
 
-//implemented
-typeJ  = {primitivetype
-		 | IDENTIFIER}
-//implemented
-variabledeclarators ={ variabledeclarator~(","~variabledeclarator)* }
-//implemented
-variabledeclarator ={ IDENTIFIER
-		 | IDENTIFIER~"="~expression }
+IfStmt = {"if" ~ "(" ~ Expr ~ ")" ~ Stmt}
 
-// implemented
-blockstatement	 ={ typeJ~variabledeclarators~";"
-		 | statement  }
+// @Cleanup: Can maybe be unified with FieldVarDecl and AssignExpr?
+LocalVarDeclStmt = {JType ~ Identifier ~ ("="~Expr)?}
 
+StmtExpr = {AssignExpr | NewExpr | MethodCallExpr}
 
-//implemented
-formalparameterlist = {formalparameter~(","~formalparameter)*}
-//implemented
-formalparameter  = {typeJ~IDENTIFIER }
+AssignExpr = {(Identifier | InstVarExpr) ~ "=" ~ Expr}
 
-explicitconstructorinvocation = {"this"~"("~")"~";"
-		 | "this"~"("~argumentlist~")"~";"}
+NewExpr = {"new" ~ Identifier ~ "(" ~ ParamList? ~ ")"}
 
+MethodCallExpr = {(Identifier|InstVarExpr) ~ "(" ~ ParamList? ~ ")"}
 
-//implemented
-primitivetype    = {"boolean"
-		        | "int"
-                | "char"
-                |"String"
-                |"void"
-                |"null"}
+ParamList = {Expr ~ (","~Expr)*}
 
+// @Note we do not support `super` at the moment
+Expr = {Prec3BinExpr | NonBinaryExpr}
 
+NonBinaryExpr = { ThisExpr
+		        | Identifier // LocalOrFieldVar
+		        | InstVarExpr
+		        | UnaryExpr
+		        | IntLiteral
+		        | BoolLiteral
+		        | CharLiteral
+		        | StrLiteral
+		        | JNull
+		        | ParanthesizedExpr
+		        | StmtExpr}
 
-argumentlist     = {expression~(","~expression)*}
+ThisExpr = {"this"}
+JNull    = {"null"}
 
+IntLiteral  = {NUMBER+}
+BoolLiteral = {"true" | "false"}
+CharLiteral = {"'" ~ ASCII ~ "'"}
+StrLiteral  = {"\"" ~ ASCII* ~ "\""}
 
+InstVarExpr      = {(Identifier|ThisExpr) ~ "." ~ InnerInstVarExpr}
+InnerInstVarExpr = {Identifier ~ ("." ~ (InnerInstVarExpr|Identifier))?}
 
+ParanthesizedExpr = {"(" ~ Expr ~ ")"}
 
-statement = {statementwithouttrailingsubstatement
-		 | ifthenstatement
-		 | ifthenelsestatement
-		 | whilestatement }
+UnaryExpr = {UnaryOp ~ (InstVarExpr|Identifier|ParanthesizedExpr)}
+UnaryOp = {"+" | "-" | "!"}
 
-
-statementwithouttrailingsubstatement = {block
-		 | emptystatement
-		 | expressionstatement
-		 | returnstatement }
-
-ifthenstatement  ={ "if"~"("~expression~")"~statement }
-
-ifthenelsestatement = {"if"~"("~expression~")"~statementnoshortif~"else"~statement  }
-
-whilestatement   = {"while"~"("~expression~")"~statement }
-
-expression = {conditionalexpression
-		 |  assignment}
-
-emptystatement	 =  {";"  }
-
-expressionstatement ={ statementexpression~";" }
-
-returnstatement  ={ "return"~";"
-		 | "return"~expression~";" }
-
-statementnoshortif = {statementwithouttrailingsubstatement
-		 | ifthenelsestatementnoshortif
-		 | whilestatementnoshortif }
-
-conditionalexpression = {conditionalorexpression
-		 | conditionalorexpression~"?"~expression~":"~conditionalexpression }
-
-assignment       ={lefthandside~assignmentoperator~expression }
-
-
-statementexpression = {assignment
-		 | preincrementexpression
-		 | predecrementexpression
-		 | postfixexpression
-		 | methodinvocation
-		 | classinstancecreationexpression }
-
-ifthenelsestatementnoshortif ={"if"~"("~expression~")"~statementnoshortif~"else"~statementnoshortif  }
-
-whilestatementnoshortif = {"while"~"("~expression~")"~statementnoshortif }
-
-conditionalorexpression ={ conditionalandexpression~("||"~conditionalandexpression)+}
-
-lefthandside     = {name }
-
-assignmentoperator = {"="
-		 | "*="
-		 | "/="
-		 | "%="
-		 | "+="
-		 | "-="
-		 | "<<="
-		 | ">>="
-		 | ">>>="
-		 | "&="
-		 | "^="
-		 | "|="}
-
-preincrementexpression = {"++"~unaryexpression }
-
-predecrementexpression = {"--"~unaryexpression }
-
-methodinvocation= {
-(name|fieldaccess)~"("~argumentlist?~")" }
-
-classinstancecreationexpression ={ "new"~name~"("~")"
-                 | "new"~name~"("~argumentlist~")"  }
-
-conditionalandexpression ={ inclusiveorexpression }
-
-fieldaccess ={(literal
-		 | "this"
-		 | "("~expression~")"
-         | classinstancecreationexpression)~"."~idorfield
-}
-idorfield={fieldaccess|IDENTIFIER}
-
-unaryexpression	 = {preincrementexpression
-		 | predecrementexpression
-		 | "+"~unaryexpression
-		 | "-"~unaryexpression
-		 | unaryexpressionnotplusminus }
-
-postfixexpression = {(primary
-		 | name)~("++"|"--" )}
-
-inclusiveorexpression = {exclusiveorexpression~("|"~exclusiveorexpression)*}
-
-primary = {literal
-		 | "this"
-		 | "("~expression~")"
-                 | classinstancecreationexpression
-		 | fieldaccess
-		 | methodinvocation }
-
-unaryexpressionnotplusminus = {postfixexpression
-	         | "~"~unaryexpression
-		 | "!"~unaryexpression                          // EXCLMARK wurde mit "!" replaced
-		 | castexpression}
-
-exclusiveorexpression ={ andexpression~("^"~andexpression)*}
-
-
-literal		 = {INTLITERAL
-		 | BOOLLITERAL
-		 | CHARLITERAL
-		 | STRINGLITERAL
-		 | primitivetype }
-
-CHARLITERAL = { "'"~ASCII~"'" }
-
-STRINGLITERAL = { "\""~ASCII*~"\"" }
-
-BOOLLITERAL = {"true"|"false"}
-INTLITERAL = {NUMBER+
-|
-            NUMBER+~"."~NUMBER+
-}
-
-
-castexpression	 ={ "("~primitivetype~")"~unaryexpression
- 		 | "("~expression~")"~unaryexpressionnotplusminus}
-
-andexpression    = {equalityexpression~("&"~equalityexpression )*}
-
-equalityexpression = {relationalexpression~(("!=" |"==")~relationalexpression)*}
-
-
-relationalexpression = {
-shiftexpression~"instanceof"~name
-|shiftexpression~(("<"|">"|"<="|">=")~shiftexpression)*
- }
-
-shiftexpression	 = {additiveexpression }
-
-additiveexpression ={ multiplicativeexpression~(("+"|"-")~multiplicativeexpression)*}
-
-multiplicativeexpression ={ unaryexpression~(("*"|"/"|"%")~unaryexpression)*}
-
+Prec3BinExpr = {(Prec2BinExpr  ~ Prec3BinOp ~ Prec3BinExpr) | Prec2BinExpr}
+Prec2BinExpr = {(Prec1BinExpr  ~ Prec2BinOp ~ Prec2BinExpr) | Prec1BinExpr}
+Prec1BinExpr = {(Prec0BinExpr  ~ Prec1BinOp ~ Prec1BinExpr) | Prec0BinExpr}
+Prec0BinExpr = {(NonBinaryExpr ~ Prec0BinOp ~ Prec0BinExpr) | NonBinaryExpr}
+Prec3BinOp = {"*" | "/" | "%"}
+Prec2BinOp = {"+" | "-"}
+Prec1BinOp = {"<=" | ">=" | "<" | ">"}
+Prec0BinOp = {"==" | "!=" | "&&" | "||"}
