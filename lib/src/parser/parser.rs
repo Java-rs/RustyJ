@@ -3,7 +3,7 @@ extern crate pest_derive;
 
 use super::*;
 use crate::parser::Rule::name;
-use crate::types::{Class, Expr, FieldDecl, Type};
+use crate::types::{Class, Expr, FieldDecl, MethodDecl, Stmt, Type};
 use pest::error::Error;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
@@ -11,6 +11,7 @@ use pest_derive::Parser;
 use serde::{Deserialize, Serialize};
 use std::iter::Map;
 use std::path::Iter;
+use std::ptr::null;
 
 #[derive(Parser)]
 #[grammar = "src/parser/JavaGrammar.pest"]
@@ -45,15 +46,14 @@ fn parse_class(pair: Pair<Rule>) -> Class {
             for fieldOrMethod in inners {
                 match fieldOrMethod.as_rule() {
                     Rule::fielddeclaration => {
-                        // add to fields list
+                        fields.append(&mut parse_field(fieldOrMethod));
                     }
                     Rule::methoddeclaration => {
-                        // add to method list
+                        methods.push(parse_method(fieldOrMethod));
                     }
                     _ => unreachable!(),
                 };
             }
-
             Class {
                 name: other_name,
                 fields,
@@ -65,6 +65,43 @@ fn parse_class(pair: Pair<Rule>) -> Class {
 }
 fn next_id(inners: &mut Pairs<Rule>) -> String {
     inners.next().unwrap().to_string()
+}
+
+fn parse_method(pair: Pair<Rule>) -> MethodDecl {
+    match pair.as_rule() {
+        Rule::methoddeclaration => {
+            let mut inners = pair.into_inner();
+            let ret_type = parse_Type(inners.next().unwrap());
+            let mut methoddeclarator = inners.next().unwrap().into_inner();
+            let method_name = next_id(&mut methoddeclarator);
+            let mut params: Vec<(Type, String)> = vec![];
+            match methoddeclarator.next() {
+                None => (),
+                Some(paramList) => {
+                    let params1 = paramList.into_inner();
+                    for param in params1 {
+                        let mut inner = param.into_inner();
+                        let TypeJ = parse_Type(inner.next().unwrap());
+                        let id = next_id(&mut inner);
+                        params.push((TypeJ, id))
+                    }
+                }
+            }
+            let body = parse_Stmt(inners.next().unwrap());
+
+            MethodDecl {
+                ret_type,
+                name: method_name,
+                params,
+                body,
+            }
+        }
+        _ => unreachable!(),
+    }
+}
+
+fn parse_Stmt(pair: Pair<Rule>) -> Stmt {
+    todo!()
 }
 
 fn parse_field(pair: Pair<Rule>) -> Vec<FieldDecl> {
