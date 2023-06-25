@@ -31,12 +31,12 @@ fn arithmetic_methods_class() -> Class {
             FieldDecl {
                 field_type: Type::Int,
                 name: "x".to_string(),
-                val: Some("69".to_string()),
+                val: Some(Expr::Integer(69)),
             },
             FieldDecl {
                 field_type: Type::Int,
                 name: "y".to_string(),
-                val: Some("420".to_string()),
+                val: Some(Expr::Integer(420)),
             },
         ],
         methods: vec![

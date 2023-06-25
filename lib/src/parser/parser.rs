@@ -16,13 +16,6 @@ use std::path::Iter;
 #[grammar = "src/parser/JavaGrammar.pest"]
 struct ExampleParser;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum Example {
-    ID(String),
-    Name(Box<Example>, Box<Example>),
-    List(Vec<Example>),
-}
-
 pub fn parse_Programm(file: &str) -> Result<Vec<Class>, Error<Rule>> {
     let example: Pair<Rule> = ExampleParser::parse(Rule::compilationunit, file)?
         .next()
@@ -113,7 +106,7 @@ fn parse_Type(pair: Pair<Rule>) -> Type {
         _ => unreachable!(),
     }
 }
-fn parse_expr(pair: Pair<Rule>) -> String {
+fn parse_expr(pair: Pair<Rule>) -> Expr {
     todo!()
 }
 fn parse_value(pair: Pair<Rule>) -> Expr {
