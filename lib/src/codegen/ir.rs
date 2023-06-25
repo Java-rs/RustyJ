@@ -321,7 +321,6 @@ fn generate_method(
         name: method.name.clone(),
         max_stack: 0,
         code: vec![],
-        return_type: method.ret_type.clone(),
     };
 
     compiled_method.code.append(&mut generate_code_stmt(
