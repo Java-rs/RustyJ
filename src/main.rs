@@ -11,7 +11,7 @@ fn main() -> color_eyre::Result<()> {
     info!("Hello RustyJ!");
 
     lib::hi();
-    let mut file = File::open("lib/tests/Fib-AST.json")?;
+    let mut file = File::open("lib/testcases/Fib-AST.json")?;
     let mut ast_string = String::new();
 
     file.read_to_string(&mut ast_string)?;
