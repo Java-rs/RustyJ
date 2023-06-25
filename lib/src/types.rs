@@ -2,7 +2,7 @@ use crate::codegen::ConstantPool;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Default, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Class {
     pub name: String,
     pub fields: Vec<FieldDecl>,
@@ -24,16 +24,6 @@ impl Display for Class {
             "class {} {{\n\tfields: {}\n\tmethods: {}\n}}",
             self.name, fields, methods
         )
-    }
-}
-
-impl Default for Class {
-    fn default() -> Self {
-        Class {
-            name: String::new(),
-            fields: Vec::new(),
-            methods: Vec::new(),
-        }
     }
 }
 
@@ -82,6 +72,13 @@ pub enum Stmt {
 pub enum StmtExpr {
     Assign(String, Expr), // first the name of the variable, then the value it is being assigned to
     New(Type, Vec<Expr>), // first the class type, that should be instantiated, then the list of arguments for the constructor
+    // FIXME: This needs to be changed to represent more how the JVM handles method calls. We need a class(at least name) and a method name with the typed arguments inside it, also the return type
+    //    #2 = Methodref          #3.#17         // MethodTest.y:(I)I
+    //    #3 = Class              #18            // MethodTest
+    //    #17 = NameAndType        #19:#20        // y:(I)I
+    //    #18 = Utf8               MethodTest
+    //    #19 = Utf8               y
+    //    #20 = Utf8               (I)I
     MethodCall(Expr, String, Vec<Expr>), // first the object to which the method belongs (e.g. Expr::This), then the name of the method and lastly the list of arguments for the method call
     TypedStmtExpr(Box<StmtExpr>, Type),
 }

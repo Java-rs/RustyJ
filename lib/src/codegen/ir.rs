@@ -80,12 +80,48 @@ impl ConstantPool {
         let index = self.0.len() as u16;
         index
     }
+    fn add_field_ref(&mut self, field_ref: FieldRef) -> u16 {
+        todo!()
+        /*
+        let class_index = self.add(Constant::Class(field_ref.class));
+        let name_and_type_index = self.add(Constant::NameAndType(NameAndType {
+            name: field_ref.field.name,
+            r#type: field_ref.field.r#type,
+        }));
+        // TODO: FieldRef should also take an index
+        self.add(Constant::FieldRef(FieldRef {
+            class: field_ref.class,
+            field: NameAndType {
+                name: field_ref.field.name,
+                r#type: field_ref.field.r#type,
+            },
+        }))*/
+    }
+    fn add_method_ref(&mut self, method_ref: MethodRef) -> u16 {
+        todo!()
+        /*
+        let class_index = self.add(Constant::Class(method_ref.class));
+        let name_and_type_index = self.add(Constant::NameAndType(NameAndType {
+            name: method_ref.method.name,
+            r#type: method_ref.method.r#type,
+        }));
+        // TODO: Change MethodRef to require a u16 instead of a String to reference other constant
+        let method_ref = Constant::MethodRef(MethodRef {
+            class: todo!(),
+            method: NameAndType {
+                name: method_ref.method.name,
+                r#type: method_ref.method.r#type,
+            },
+        });
+        self.add(method_ref)
+        */
+    }
     /// Returns the constant at the given index. Note that this is 1-indexed since the constant
     /// pool of the JVM is 1-indexed
     fn get(&self, index: u16) -> Option<&Constant> {
         self.0.get(index as usize - 1)
     }
-    /// See this table: https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.4:w
+    /// See this table: https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.4
     fn as_bytes(&mut self) -> Vec<u8> {
         let mut result = vec![];
         // TODO: Remove this clone and act on self reference instead
@@ -266,15 +302,15 @@ pub struct NameAndType {
 /// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.areturn
 pub(crate) enum Instruction {
     aload_0,
-    aload(u8),        //Load reference from local variable
-    iload(u8),        //Load int from local variable
-    ifeq(u16),        //Branch if int is 0
-    ireturn,          //return int, char, boolean
-    r#return,         //return void
-    areturn,          //return object(string, integer, null)
-    bipush(u8),       //Push byte onto stack
-    istore(u8),       //Store int into local variable
-    astore(u8),       //Store reference into local variable
+    aload(u8),          //Load reference from local variable
+    iload(u8),          //Load int from local variable
+    ifeq(u16),          //Branch if int is 0
+    ireturn,            //return int, char, boolean
+    r#return,           //return void
+    areturn,            //return object(string, integer, null)
+    bipush(u8),         //Push byte onto stack
+    istore(u8),         //Store int into local variable
+    astore(u8),         //Store reference into local variable
     reljumpifeq(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
     aconst_null,      //Push null onto stack
     ldc(u16),         //Push item from constant pool onto stack
@@ -285,6 +321,7 @@ pub(crate) enum Instruction {
     reljumpifne(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
     reljumpiflt(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
     reljumpifge(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
+    invokespecial(u16), // TODO: Check if u16 is correct here
     iadd,             //Add int
     isub,             //Subtract int
     imul,             //Multiply int
@@ -332,7 +369,13 @@ fn generate_method(
     dir: &DIR,
     constant_pool: &mut ConstantPool,
 ) -> CompiledMethod {
-    let mut local_var_pool = LocalVarPool(vec![]);
+    let mut local_var_pool = LocalVarPool(
+        method
+            .params
+            .iter()
+            .map(|(_type, name)| name.clone())
+            .collect(),
+    );
     let mut compiled_method = CompiledMethod {
         return_type: method.ret_type.clone(),
         name: method.name.clone(),
@@ -529,12 +572,26 @@ fn generate_code_stmt_expr(
                 ));
             });
         }
-        StmtExpr::MethodCall(expr, name, exprs) => {
+        StmtExpr::MethodCall(_expr, name, args) => {
             // Generate bytecode for method call
-            // TODO: Bene
             // Principally this should work this way:
             // 1. Write Function Name into Constant Pool generating the necessary Constants
-            // Call invokespecial on the given back function index
+            // 2. Push all arguments onto the stack
+            // 3. Call invokespecial on the given back function index
+            result.append(
+                &mut args
+                    .iter()
+                    .flat_map(|arg| generate_code_expr(arg.clone(), constant_pool, local_var_pool))
+                    .collect(),
+            );
+            let method_index = constant_pool.add_method_ref(MethodRef {
+                class: todo!(),
+                method: NameAndType {
+                    name: name.clone(),
+                    r#type: todo!(),
+                },
+            });
+            result.push(Instruction::invokespecial(method_index));
         }
         StmtExpr::TypedStmtExpr(stmt_expr, _) => {
             result.append(&mut generate_code_stmt_expr(
