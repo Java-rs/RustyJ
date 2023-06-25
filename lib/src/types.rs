@@ -40,7 +40,7 @@ impl Default for Class {
 pub struct FieldDecl {
     pub field_type: Type,
     pub name: String,
-    pub val: Option<String>, // @Decide: Should probably Option<Expr> instead
+    pub val: Option<Expr>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
