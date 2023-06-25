@@ -1,7 +1,10 @@
+WHITESPACE = _{ " " | "\t" | "\n" }
+COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
+
 //ipmlemented
 IDENTIFIER ={(ASCII_ALPHA|"_")~(ASCII_ALPHANUMERIC|"_")* }
 //ipmlemented
-compilationunit = {classdeclaration+ }
+compilationunit = {classdeclaration+}
 
 name    ={IDENTIFIER ~("."~IDENTIFIER)*}
 //ipmlemented
