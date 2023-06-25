@@ -30,7 +30,7 @@ fn main() -> color_eyre::Result<()> {
             FieldDecl {
                 field_type: Type::Int,
                 name: "d".to_string(),
-                val: Some("42".to_string()),
+                val: Some(Expr::Integer(42)),
             },
         ],
         methods: vec![MethodDecl {

@@ -38,9 +38,11 @@ variabledeclarators ={ variabledeclarator~(","~variabledeclarator)* }
 variabledeclarator ={ IDENTIFIER
 		 | IDENTIFIER~"="~expression }
 
-
-blockstatement	 ={ localvariabledeclarationstatement
+// implemented
+blockstatement	 ={ typeJ~variabledeclarators~";"
 		 | statement  }
+
+
 //implemented
 formalparameterlist = {formalparameter~(","~formalparameter)*}
 //implemented
@@ -63,14 +65,13 @@ primitivetype    = {"boolean"
 argumentlist     = {expression~(","~expression)*}
 
 
-localvariabledeclarationstatement = {localvariabledeclaration~";"  }
 
-statement        = {statementwithouttrailingsubstatement
+
+statement = {statementwithouttrailingsubstatement
 		 | ifthenstatement
 		 | ifthenelsestatement
 		 | whilestatement }
 
-localvariabledeclaration ={ typeJ~variabledeclarators }
 
 statementwithouttrailingsubstatement = {block
 		 | emptystatement

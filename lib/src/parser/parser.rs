@@ -3,7 +3,8 @@ extern crate pest_derive;
 
 use super::*;
 use crate::parser::Rule::name;
-use crate::types::{Class, Expr, FieldDecl, MethodDecl, Stmt, Type};
+use crate::types::Stmt::{Block, StmtExprStmt};
+use crate::types::{Class, Expr, FieldDecl, MethodDecl, Stmt, StmtExpr, Type};
 use pest::error::Error;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
@@ -86,16 +87,61 @@ fn parse_method(pair: Pair<Rule>) -> MethodDecl {
                 ret_type,
                 name: method_name,
                 params,
-                body,
+                body: Stmt::Block(body),
             }
         }
         _ => unreachable!(),
     }
 }
 
-fn parse_Stmt(pair: Pair<Rule>) -> Stmt {
+fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
+    match pair.as_rule() {
+        Rule::blockstatement => {
+            let mut inner = pair.into_inner();
+            let first = inner.next().unwrap();
+            match first.as_rule() {
+                Rule::typeJ => {
+                    let typeJ = parse_Type(first);
+                    let varDecels = inner.next().unwrap().into_inner();
+                    varDecels
+                        .map(|x| {
+                            let mut inner = x.into_inner();
+                            let other_name = next_id(&mut inner);
+                            match inner.next() {
+                                None => vec![Stmt::LocalVarDecl(typeJ.clone(), other_name)],
+                                Some(expresion) => vec![
+                                    Stmt::LocalVarDecl(typeJ.clone(), other_name.clone()),
+                                    Stmt::StmtExprStmt(StmtExpr::Assign(
+                                        other_name,
+                                        parse_expr(expresion),
+                                    )),
+                                ],
+                            }
+                        })
+                        .flatten()
+                        .collect()
+                }
+                Rule::statement => {
+                    vec![]
+                }
+                _ => unreachable!(),
+            }
+        }
+        _ => unreachable!(),
+    }
+}
+fn parse_statement(pair: Pair<Rule>) -> Stmt {
+    match pair.as_rule() {
+        Rule::statementwithouttrailingsubstatement => {}
+        Rule::ifthenstatement => {}
+        Rule::ifthenelsestatement => {}
+        Rule::whilestatement => {}
+        _ => unreachable!(),
+    }
     todo!()
 }
+
+//fn parse_variabledeclarators(pair: Pair<Rule>)->
 
 fn parse_field(pair: Pair<Rule>) -> Vec<FieldDecl> {
     match pair.as_rule() {
