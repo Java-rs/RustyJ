@@ -366,23 +366,61 @@ fn generate_code_stmt(
                 .collect(),
         ),
         Stmt::Return(expr) => {
-            result.append(&mut generate_code_expr(
-                expr.clone(),
-                constant_pool,
-                local_var_pool,
-            ));
-            match expr {
-                Expr::Integer(_) => {
-                    result.push(Instruction::ireturn);
+            match &expr {
+                Expr::TypedExpr(_, r#type) => {
+                    match r#type {
+                        Type::Int => {
+                            result.append(&mut generate_code_expr(
+                                expr,
+                                constant_pool,
+                                local_var_pool,
+                            ));
+                            result.push(Instruction::ireturn);
+                        }
+                        Type::Void => {
+                            result.push(Instruction::r#return);
+                        }
+                        Type::String => {
+                            result.append(&mut generate_code_expr(
+                                expr,
+                                constant_pool,
+                                local_var_pool,
+                            ));
+                            result.push(Instruction::areturn);
+                        }
+                        Type::Bool => {
+                            result.append(&mut generate_code_expr(
+                                expr,
+                                constant_pool,
+                                local_var_pool,
+                            ));
+                            result.push(Instruction::ireturn);
+                        }
+                        //Todo: Can this even happen?
+                        Type::Null => {
+                            result.push(Instruction::aconst_null);
+                            result.push(Instruction::areturn);
+                        }
+                        Type::Char => {
+                            result.append(&mut generate_code_expr(
+                                expr,
+                                constant_pool,
+                                local_var_pool,
+                            ));
+                            result.push(Instruction::ireturn);
+                        }
+                        Type::Class(_) => {
+                            result.append(&mut generate_code_expr(
+                                expr,
+                                constant_pool,
+                                local_var_pool,
+                            ));
+                            result.push(Instruction::areturn);
+                        }
+                        _ => panic!("This should never happen"),
+                    }
                 }
-                Expr::Bool(_) => result.push(Instruction::ireturn),
-                Expr::Char(_) => result.push(Instruction::ireturn),
-                Expr::String(_) => result.push(Instruction::areturn),
-                Expr::Jnull => result.push(Instruction::areturn),
-                Expr::LocalVar(_) => {
-                    result.push(Instruction::ireturn);
-                }
-                _ => panic!("Invalid return type"),
+                _ => panic!("This should never happen"),
             }
         }
         Stmt::While(expr, stmt) => {
