@@ -7,17 +7,21 @@ IDENTIFIER ={(ASCII_ALPHA|"_")~(ASCII_ALPHANUMERIC|"_")* }
 compilationunit = {classdeclaration+}
 
 name    ={IDENTIFIER ~("."~IDENTIFIER)*}
-//ipmlemented
+//implemented
 classdeclaration = {"class"~IDENTIFIER~"{"~(fielddeclaration|methoddeclaration|constructordeclaration)*~"}"}
 
+//ignored for now
 constructordeclaration = {constructordeclarator~constructorbody}
-
+//implemented
 fielddeclaration = {typeJ~variabledeclarators~";"}
-
-methoddeclaration = {methodheader~methodbody }
-
-block            = {"{"~"}"
-                 		 | "{"~blockstatement+~"}" }
+//implemented
+methoddeclaration = {typeJ~methoddeclarator
+                    ~(block| ";" )}
+//implemented
+methoddeclarator ={ IDENTIFIER~"("~")"
+		 | IDENTIFIER~"("~formalparameterlist~")"  }
+//declared
+block            = {"{"~blockstatement*~"}" }
 
 constructordeclarator = { IDENTIFIER~"()"
 		 |  IDENTIFIER~"("~formalparameterlist~")"  }
@@ -27,26 +31,30 @@ constructorbody	 ={ "{"~"}"
 		|"{"~blockstatement+~"}"
 		|"{"~explicitconstructorinvocation~blockstatement+~"}"}
 
-methodheader	 ={ typeJ~methoddeclarator }
+
 //implemented
 typeJ  = {primitivetype
 		 | IDENTIFIER}
-
+//implemented
 variabledeclarators ={ variabledeclarator~(","~variabledeclarator)* }
+//implemented
+variabledeclarator ={ IDENTIFIER
+		 | IDENTIFIER~"="~expression }
 
-methodbody       = {block
-		 | ";" }
-
-blockstatement	 ={ localvariabledeclarationstatement
+// implemented
+blockstatement	 ={ typeJ~variabledeclarators~";"
 		 | statement  }
 
+
+//implemented
 formalparameterlist = {formalparameter~(","~formalparameter)*}
+//implemented
+formalparameter  = {typeJ~IDENTIFIER }
 
 explicitconstructorinvocation = {"this"~"("~")"~";"
 		 | "this"~"("~argumentlist~")"~";"}
 
-methoddeclarator ={ IDENTIFIER~"("~")"
-		 | IDENTIFIER~"("~formalparameterlist~")"  }
+
 //implemented
 primitivetype    = {"boolean"
 		        | "int"
@@ -56,23 +64,17 @@ primitivetype    = {"boolean"
                 |"null"}
 
 
-variabledeclarator ={ IDENTIFIER
-		 | IDENTIFIER~"="~expression }
-
-
-formalparameter  = {typeJ~IDENTIFIER }
 
 argumentlist     = {expression~(","~expression)*}
 
 
-localvariabledeclarationstatement = {localvariabledeclaration~";"  }
 
-statement        = {statementwithouttrailingsubstatement
+
+statement = {statementwithouttrailingsubstatement
 		 | ifthenstatement
 		 | ifthenelsestatement
 		 | whilestatement }
 
-localvariabledeclaration ={ typeJ~variabledeclarators }
 
 statementwithouttrailingsubstatement = {block
 		 | emptystatement
