@@ -14,11 +14,11 @@ struct ExampleParser;
 pub fn parse_Programm(file: &str) -> Result<Vec<Class>, Error<Rule>> {
     let example: Pair<Rule> = ExampleParser::parse(Rule::Program, file)?.next().unwrap();
 
-    if (example.as_rule() != Rule::Program) {
+    if example.as_rule() != Rule::Program {
         panic!();
     }
-    let pasedClases = example.into_inner().map(parse_class).collect();
-    Ok(pasedClases)
+    let pased_clases = example.into_inner().map(parse_class).collect();
+    Ok(pased_clases)
 }
 
 fn parse_class(pair: Pair<Rule>) -> Class {
@@ -61,32 +61,36 @@ fn parse_method(pair: Pair<Rule>) -> MethodDecl {
         Rule::MethodDecl => {
             let mut inners = pair.into_inner();
             let ret_type = parse_Type(inners.next().unwrap());
-            let mut methoddeclarator = inners.next().unwrap().into_inner();
-            let method_name = next_id(&mut methoddeclarator);
-            let mut params: Vec<(Type, String)> = vec![];
-            match methoddeclarator.next() {
-                None => (),
-                Some(paramList) => {
-                    let params1 = paramList.into_inner();
-                    for param in params1 {
-                        let mut inner = param.into_inner();
-                        let jtype = parse_Type(inner.next().unwrap());
-                        let id = next_id(&mut inner);
-                        params.push((jtype, id))
+            let method_name = next_id(&mut inners);
+            let mut params = vec![];
+            let mut body = None;
+            while let Some(p) = inners.next() {
+                match p.as_rule() {
+                    Rule::ParamDecl => {
+                        let mut inner_param = p.into_inner();
+                        let param_type = parse_Type(inner_param.next().unwrap());
+                        let param_name = next_id(&mut inner_param);
+                        params.push((param_type, param_name));
                     }
-                }
+                    Rule::BlockStmt => body = Some(parse_block_stmt(p)),
+                    _ => unreachable!(),
+                };
             }
-            let body = parse_Stmt(inners.next().unwrap());
 
             MethodDecl {
                 ret_type,
                 name: method_name,
                 params,
-                body: Stmt::Block(body),
+                body: body.unwrap(),
             }
         }
         _ => unreachable!(),
     }
+}
+
+// TODO
+fn parse_block_stmt(pair: Pair<Rule>) -> Stmt {
+    Stmt::Block(vec![])
 }
 
 fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
@@ -167,6 +171,7 @@ fn parse_field(pair: Pair<Rule>) -> Vec<FieldDecl> {
 
 fn parse_Type(pair: Pair<Rule>) -> Type {
     match pair.as_rule() {
+        Rule::JType => parse_Type(pair.into_inner().next().unwrap()),
         Rule::PrimitiveType => match pair.as_str() {
             "boolean" => Type::Bool,
             "int" => Type::Int,

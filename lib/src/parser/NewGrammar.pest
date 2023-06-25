@@ -2,16 +2,18 @@
 // in between "~". However, sometimes there has to be some whitespace between
 // characters (e.g. "class Name" is allowed, but "className" is not allowed).
 // In that case you should explicitly put WHITESPACE in between the "~"
-WHITESPACE = _{ " " | "\t" | "\n" }
+WHITESPACE = _{ WHITE_SPACE }
 COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
 
 Program = {ClassDecl+}
 
-ClassDecl = {"class" ~ Identifier ~ "{" ~ (FieldDecl|MethodDecl)* ~ "}"}
+ClassDecl = {"class" ~ Identifier ~ "{" ~ (MethodDecl|FieldDecl)* ~ "}"}
 
 FieldDecl = {JType ~ FieldVarDecl+}
 
-MethodDecl = {JType ~ Identifier ~ "(" ~ ParamDecl* ~ ")" ~ BlockStmt}
+MethodDecl = {JType ~ Identifier ~ "(" ~ ParamDeclList? ~ ")" ~ BlockStmt}
+
+ParamDeclList = {ParamDecl ~ (","~ParamDecl)*}
 
 ParamDecl = {JType ~ Identifier}
 
@@ -22,7 +24,7 @@ JType = {PrimitiveType | Identifier}
 PrimitiveType = {"int" | "boolean" | "char" | "String" | "void" | "null"}
 
 //ipmlemented
-Identifier ={ (ASCII_ALPHA|"_") ~ (ASCII_ALPHANUMERIC|"_")* }
+Identifier ={ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 
 BlockStmt = {"{" ~ Stmt* ~ "}"}
 
