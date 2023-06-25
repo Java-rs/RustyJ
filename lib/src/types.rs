@@ -2,7 +2,7 @@ use crate::codegen::ConstantPool;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Class {
     pub name: String,
     pub fields: Vec<FieldDecl>,
@@ -37,7 +37,7 @@ impl Default for Class {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct FieldDecl {
     pub field_type: Type,
     pub name: String,
