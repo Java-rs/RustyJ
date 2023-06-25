@@ -9,7 +9,7 @@ use pest_derive::Parser;
 use serde::{Deserialize, Serialize};
 
 #[derive(Parser)]
-#[grammar = "src/parser/ExampleGrammar.pest"]
+#[grammar = "../lib/src/parser/ExampleGrammar.pest"]
 struct ExampleParser;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

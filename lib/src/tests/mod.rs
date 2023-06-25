@@ -42,7 +42,7 @@ fn normalize_str(s: std::string::String) -> std::string::String {
 pub fn parser_test(ast: &Class, name: &str) {
     // Call parser with java code
     // TODO: Can only be done, once we have a parsing method that returns a Class
-    // let parse_res = parser::parse(&read_to_string(File::open(format!("testcases/{name}.java"))));
+    // let parse_res = parser::parse(&read_to_string(File::open(format!("lib/testcases/{name}.java"))));
     // assert_eq!(parse_res, ast);
 }
 
@@ -56,180 +56,166 @@ pub fn typechecker_test(ast: &Class, tast: &Class) {
     assert_eq!(*typed, *ast);
 }
 
+const TEST_VALS_AMOUNT: usize = 5;
+static BOOL_TEST_VALS: [&str; 2] = ["true", "false"];
+static CHAR_TEST_VALS: [&str; TEST_VALS_AMOUNT] = ["'c'", "'x'", "'!'", "'a'", "'f'"];
+static INT_TEST_VALS: [&str; TEST_VALS_AMOUNT] = ["5", "8", "257", "0", "69"];
+static STR_TEST_VALS: [&str; TEST_VALS_AMOUNT] = [
+    "\"a\"",
+    "\"test\"",
+    "\"Hello World!?!\"",
+    "\"A bit of escaping going on here... \\\"\"",
+    "Just another string test",
+];
+
+pub fn get_test_val(t: Type, i: usize) -> std::string::String {
+    match t {
+        Type::Bool => BOOL_TEST_VALS[i % BOOL_TEST_VALS.len()].to_string(),
+        Type::Char => CHAR_TEST_VALS[i % CHAR_TEST_VALS.len()].to_string(),
+        Type::Int => INT_TEST_VALS[i % INT_TEST_VALS.len()].to_string(),
+        Type::Null => "null".to_string(),
+        Type::Void => panic!("can't create a test value for parameters of type 'void'"),
+        Type::String => STR_TEST_VALS[i % STR_TEST_VALS.len()].to_string(),
+        Type::Class(name) => format!("new {name}()"),
+    }
+}
+
 pub fn codegen_test(tast: &Class, name: &str) {
-    // TODO: I have not decided to how to test the codegen yet
-    // ir = generate_dir(&vec![tast]);
+    // Create code to run tests on generated class file
+    let mut java_code = format!(
+        "class Test {{\npublic static void main(String[] args) {{\n{} m = new {}();\n",
+        tast.name, tast.name
+    );
+    for method in tast.methods.iter() {
+        let n = if method.params.is_empty() {
+            1
+        } else {
+            TEST_VALS_AMOUNT
+        };
+        for i in 0..n {
+            let test_inputs: Vec<std::string::String> = method
+                .params
+                .iter()
+                .enumerate()
+                .map(|(i, p)| get_test_val(p.0.clone(), i))
+                .collect();
+            let test_inputs = test_inputs.join(",");
+            let method_call = format!("m.{}({})", method.name, test_inputs);
+            if method.ret_type == Type::Void {
+                java_code.push_str(&method_call);
+            } else {
+                java_code.push_str(&format!("System.out.println({method_call})"));
+            }
+            java_code.push_str(";\n");
+        }
+    }
+    java_code.push_str("}}");
+
+    File::create("lib/testcases/Test.java")
+        .expect("failed to create Test.java")
+        .write(java_code.as_bytes())
+        .expect("failed to write to Test.java");
+    // Compile & run tests on generated DIR
+    let mut dir = generate_dir(&vec![tast.clone()]);
+    File::create(format!("lib/testcases/{name}.class"))
+        .expect(&format!("failed to create {name}.class"))
+        .write(&dir.as_bytes())
+        .expect(&format!("failed to write generated DIR into {name}.class"));
+    disassemble_java(name, &format!("{name}-codegen")); // Probably useful for debugging
+    compile_java("Test");
+    let codegen_out = run_java("Test");
+    // Compile original java code for expected result
+    compile_java(name);
+    compile_java("Test");
+    let expected_out = run_java("Test");
+
+    assert_eq!(codegen_out.status, expected_out.status);
+    assert_eq!(codegen_out.stderr, expected_out.stderr);
+    assert_eq!(codegen_out.stdout, expected_out.stdout);
 }
 
 pub fn class_test(ast: &Class, tast: Option<&Class>, name: &str) {
     // Write AST & TAST to files
     let mut file =
-        File::create(format!("testcases/{name}-AST.json")).expect("File failed to be created");
+        File::create(format!("lib/testcases/{name}-AST.json")).expect("File failed to be created");
     serde_json::to_writer_pretty(&mut file, &ast).expect("failed to serialize class");
 
     if let Some(tast) = tast {
-        let mut file =
-            File::create(format!("testcases/{name}-TAST.json")).expect("File failed to be created");
+        let mut file = File::create(format!("lib/testcases/{name}-TAST.json"))
+            .expect("File failed to be created");
         serde_json::to_writer_pretty(&mut file, tast).expect("failed to serialize class");
     };
 
     // Load orignal java code
-    let file =
-        File::open(format!("testcases/{name}.java")).expect("failed to open original java file");
+    let file = File::open(format!("lib/testcases/{name}.java"))
+        .expect("failed to open original java file");
     let og_java_code = read_to_string(file).expect("failed to read original java file");
 
     let res = test_helper(ast, tast, name, &og_java_code);
-
-    if let Err(msg) = res {
-        let mut file = File::create(format!("testcases/{name}.java"))
-            .expect("failed to open original java file for writing");
-        file.write(og_java_code.as_bytes())
-            .expect("failed to write the original java code back into its file");
-        panic!("{msg}");
-    }
 }
 
-fn test_helper(
-    ast: &Class,
-    tast: Option<&Class>,
-    name: &str,
-    og_java_code: &str,
-) -> Result<(), std::string::String> {
+fn test_helper(ast: &Class, tast: Option<&Class>, name: &str, og_java_code: &str) {
     // Generate Java Code from AST and write to file
     let class_code = class_to_java(ast);
-    let mut file = File::create(format!("testcases/{name}.java"))
+    let mut file = File::create(format!("lib/testcases/{name}.java"))
         .expect("failed to open original java file for writing generated code");
     file.write(class_code.as_bytes())
-        .map_err(|x| "failed to write generated java code in original java file".to_string())?;
-    let mut file = File::create(format!("testcases/{name}-gen.java")) // Only for debugging tests
+        .expect("failed to write generated java code in original java file");
+    let mut file = File::create(format!("lib/testcases/{name}-expected.java")) // Only for debugging tests
         .expect("failed to open generated java file for writing generated code");
     file.write(class_code.as_bytes())
-        .map_err(|x| "failed to write generated java code in generated java file".to_string())?;
+        .expect("failed to write generated java code in generated java file");
 
     // Compile generated java code
-    let mut child = Command::new("javac")
-        .arg(format!("testcases/{name}.java"))
-        .arg("-g:none")
-        .spawn()
-        .map_err(|x| "failed to compile generated java-code".to_string())?;
-    let ecode = child
-        .wait()
-        .map_err(|x| "failed to wait on child compiling generated java code".to_string())?;
-    assert!(ecode.success());
-    let gen_clz_file = read(format!("testcases/{name}.class"))
-        .map_err(|x| "failed to read generated java class file".to_string())?;
-    let mut file = File::create(format!("testcases/{name}-gen.txt")).unwrap();
-    let mut child = Command::new("javap")
-        .arg("-v")
-        .arg("-c")
-        .arg(format!("testcases/{name}.class"))
-        .stdout(Stdio::from(file))
-        .spawn()
-        .map_err(|x| "failed to disassemble generated java class file".to_string())?;
-    let ecode = child
-        .wait()
-        .map_err(|x| "failed to wait on child decompiling generated java code".to_string())?;
-    assert!(ecode.success());
+    compile_java(name);
+    let gen_clz = disassemble_java(name, &format!("{name}-expected"));
 
     // Compile original java code
-    let mut file = File::create(format!("testcases/{name}.java"))
+    let mut file = File::create(format!("lib/testcases/{name}.java"))
         .expect("failed to open original java file for writing");
     file.write(og_java_code.as_bytes())
-        .map_err(|x| "failed to write original java code back".to_string())?;
+        .expect("failed to write original java code back");
+    compile_java(name);
+    let og_clz = disassemble_java(name, &format!("{name}"));
+
+    assert_eq!(og_clz, gen_clz);
+}
+
+fn run_java(name: &str) -> std::process::Output {
+    Command::new("java")
+        .arg(name)
+        .output()
+        .expect(&format!("failed to run 'java {name}'"))
+}
+
+fn compile_java(name: &str) {
     let mut child = Command::new("javac")
-        .arg(format!("testcases/{name}.java"))
+        .arg(format!("lib/testcases/{name}.java"))
         .arg("-g:none")
         .spawn()
-        .map_err(|x| "failed to compile original java-code".to_string())?;
+        .expect(&format!("failed to compile {name}.java"));
     let ecode = child
         .wait()
-        .map_err(|x| "failed to wait on child compiling original java code".to_string())?;
+        .expect(&format!("failed to wait on child compiling {name}.java"));
     assert!(ecode.success());
-    let og_clz_file = read(format!("testcases/{name}.class"))
-        .map_err(|x| "failed to read original java class file".to_string())?;
-    let mut file = File::create(format!("testcases/{name}.txt")).unwrap();
+}
+
+// Decompiles the class file, writing the result in lib/testcases/out.txt and returning the bytes that were read from the class file
+fn disassemble_java(name: &str, out: &str) -> Vec<u8> {
+    let clz_file_path = format!("lib/testcases/{name}.class");
+    let clz_file = read(clz_file_path.clone()).expect("failed to read generated java class file");
+    let mut file = File::create(format!("lib/testcases/{out}.txt"))
+        .expect(&format!("failed to create {out}.txt"));
     let mut child = Command::new("javap")
         .arg("-v")
         .arg("-c")
-        .arg(format!("testcases/{name}.class"))
+        .arg(clz_file_path)
         .stdout(Stdio::from(file))
         .spawn()
-        .map_err(|x| "failed to disassemble original java class file".to_string())?;
-    let ecode = child
-        .wait()
-        .map_err(|x| "failed to wait on child compiling original java code".to_string())?;
+        .expect(&format!("failed to disassemble {name}.java"));
+    let ecode = child.wait().expect(&format!(
+        "failed to wait on child disassembling {name}.java"
+    ));
     assert!(ecode.success());
-
-    assert_eq!(og_clz_file, gen_clz_file);
-    Ok(())
+    clz_file
 }
-
-// use super::*
-// #[test]
-// fn Fields_class() {
-//     let class = Class {};
-//     class_test(&tast_to_ast(&class), Some(&class), "Fields");
-// }
-
-// use super::*
-// #[test]
-// fn IntFields_class() {
-//     let class = Class {};
-//     class_test(&tast_to_ast(&class), Some(&class), "IntFields");
-// }
-
-// use super::*
-// #[test]
-// fn LocalVarDecl_class() {
-//     let class = Class {};
-//     class_test(&tast_to_ast(&class), Some(&class), "LocalVarDecl");
-// }
-
-// use super::*
-// #[test]
-// fn MethodCall_class() {
-//     let class = Class {};
-//     class_test(&tast_to_ast(&class), Some(&class), "MethodCall");
-// }
-
-// use super::*
-// #[test]
-// fn NamingConflict_class() {
-//     let class = Class {};
-//     class_test(&tast_to_ast(&class), Some(&class), "NamingConflict");
-// }
-
-// use super::*
-// #[test]
-// fn Negator_class() {
-//     let class = Class {};
-//     class_test(&tast_to_ast(&class), Some(&class), "Negator");
-// }
-
-// use super::*
-// #[test]
-// fn Return_class() {
-//     let class = Class {};
-//     class_test(&tast_to_ast(&class), Some(&class), "Return");
-// }
-
-// use super::*
-// #[test]
-// fn SetterGetter_class() {
-//     let class = Class {};
-//     class_test(&tast_to_ast(&class), Some(&class), "SetterGetter");
-// }
-
-// use super::*
-// #[test]
-// fn StrAdd_class() {
-//     let class = Class {};
-//     class_test(&tast_to_ast(&class), Some(&class), "StrAdd");
-// }
-
-// use super::*
-// #[test]
-// fn While_class() {
-//     let class = Class {};
-//     class_test(&tast_to_ast(&class), Some(&class), "While");
-// }

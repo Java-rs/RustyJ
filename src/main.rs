@@ -1,3 +1,4 @@
+use lib::codegen::generate_dir;
 use lib::typechecker::typechecker;
 use lib::types::{Class, Expr, FieldDecl, MethodDecl, Prg, Stmt, StmtExpr, Type};
 use serde_json::Value;
@@ -69,6 +70,9 @@ fn main() -> color_eyre::Result<()> {
         &mut File::create("typed_if-test.json")?,
         &typechecker.typed_classes.get(&class2.name.clone()),
     )?;
+
+    let dir = generate_dir(&typechecker.typed_classes.values().cloned().collect());
+    println!("{:#?}", dir);
 
     //let mut file = File::create("typed_if-ast.txt")?;
     //file.write_all(typed_ast_string.as_bytes())?;
