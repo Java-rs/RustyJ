@@ -4,6 +4,7 @@ use crate::typechecker::*;
 use crate::types;
 use crate::types::Expr::Binary;
 use crate::types::*;
+use std::any::TypeId;
 use std::io::Bytes;
 
 /// The DIR(Duck Intermediate Representation) is our IR for generating Java Bytecode
@@ -364,14 +365,26 @@ fn generate_code_stmt(
                 .flatten()
                 .collect(),
         ),
-        Stmt::Return(expr) => match expr {
-            Integer => result.push(Instruction::ireturn),
-            Boolean => result.push(Instruction::ireturn),
-            Char => result.push(Instruction::ireturn),
-            String => result.push(Instruction::areturn),
-            types::Expr::Jnull => result.push(Instruction::areturn),
-            _ => panic!("Invalid return type"),
-        },
+        Stmt::Return(expr) => {
+            result.append(&mut generate_code_expr(
+                expr.clone(),
+                constant_pool,
+                local_var_pool,
+            ));
+            match expr {
+                Expr::Integer(_) => {
+                    result.push(Instruction::ireturn);
+                }
+                Expr::Bool(_) => result.push(Instruction::ireturn),
+                Expr::Char(_) => result.push(Instruction::ireturn),
+                Expr::String(_) => result.push(Instruction::areturn),
+                Expr::Jnull => result.push(Instruction::areturn),
+                Expr::LocalVar(_) => {
+                    result.push(Instruction::ireturn);
+                }
+                _ => panic!("Invalid return type"),
+            }
+        }
         Stmt::While(expr, stmt) => {
             // TODO: Test, Bene
             result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
@@ -386,29 +399,24 @@ fn generate_code_stmt(
             //TODO: fix bipush to "store" the value of the variable
             match types {
                 types::Type::Int => result.append(&mut vec![
-                    Instruction::bipush(index),
+                    Instruction::bipush(index.clone()),
                     Instruction::istore(index),
-                    Instruction::iload(index),
                 ]),
                 types::Type::Bool => result.append(&mut vec![
-                    Instruction::bipush(index),
+                    Instruction::bipush(index.clone()),
                     Instruction::istore(index),
-                    Instruction::iload(index),
                 ]),
                 types::Type::Char => result.append(&mut vec![
-                    Instruction::bipush(index),
+                    Instruction::bipush(index.clone()),
                     Instruction::istore(index),
-                    Instruction::iload(index),
                 ]),
                 types::Type::String => result.append(&mut vec![
-                    Instruction::bipush(index),
+                    Instruction::bipush(index.clone()),
                     Instruction::astore(index),
-                    Instruction::aload(index),
                 ]),
                 types::Type::Null => result.append(&mut vec![
-                    Instruction::bipush(index),
+                    Instruction::bipush(index.clone()),
                     Instruction::astore(index),
-                    Instruction::aload(index),
                 ]),
                 _ => panic!("Invalid return type"),
             }
@@ -750,6 +758,7 @@ fn generate_code_expr(
             }
         }
         Expr::LocalVar(name) => {
+            //Todo: Match for type
             let index = local_var_pool.get_index(&name);
             result.push(Instruction::iload(index as u8));
         }
