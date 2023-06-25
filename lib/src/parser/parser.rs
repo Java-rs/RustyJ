@@ -49,7 +49,11 @@ fn parse_class(pair: Pair<Rule>) -> Class {
     }
 }
 fn next_id(inners: &mut Pairs<Rule>) -> String {
-    inners.next().unwrap().to_string()
+    // ".as_str().to_string()" might look weird but is legitimate
+    // calling to_string() immediately would return "Identifier(<location>)",
+    // while as_str() returns the actual str-slice captured by the Identifier-rule
+    // We still have to copy that str-slice into its own string object with to_string() though
+    inners.next().unwrap().as_str().to_string()
 }
 
 fn parse_method(pair: Pair<Rule>) -> MethodDecl {
