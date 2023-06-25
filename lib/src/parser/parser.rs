@@ -2,6 +2,7 @@ extern crate pest;
 extern crate pest_derive;
 
 use super::*;
+use crate::parser::Rule::name;
 use crate::types::{Class, Expr, FieldDecl, Type};
 use pest::error::Error;
 use pest::iterators::{Pair, Pairs};
@@ -38,7 +39,7 @@ fn parse_class(pair: Pair<Rule>) -> Class {
     match pair.as_rule() {
         Rule::classdeclaration => {
             let mut inners = pair.into_inner();
-            let name = next_id(&mut inners);
+            let other_name = next_id(&mut inners);
             let mut fields = vec![];
             let mut methods = vec![];
             for fieldOrMethod in inners {
@@ -50,10 +51,11 @@ fn parse_class(pair: Pair<Rule>) -> Class {
                         // add to method list
                     }
                     _ => unreachable!(),
-                }
+                };
             }
+
             Class {
-                name,
+                name: other_name,
                 fields,
                 methods,
             }
@@ -65,14 +67,31 @@ fn next_id(inners: &mut Pairs<Rule>) -> String {
     inners.next().unwrap().to_string()
 }
 
-fn parse_field(pair: Pair<Rule>) -> FieldDecl {
+fn parse_field(pair: Pair<Rule>) -> Vec<FieldDecl> {
     match pair.as_rule() {
         Rule::fielddeclaration => {
             let mut inners = pair.into_inner();
             let typeJ = parse_Type(inners.next().unwrap());
-            let varDecels = vec![];
+            let varDecels = inners.next().unwrap().into_inner();
 
-            todo!()
+            varDecels
+                .map(|x| {
+                    let mut inner = x.into_inner();
+                    let other_name = next_id(&mut inner);
+                    match inner.next() {
+                        None => FieldDecl {
+                            field_type: typeJ.clone(),
+                            name: other_name,
+                            val: None,
+                        },
+                        Some(val) => FieldDecl {
+                            field_type: typeJ.clone(),
+                            name: other_name,
+                            val: Some(parse_expr(val)),
+                        },
+                    }
+                })
+                .collect()
         }
 
         _ => unreachable!(),
@@ -94,7 +113,9 @@ fn parse_Type(pair: Pair<Rule>) -> Type {
         _ => unreachable!(),
     }
 }
-
+fn parse_expr(pair: Pair<Rule>) -> String {
+    todo!()
+}
 fn parse_value(pair: Pair<Rule>) -> Expr {
     match pair.as_rule() {
         // Rule::ID => Example::ID(String::from(pair.as_str())),
