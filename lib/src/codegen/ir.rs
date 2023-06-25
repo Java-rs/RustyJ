@@ -16,6 +16,7 @@ impl DIR {
     /// https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.1
     /// Since we have a DIR we can assume the methods have been expanded into Vectors of Instructions
     pub fn as_bytes(&mut self) -> Vec<u8> {
+        // TODO: Some steps here should really be done in advance
         // TODO: We should really check if all of these have the right size. Most lengths are u16
         // Only one class for now
         let current_class = &self.classes[0];
@@ -427,9 +428,8 @@ fn generate_code_stmt(
                 local_var_pool,
             ));
         }
-        Stmt::TypedStmt(stmt, _types) => {
+        Stmt::TypedStmt(stmt, _) => {
             // Generate bytecode for typed stmt
-            // TODO: Check whether we can actually generate the same code as a normal stmt
             result.append(&mut generate_code_stmt(
                 *stmt,
                 &dir,
@@ -463,8 +463,11 @@ fn generate_code_stmt_expr(
         StmtExpr::MethodCall(expr, name, exprs) => {
             // Generate bytecode for method call
             // TODO: Bene
+            // Principally this should work this way:
+            // 1. Write Function Name into Constant Pool generating the necessary Constants
+            // Call invokespecial on the given back function index
         }
-        StmtExpr::TypedStmtExpr(stmt_expr, types) => {
+        StmtExpr::TypedStmtExpr(stmt_expr, _) => {
             result.append(&mut generate_code_stmt_expr(
                 stmt_expr,
                 constant_pool,
