@@ -2,7 +2,7 @@ use crate::codegen::ConstantPool;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Class {
     pub name: String,
     pub fields: Vec<FieldDecl>,
@@ -37,7 +37,7 @@ impl Default for Class {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct FieldDecl {
     pub field_type: Type,
     pub name: String,
@@ -59,7 +59,7 @@ impl FieldDecl {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct MethodDecl {
     pub ret_type: Type,
     pub name: String,
@@ -67,15 +67,7 @@ pub struct MethodDecl {
     pub body: Stmt,
 }
 
-impl MethodDecl {
-    pub fn as_bytes(&self, constant_pool: &mut ConstantPool) -> Vec<u8> {
-        let mut bytes = Vec::new();
-        // TODO
-        bytes
-    }
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum Stmt {
     Block(Vec<Stmt>),
     Return(Expr),
