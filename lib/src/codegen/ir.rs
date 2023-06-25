@@ -396,7 +396,7 @@ fn generate_code_stmt(
         }
         Stmt::LocalVarDecl(types, name) => {
             let index: u8 = local_var_pool.0.len() as u8 + 1;
-            //TODO: fix bipush to "store" the value of the variable
+            // FIXME: Add the variable name to localvarpool and use the index of the added variable for the istore instruction
             match types {
                 types::Type::Int => result.append(&mut vec![
                     Instruction::bipush(index.clone()),
