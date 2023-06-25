@@ -194,15 +194,17 @@ impl IRFieldDecl {
 struct LocalVarPool(Vec<String>);
 impl LocalVarPool {
     pub fn add(&mut self, name: String) -> u16 {
+        println!("Adding local var {:?}", name);
         self.0.push(name);
         self.0.len() as u16
     }
     pub fn get_index(&self, name: &str) -> u16 {
+        //TODO: This is not working or saving does not work
         self.0
             .iter()
             .position(|n| n == name)
             .map(|i| i as u16)
-            .expect(&*format!("Local var {:?} not found", name))
+            .expect(&*format!("Local var {:?} not found in  {:?}", name, self.0))
     }
 }
 #[derive(Debug)]
