@@ -1,19 +1,11 @@
+//ipmlemented
 IDENTIFIER ={(ASCII_ALPHA|"_")~(ASCII_ALPHANUMERIC|"_")* }
-
+//ipmlemented
 compilationunit = {classdeclaration+ }
 
 name    ={IDENTIFIER ~("."~IDENTIFIER)*}
-
-classdeclaration = {"class"~IDENTIFIER~classbody}
-
-classbody        = {"{"~classbodydeclaration*~"}" }
-
-
-classbodydeclaration = {classmemberdeclaration
-		 | constructordeclaration }
-
-classmemberdeclaration = {fielddeclaration
-		 | methoddeclaration }
+//ipmlemented
+classdeclaration = {"class"~IDENTIFIER~"{"~(fielddeclaration|methoddeclaration|constructordeclaration)*~"}"}
 
 constructordeclaration = {constructordeclarator~constructorbody}
 
@@ -32,11 +24,10 @@ constructorbody	 ={ "{"~"}"
 		|"{"~blockstatement+~"}"
 		|"{"~explicitconstructorinvocation~blockstatement+~"}"}
 
-methodheader	 ={ typeJ~methoddeclarator
-		 | "void"~methoddeclarator }
-
+methodheader	 ={ typeJ~methoddeclarator }
+//implemented
 typeJ  = {primitivetype
-		 | name}
+		 | IDENTIFIER}
 
 variabledeclarators ={ variabledeclarator~(","~variabledeclarator)* }
 
@@ -53,11 +44,13 @@ explicitconstructorinvocation = {"this"~"("~")"~";"
 
 methoddeclarator ={ IDENTIFIER~"("~")"
 		 | IDENTIFIER~"("~formalparameterlist~")"  }
-
+//implemented
 primitivetype    = {"boolean"
 		        | "int"
                 | "char"
-                |"String"}
+                |"String"
+                |"void"
+                |"null"}
 
 
 variabledeclarator ={ IDENTIFIER
@@ -186,7 +179,7 @@ literal		 = {INTLITERAL
 		 | BOOLLITERAL
 		 | CHARLITERAL
 		 | STRINGLITERAL
-		 | "null" }
+		 | primitivetype }
 
 CHARLITERAL = { "'"~ASCII~"'" }
 
