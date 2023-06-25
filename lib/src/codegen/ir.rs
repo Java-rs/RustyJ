@@ -5,10 +5,12 @@ use crate::types;
 use crate::types::Expr::Binary;
 use crate::types::*;
 use std::any::TypeId;
+use std::fmt::Debug;
 use std::io::Bytes;
 
 /// The DIR(Duck Intermediate Representation) is our IR for generating Java Bytecode
 /// from our TAST
+#[derive(Debug)]
 pub struct DIR {
     pub(crate) constant_pool: ConstantPool,
     pub(crate) classes: Vec<IRClass>,
@@ -65,6 +67,7 @@ impl DIR {
         result
     }
 }
+#[derive(Debug)]
 pub struct ConstantPool(Vec<Constant>);
 impl ConstantPool {
     fn new() -> Self {
@@ -139,6 +142,7 @@ impl ConstantPool {
         result
     }
 }
+#[derive(Debug)]
 pub(crate) struct IRClass {
     pub(crate) name: String,
     pub(crate) super_name: String,
@@ -201,7 +205,7 @@ impl LocalVarPool {
             .expect(&*format!("Local var {:?} not found", name))
     }
 }
-
+#[derive(Debug)]
 pub(crate) struct CompiledMethod {
     pub(crate) name: String,
     pub(crate) return_type: Type,
@@ -263,6 +267,7 @@ pub struct NameAndType {
 
 /// The instructions for the JVM
 /// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.areturn
+#[derive(Debug)]
 pub(crate) enum Instruction {
     aload_0,
     aload(u8),        //Load reference from local variable
@@ -365,64 +370,39 @@ fn generate_code_stmt(
                 .flatten()
                 .collect(),
         ),
-        Stmt::Return(expr) => {
-            match &expr {
-                Expr::TypedExpr(_, r#type) => {
-                    match r#type {
-                        Type::Int => {
-                            result.append(&mut generate_code_expr(
-                                expr,
-                                constant_pool,
-                                local_var_pool,
-                            ));
-                            result.push(Instruction::ireturn);
-                        }
-                        Type::Void => {
-                            result.push(Instruction::r#return);
-                        }
-                        Type::String => {
-                            result.append(&mut generate_code_expr(
-                                expr,
-                                constant_pool,
-                                local_var_pool,
-                            ));
-                            result.push(Instruction::areturn);
-                        }
-                        Type::Bool => {
-                            result.append(&mut generate_code_expr(
-                                expr,
-                                constant_pool,
-                                local_var_pool,
-                            ));
-                            result.push(Instruction::ireturn);
-                        }
-                        //Todo: Can this even happen?
-                        Type::Null => {
-                            result.push(Instruction::aconst_null);
-                            result.push(Instruction::areturn);
-                        }
-                        Type::Char => {
-                            result.append(&mut generate_code_expr(
-                                expr,
-                                constant_pool,
-                                local_var_pool,
-                            ));
-                            result.push(Instruction::ireturn);
-                        }
-                        Type::Class(_) => {
-                            result.append(&mut generate_code_expr(
-                                expr,
-                                constant_pool,
-                                local_var_pool,
-                            ));
-                            result.push(Instruction::areturn);
-                        }
-                        _ => panic!("This should never happen"),
-                    }
+        Stmt::Return(expr) => match &expr {
+            Expr::TypedExpr(_, r#type) => match r#type {
+                Type::Int => {
+                    result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
+                    result.push(Instruction::ireturn);
+                }
+                Type::Void => {
+                    result.push(Instruction::r#return);
+                }
+                Type::String => {
+                    result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
+                    result.push(Instruction::areturn);
+                }
+                Type::Bool => {
+                    result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
+                    result.push(Instruction::ireturn);
+                }
+                Type::Null => {
+                    result.push(Instruction::aconst_null);
+                    result.push(Instruction::areturn);
+                }
+                Type::Char => {
+                    result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
+                    result.push(Instruction::ireturn);
+                }
+                Type::Class(_) => {
+                    result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
+                    result.push(Instruction::areturn);
                 }
                 _ => panic!("This should never happen"),
-            }
-        }
+            },
+            _ => panic!("This should never happen"),
+        },
         Stmt::While(expr, stmt) => {
             // TODO: Test, Bene
             result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
@@ -436,23 +416,23 @@ fn generate_code_stmt(
             let index: u8 = local_var_pool.0.len() as u8 + 1;
             // FIXME: Add the variable name to localvarpool and use the index of the added variable for the istore instruction
             match types {
-                types::Type::Int => result.append(&mut vec![
+                Type::Int => result.append(&mut vec![
                     Instruction::bipush(index.clone()),
                     Instruction::istore(index),
                 ]),
-                types::Type::Bool => result.append(&mut vec![
+                Type::Bool => result.append(&mut vec![
                     Instruction::bipush(index.clone()),
                     Instruction::istore(index),
                 ]),
-                types::Type::Char => result.append(&mut vec![
+                Type::Char => result.append(&mut vec![
                     Instruction::bipush(index.clone()),
                     Instruction::istore(index),
                 ]),
-                types::Type::String => result.append(&mut vec![
+                Type::String => result.append(&mut vec![
                     Instruction::bipush(index.clone()),
                     Instruction::astore(index),
                 ]),
-                types::Type::Null => result.append(&mut vec![
+                Type::Null => result.append(&mut vec![
                     Instruction::bipush(index.clone()),
                     Instruction::astore(index),
                 ]),
@@ -573,7 +553,7 @@ fn generate_code_expr(
         Expr::InstVar(exprs, name) => {
             panic!("This should not happen")
         }
-        Expr::Binary(op, left, right) => match BinaryOp::from(&op as &str) {
+        Binary(op, left, right) => match BinaryOp::from(&op as &str) {
             BinaryOp::Add => {
                 result.append(&mut generate_code_expr(
                     *left,
@@ -814,11 +794,22 @@ fn generate_code_expr(
                 local_var_pool,
             ));
         }
+        Expr::FieldVar(name) => {
+            //TODO: How to get class name and type?
+            constant_pool.add(Constant::FieldRef(FieldRef {
+                class: "0".to_string(),
+                field: NameAndType {
+                    name: name.clone(),
+                    r#type: "Int".to_string(),
+                },
+            }));
+            //Todo: Write Fieldvar as Fieldref into Constantpool
+        }
         unexpected => panic!("Unexpected expression: {:?}", unexpected),
     }
     result
 }
-
+//TODO: Constructor
 #[cfg(test)]
 mod tests {
     use super::*;
