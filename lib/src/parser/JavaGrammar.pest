@@ -14,7 +14,7 @@ ParamDeclList = {ParamDecl ~ (","~ParamDecl)*}
 
 ParamDecl = {JType ~ Identifier}
 
-FieldVarDecl = {Identifier ~ ("="~Expr)?}
+FieldVarDecl = {Identifier ~ ("="~Expr)? ~ ";"}
 
 JType = {PrimitiveType | Identifier}
 
