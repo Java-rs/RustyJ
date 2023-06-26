@@ -303,7 +303,6 @@ impl LocalVarPool {
         self.0.len() as u16
     }
     pub fn get_index(&self, name: &str) -> u16 {
-        //TODO: This is not working or saving does not work
         self.0
             .iter()
             .position(|n| n == name)
@@ -470,7 +469,7 @@ impl Instruction {
             // Instruction::relgoto() =>
             // Instruction::reljumpifeq(idx) =>
             // Instruction::reljumpifne(idx) =>
-            _ => todo!(),
+            e => panic!("Instruction {:?} not implemented or unexpected", e),
         }
     }
 }
@@ -518,7 +517,6 @@ fn generate_method(
     constant_pool: &mut ConstantPool,
 ) -> CompiledMethod {
     let mut local_var_pool = LocalVarPool(
-        // FIXME: This is done right on a per-method basis but this works hopefully too
         method
             .params
             .iter()
