@@ -64,12 +64,12 @@ NonBinaryExpr = { ThisExpr
 		        | Identifier // LocalOrFieldVar
 		        | InstVarExpr
 		        | UnaryExpr
+		        | ParanthesizedExpr
 		        | IntLiteral
 		        | BoolLiteral
 		        | CharLiteral
 		        | StrLiteral
 		        | JNull
-		        | ParanthesizedExpr
 		        | StmtExpr}
 
 ThisExpr = {"this"}
@@ -77,8 +77,10 @@ JNull    = {"null"}
 
 IntLiteral  = {NUMBER+}
 BoolLiteral = {"true" | "false"}
-CharLiteral = {"'" ~ ASCII ~ "'"}
-StrLiteral  = {"\"" ~ ASCII* ~ "\""}
+CharLiteral = {"'"  ~  (!("'"  | "\\") ~ ANY | EscapedChar) ~ "'"}
+StrLiteral  = {"\"" ~  (!("\"" | "\\") ~ ANY | EscapedChar)* ~ "\""}
+EscapedChar = @{  "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+    			| "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})}
 
 InstVarExpr      = {(Identifier|ThisExpr) ~ "." ~ InnerInstVarExpr}
 InnerInstVarExpr = {Identifier ~ ("." ~ (InnerInstVarExpr|Identifier))?}
