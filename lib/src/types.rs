@@ -220,7 +220,7 @@ impl Type {
     fn as_bytes(&self) -> Vec<u8> {
         todo!()
     }
-    pub fn to_ir_string(&self) -> &str {
+    pub fn to_ir_string(&self) -> String {
         match self {
             Type::Int => "I",
             Type::Char => "C",
@@ -231,6 +231,7 @@ impl Type {
             Type::Class(name) => name,
             _ => panic!("Invalid type: {}", self),
         }
+        .to_string()
     }
 }
 
