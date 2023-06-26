@@ -1,8 +1,8 @@
 class Return {
 	char id(char x) {
-		return x;
-	}
+{		return x;
+}	}
 	boolean id(boolean b) {
-		return b;
-	}
+{		return b;
+}	}
 }

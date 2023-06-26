@@ -149,30 +149,26 @@ fn wonky_assignments_class() -> Class {
                                     Box::new(Unary(
                                         "!".to_string(),
                                         Box::new(TypedExpr(
-                                            Box::new(
-                                                (StmtExprExpr(Box::new(TypedStmtExpr(
-                                                    Box::new(Assign(
-                                                        "b".to_string(),
-                                                        TypedExpr(
-                                                            Box::new(Binary(
-                                                                "==".to_string(),
-                                                                Box::new(TypedExpr(
-                                                                    Box::new(FieldVar(
-                                                                        "c".to_string(),
-                                                                    )),
-                                                                    Type::Bool,
-                                                                )),
-                                                                Box::new(TypedExpr(
-                                                                    Box::new(Expr::Bool(true)),
-                                                                    Type::Bool,
-                                                                )),
+                                            Box::new(StmtExprExpr(Box::new(TypedStmtExpr(
+                                                Box::new(Assign(
+                                                    "b".to_string(),
+                                                    TypedExpr(
+                                                        Box::new(Binary(
+                                                            "==".to_string(),
+                                                            Box::new(TypedExpr(
+                                                                Box::new(FieldVar("c".to_string())),
+                                                                Type::Bool,
                                                             )),
-                                                            Type::Bool,
-                                                        ),
-                                                    )),
-                                                    Type::Bool,
-                                                )))),
-                                            ),
+                                                            Box::new(TypedExpr(
+                                                                Box::new(Expr::Bool(true)),
+                                                                Type::Bool,
+                                                            )),
+                                                        )),
+                                                        Type::Bool,
+                                                    ),
+                                                )),
+                                                Type::Bool,
+                                            )))),
                                             Type::Bool,
                                         )),
                                     )),

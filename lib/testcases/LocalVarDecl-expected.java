@@ -1,7 +1,7 @@
 class LocalVarDecl {
 	int f() {
-		int x;
+{		int x;
 		x = 69;
 		return x;
-	}
+}	}
 }

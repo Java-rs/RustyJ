@@ -4,27 +4,27 @@ class SetterGetter {
 	char c;
 	String s;
 	int getX() {
-		return this.x;
-	}
+{		return this.x;
+}	}
 	void setX(int x) {
-		this.x = x;
-	}
+{		this.x = x;
+}	}
 	boolean getB() {
-		return this.b;
-	}
+{		return this.b;
+}	}
 	void setB(boolean b) {
-		this.b = b;
-	}
+{		this.b = b;
+}	}
 	char getC() {
-		return this.c;
-	}
+{		return this.c;
+}	}
 	void setC(char c) {
-		this.c = c;
-	}
+{		this.c = c;
+}	}
 	String getS() {
-		return this.s;
-	}
+{		return this.s;
+}	}
 	void setS(String s) {
-		this.s = s;
-	}
+{		this.s = s;
+}	}
 }
