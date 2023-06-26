@@ -1,4 +1,4 @@
-class emptyMethod {
+class EmptyMethod {
 	void f() {
-	}
+{}	}
 }

@@ -37,17 +37,14 @@ fn fib_class() -> Class {
                     TypedExpr(
                         Box::new(Binary(
                             "<".to_string(),
-                            Box::new(TypedExpr(
-                                Box::new(LocalOrFieldVar("n".to_string())),
-                                Type::Int,
-                            )),
+                            Box::new(TypedExpr(Box::new(LocalVar("n".to_string())), Type::Int)),
                             Box::new(TypedExpr(Box::new(Expr::Integer(2)), Type::Int)),
                         )),
                         Type::Bool,
                     ),
                     Box::new(TypedStmt(
                         Box::new(Return(TypedExpr(
-                            Box::new(LocalOrFieldVar("n".to_string())),
+                            Box::new(LocalVar("n".to_string())),
                             Type::Int,
                         ))),
                         Type::Int,
@@ -69,9 +66,7 @@ fn fib_class() -> Class {
                                                     Box::new(Binary(
                                                         "-".to_string(),
                                                         Box::new(TypedExpr(
-                                                            Box::new(LocalOrFieldVar(
-                                                                "n".to_string(),
-                                                            )),
+                                                            Box::new(LocalVar("n".to_string())),
                                                             Type::Int,
                                                         )),
                                                         Box::new(TypedExpr(
@@ -98,9 +93,7 @@ fn fib_class() -> Class {
                                                     Box::new(Binary(
                                                         "-".to_string(),
                                                         Box::new(TypedExpr(
-                                                            Box::new(LocalOrFieldVar(
-                                                                "n".to_string(),
-                                                            )),
+                                                            Box::new(LocalVar("n".to_string())),
                                                             Type::Int,
                                                         )),
                                                         Box::new(TypedExpr(
@@ -136,7 +129,7 @@ fn fib_class() -> Class {
                                     Box::new(Binary(
                                         "<".to_string(),
                                         Box::new(TypedExpr(
-                                            Box::new(LocalOrFieldVar("n".to_string())),
+                                            Box::new(LocalVar("n".to_string())),
                                             Type::Int,
                                         )),
                                         Box::new(TypedExpr(Box::new(Expr::Integer(2)), Type::Int)),
@@ -145,7 +138,7 @@ fn fib_class() -> Class {
                                 ),
                                 Box::new(TypedStmt(
                                     Box::new(Return(TypedExpr(
-                                        Box::new(LocalOrFieldVar("n".to_string())),
+                                        Box::new(LocalVar("n".to_string())),
                                         Type::Int,
                                     ))),
                                     Type::Int,
@@ -202,11 +195,11 @@ fn fib_class() -> Class {
                                     Box::new(Binary(
                                         "<".to_string(),
                                         Box::new(TypedExpr(
-                                            Box::new(LocalOrFieldVar("i".to_string())),
+                                            Box::new(LocalVar("i".to_string())),
                                             Type::Int,
                                         )),
                                         Box::new(TypedExpr(
-                                            Box::new(LocalOrFieldVar("n".to_string())),
+                                            Box::new(LocalVar("n".to_string())),
                                             Type::Int,
                                         )),
                                     )),
@@ -226,15 +219,11 @@ fn fib_class() -> Class {
                                                         Box::new(Binary(
                                                             "+".to_string(),
                                                             Box::new(TypedExpr(
-                                                                Box::new(LocalOrFieldVar(
-                                                                    "y".to_string(),
-                                                                )),
+                                                                Box::new(LocalVar("y".to_string())),
                                                                 Type::Int,
                                                             )),
                                                             Box::new(TypedExpr(
-                                                                Box::new(LocalOrFieldVar(
-                                                                    "x".to_string(),
-                                                                )),
+                                                                Box::new(LocalVar("x".to_string())),
                                                                 Type::Int,
                                                             )),
                                                         )),
@@ -250,7 +239,7 @@ fn fib_class() -> Class {
                                                 Box::new(Assign(
                                                     "x".to_string(),
                                                     TypedExpr(
-                                                        Box::new(LocalOrFieldVar("y".to_string())),
+                                                        Box::new(LocalVar("y".to_string())),
                                                         Type::Int,
                                                     ),
                                                 )),
@@ -263,9 +252,7 @@ fn fib_class() -> Class {
                                                 Box::new(Assign(
                                                     "y".to_string(),
                                                     TypedExpr(
-                                                        Box::new(LocalOrFieldVar(
-                                                            "next".to_string(),
-                                                        )),
+                                                        Box::new(LocalVar("next".to_string())),
                                                         Type::Int,
                                                     ),
                                                 )),
@@ -281,9 +268,7 @@ fn fib_class() -> Class {
                                                         Box::new(Binary(
                                                             "+".to_string(),
                                                             Box::new(TypedExpr(
-                                                                Box::new(LocalOrFieldVar(
-                                                                    "i".to_string(),
-                                                                )),
+                                                                Box::new(LocalVar("i".to_string())),
                                                                 Type::Int,
                                                             )),
                                                             Box::new(TypedExpr(
@@ -306,7 +291,7 @@ fn fib_class() -> Class {
                         ),
                         TypedStmt(
                             Box::new(Return(TypedExpr(
-                                Box::new(LocalOrFieldVar("y".to_string())),
+                                Box::new(LocalVar("y".to_string())),
                                 Type::Int,
                             ))),
                             Type::Int,
