@@ -45,7 +45,7 @@ IfElseStmt = {IfStmt ~ "else" ~ IfStmt}
 IfStmt = {"if" ~ "(" ~ Expr ~ ")" ~ Stmt}
 
 // @Cleanup: Can maybe be unified with FieldVarDecl and AssignExpr?
-LocalVarDeclStmt = {JType ~ Identifier ~ ("="~Expr)?}
+LocalVarDeclStmt = {JType ~ Identifier ~ ("="~Expr)? ~ ";"}
 
 StmtExpr = {AssignExpr | NewExpr | MethodCallExpr}
 
