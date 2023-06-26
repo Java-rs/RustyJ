@@ -44,7 +44,7 @@ pub fn parser_test(ast: &Class, name: &str) {
     // Call parser with java code
     // TODO: Can only be done, once we have a parsing method that returns a Class
     let parse_res = parser::parse_Programm(
-        &read_to_string(File::open(format!("testcases/{name}.java")).unwrap()).unwrap(),
+        &read_to_string(File::open(format!("lib/testcases/{name}.java")).unwrap()).unwrap(),
     )
     .unwrap();
     let parse_res = parse_res.get(0).unwrap();
