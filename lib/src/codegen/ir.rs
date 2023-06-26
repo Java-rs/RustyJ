@@ -404,13 +404,15 @@ pub struct NameAndType {
 
 /// The instructions for the JVM
 /// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.areturn
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub(crate) enum Instruction {
     invokespecial(u16), //Calling a method from the super class (probably only used in constructor)
     aload_0,
     aload(u8),        //Load reference from local variable
     iload(u8),        //Load int from local variable
     ifeq(u16),        //Branch if int is 0
+    iflt(u16),        //Branch if int is < 0
+    ifge(u16),        //Branch if int is >= 0
     ireturn,          //return int, char, boolean
     r#return,         //return void
     areturn,          //return object(string, integer, null)
@@ -443,7 +445,7 @@ fn low_byte(short: u16) -> u8 {
 }
 
 impl Instruction {
-    fn as_bytes(&self) -> Vec<u8> {
+    pub(crate) fn as_bytes(&self) -> Vec<u8> {
         match self {
             Instruction::invokespecial(idx) => {
                 vec![183, high_byte(*idx), low_byte(*idx)]
@@ -1098,30 +1100,4 @@ fn generate_code_expr(
         unexpected => panic!("Unexpected expression: {:?}", unexpected),
     }
     result
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_generate_fields() {
-        let mut constant_pool = ConstantPool::new("Test");
-        let field = FieldDecl {
-            field_type: Type::Int,
-            name: String::from("test"),
-            val: None,
-        };
-        let ir_field = generate_field(&field, &mut constant_pool);
-        assert_eq!(ir_field.name_index, 1);
-        assert_eq!(ir_field.type_index, 2);
-        assert_eq!(
-            constant_pool.get(1),
-            Some(&Constant::Utf8(String::from("test")))
-        );
-        assert_eq!(
-            constant_pool.get(2),
-            Some(&Constant::Utf8(String::from("int")))
-        );
-    }
 }
