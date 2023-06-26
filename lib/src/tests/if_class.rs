@@ -40,7 +40,7 @@ fn if_class() -> Class {
                                 Box::new(Binary(
                                     "==".to_string(),
                                     Box::new(TypedExpr(
-                                        Box::new(LocalOrFieldVar("c".to_string())),
+                                        Box::new(LocalVar("c".to_string())),
                                         Type::Char,
                                     )),
                                     Box::new(Char('a')),

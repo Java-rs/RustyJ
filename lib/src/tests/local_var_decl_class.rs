@@ -50,7 +50,7 @@ fn local_var_decl_class() -> Class {
                     ),
                     TypedStmt(
                         Box::new(Return(TypedExpr(
-                            Box::new(LocalOrFieldVar("x".to_string())),
+                            Box::new(LocalVar("x".to_string())),
                             Type::Int,
                         ))),
                         Type::Int,
