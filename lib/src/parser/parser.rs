@@ -267,7 +267,6 @@ fn parse_Type(pair: Pair<Rule>) -> Type {
 }
 
 fn parse_expr(pair: Pair<Rule>) -> Expr {
-    println!("{:?}", pair);
     match pair.as_rule() {
         Rule::Expr => parse_expr(pair.into_inner().next().unwrap()),
         Rule::NonBinaryExpr => parse_expr(pair.into_inner().next().unwrap()),

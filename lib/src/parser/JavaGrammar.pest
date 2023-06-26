@@ -58,7 +58,7 @@ MethodCallExpr = {(Identifier|InstVarExpr) ~ "(" ~ ParamList? ~ ")"}
 ParamList = {Expr ~ (","~Expr)*}
 
 // @Note we do not support `super` at the moment
-Expr = {NonBinaryExpr | Prec3BinExpr}
+Expr = {Prec3BinExpr | NonBinaryExpr}
 
 NonBinaryExpr = { ThisExpr
 		        | JNull
@@ -94,7 +94,7 @@ Prec3BinExpr = {(Prec2BinExpr  ~ Prec3BinOp ~ Prec3BinExpr) | Prec2BinExpr}
 Prec2BinExpr = {(Prec1BinExpr  ~ Prec2BinOp ~ Prec2BinExpr) | Prec1BinExpr}
 Prec1BinExpr = {(Prec0BinExpr  ~ Prec1BinOp ~ Prec1BinExpr) | Prec0BinExpr}
 Prec0BinExpr = {(NonBinaryExpr ~ Prec0BinOp ~ Prec0BinExpr) | NonBinaryExpr}
-Prec3BinOp = {"*" | "/" | "%"}
-Prec2BinOp = {"+" | "-"}
-Prec1BinOp = {"<=" | ">=" | "<" | ">"}
-Prec0BinOp = {"==" | "!=" | "&&" | "||"}
+Prec3BinOp = {"==" | "!=" | "&&" | "||"}
+Prec2BinOp = {"<=" | ">=" | "<" | ">"}
+Prec1BinOp = {"+" | "-"}
+Prec0BinOp = {"*" | "/" | "%"}
