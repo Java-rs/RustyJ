@@ -200,7 +200,7 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
                     String_name = name.as_str().trim().to_string();
                 }
                 Rule::InstVarExpr => {
-                    todo!()
+                    todo!() // until further notice ignored
                 }
                 _ => unreachable!(),
             }
