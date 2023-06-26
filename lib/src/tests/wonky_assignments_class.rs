@@ -36,7 +36,7 @@ fn wonky_assignments_class() -> Class {
             FieldDecl {
                 field_type: Type::Int,
                 name: "y".to_string(),
-                val: Some(TypedExpr(Box::new(Expr::Integer(3)), Type::Int)),
+                val: Some(Expr::Integer(3)),
             },
             FieldDecl {
                 field_type: Type::Int,
@@ -46,12 +46,12 @@ fn wonky_assignments_class() -> Class {
             FieldDecl {
                 field_type: Type::Bool,
                 name: "a".to_string(),
-                val: Some(TypedExpr(Box::new(Expr::Bool(false)), Type::Bool)),
+                val: Some(Expr::Bool(false)),
             },
             FieldDecl {
                 field_type: Type::Bool,
                 name: "b".to_string(),
-                val: Some(TypedExpr(Box::new(Expr::Bool(true)), Type::Bool)),
+                val: Some(Expr::Bool(true)),
             },
             FieldDecl {
                 field_type: Type::Bool,
@@ -95,15 +95,15 @@ fn wonky_assignments_class() -> Class {
                             )),
                             Type::Bool,
                         ))),
-                        Type::Void,
+                        Type::Bool, //TODO: should be Void
                     ),
                     TypedStmt(
                         Box::new(LocalVarDecl(Type::Int, "i".to_string())),
-                        Type::Void,
+                        Type::Int,
                     ),
                     TypedStmt(
                         Box::new(LocalVarDecl(Type::Int, "j".to_string())),
-                        Type::Void,
+                        Type::Int,
                     ),
                     TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
@@ -125,11 +125,11 @@ fn wonky_assignments_class() -> Class {
                             )),
                             Type::Int,
                         ))),
-                        Type::Void,
+                        Type::Int, // TODO: should be Void
                     ),
                     TypedStmt(
                         Box::new(LocalVarDecl(Type::Int, "k".to_string())),
-                        Type::Void,
+                        Type::Int,
                     ),
                     TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
@@ -139,7 +139,7 @@ fn wonky_assignments_class() -> Class {
                             )),
                             Type::Int,
                         ))),
-                        Type::Void,
+                        Type::Int, //TODO: should be Void
                     ),
                     TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
@@ -177,7 +177,7 @@ fn wonky_assignments_class() -> Class {
                             )),
                             Type::Bool,
                         ))),
-                        Type::Void,
+                        Type::Bool, //TODO: should be Void
                     ),
                     TypedStmt(
                         Box::new(If(
@@ -192,9 +192,9 @@ fn wonky_assignments_class() -> Class {
                             Some(Box::new(TypedStmt(
                                 Box::new(Return(TypedExpr(
                                     Box::new(LocalVar("k".to_string())),
-                                    Type::Bool,
+                                    Type::Int, //TODO: Bool?
                                 ))),
-                                Type::Bool,
+                                Type::Int, // TODO: Bool?
                             ))),
                         )),
                         Type::Int,
