@@ -1,5 +1,6 @@
 #![allow(non_camel_case_types)]
 
+use crate::codegen::reljumps::convert_to_absolute_jumps;
 use crate::types::Expr::Binary;
 use crate::types::*;
 use std::fmt::Debug;
@@ -354,13 +355,15 @@ impl CompiledMethod {
                 .unwrap()
                 .to_be_bytes(),
         );
+        // Expand the relative jumps in the code to absolute jumps
+        let expanded_code = convert_to_absolute_jumps(self.code.clone());
         // attr = attribute after attribute_length
         let mut attr = vec![];
         attr.extend_from_slice(&self.max_stack.to_be_bytes());
         attr.extend_from_slice(&self.max_locals.to_be_bytes());
-        attr.extend_from_slice(&(self.code.len() as u32).to_be_bytes());
+        attr.extend_from_slice(&(expanded_code.len() as u32).to_be_bytes());
         let mut code_bytes = vec![];
-        self.code
+        expanded_code
             .iter()
             .for_each(|i| code_bytes.append(&mut i.as_bytes()));
         attr.extend_from_slice(&(code_bytes.len() as u16).to_be_bytes());

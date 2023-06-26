@@ -18,7 +18,7 @@ fn get_instructions_length(instructions: &[Instruction]) -> u16 {
 /// Some context: This function only works because we know the size of the final instructions.
 /// We measure the size of the instructions to jump over and then replace the relative jump with
 /// size_of_instructions_to_jump_over + current_position
-fn convert_to_absolute_jumps(instructions: Vec<Instruction>) -> Vec<Instruction> {
+pub(crate) fn convert_to_absolute_jumps(instructions: Vec<Instruction>) -> Vec<Instruction> {
     let mut result = vec![];
     let mut i = 0;
     for (j, istr) in instructions.iter().enumerate() {
