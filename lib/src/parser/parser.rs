@@ -276,6 +276,20 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
         Rule::StrLiteral => Expr::String(get_str_content(pair.as_str()).to_string()),
         Rule::JNull => Expr::Jnull,
         Rule::ThisExpr => Expr::This,
+        Rule::InstVarExpr => {
+            let mut pairs = pair.into_inner();
+            let x = pairs.next().unwrap();
+            let mut obj = match x.as_rule() {
+                Rule::Identifier => Expr::LocalOrFieldVar(x.as_str().trim().to_string()),
+                Rule::ThisExpr => Expr::This,
+                _ => unreachable!(),
+            };
+            while let Some(p) = pairs.next() {
+                assert_eq!(p.as_rule(), Rule::Identifier);
+                obj = Expr::InstVar(Box::new(obj), p.as_str().trim().to_string());
+            }
+            obj
+        }
         _ => todo!(),
     }
 }
