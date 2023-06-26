@@ -12,7 +12,7 @@ fn main() -> color_eyre::Result<()> {
     info!("Hello RustyJ!");
 
     lib::hi();
-    let mut file = File::open("lib/tests/Fib-AST.json")?;
+    let mut file = File::open("lib/testcases/Fib-AST.json")?;
     let mut ast_string = String::new();
 
     file.read_to_string(&mut ast_string)?;
@@ -31,7 +31,7 @@ fn main() -> color_eyre::Result<()> {
             FieldDecl {
                 field_type: Type::Int,
                 name: "d".to_string(),
-                val: Some("42".to_string()),
+                val: Some(Expr::Integer(42)),
             },
         ],
         methods: vec![MethodDecl {
