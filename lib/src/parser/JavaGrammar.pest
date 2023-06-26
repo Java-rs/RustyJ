@@ -58,10 +58,10 @@ MethodCallExpr = {(Identifier|InstVarExpr) ~ "(" ~ ParamList? ~ ")"}
 ParamList = {Expr ~ (","~Expr)*}
 
 // @Note we do not support `super` at the moment
-Expr = {Prec3BinExpr | NonBinaryExpr}
+Expr = {NonBinaryExpr | Prec3BinExpr}
 
 NonBinaryExpr = { ThisExpr
-		        | Identifier // LocalOrFieldVar
+		        | JNull
 		        | InstVarExpr
 		        | UnaryExpr
 		        | ParanthesizedExpr
@@ -69,7 +69,7 @@ NonBinaryExpr = { ThisExpr
 		        | BoolLiteral
 		        | CharLiteral
 		        | StrLiteral
-		        | JNull
+		        | Identifier // LocalOrFieldVar
 		        | StmtExpr}
 
 ThisExpr = {"this"}
@@ -77,10 +77,10 @@ JNull    = {"null"}
 
 IntLiteral  = {NUMBER+}
 BoolLiteral = {"true" | "false"}
-CharLiteral = {"'"  ~  (!("'"  | "\\") ~ ANY | EscapedChar) ~ "'"}
-StrLiteral  = {"\"" ~  (!("\"" | "\\") ~ ANY | EscapedChar)* ~ "\""}
-EscapedChar = @{  "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
-    			| "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})}
+CharLiteral = { "'"  ~ (!("'"  | "\\") ~ ANY | EscapedChar) ~ "'"}
+StrLiteral  = { "\"" ~ (!("\"" | "\\") ~ ANY | EscapedChar)* ~ "\""}
+EscapedChar = { "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+    		  | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})}
 
 InstVarExpr      = {(Identifier|ThisExpr) ~ "." ~ InnerInstVarExpr}
 InnerInstVarExpr = {Identifier ~ ("." ~ (InnerInstVarExpr|Identifier))?}

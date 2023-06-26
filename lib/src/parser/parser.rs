@@ -57,7 +57,7 @@ fn next_id(inners: &mut Pairs<Rule>) -> String {
     // calling to_string() immediately would return "Identifier(<location>)",
     // while as_str() returns the actual str-slice captured by the Identifier-rule
     // We still have to copy that str-slice into its own string object with to_string() though
-    inners.next().unwrap().as_str().to_string()
+    inners.next().unwrap().as_str().trim().to_string()
 }
 
 fn parse_method(pair: Pair<Rule>) -> MethodDecl {
@@ -187,9 +187,26 @@ fn parse_Type(pair: Pair<Rule>) -> Type {
         _ => unreachable!(),
     }
 }
+
 fn parse_expr(pair: Pair<Rule>) -> Expr {
-    todo!()
+    println!("{:?}", pair);
+    match pair.as_rule() {
+        Rule::Expr => parse_expr(pair.into_inner().next().unwrap()),
+        Rule::NonBinaryExpr => parse_expr(pair.into_inner().next().unwrap()),
+        Rule::IntLiteral => Expr::Integer(pair.as_str().parse().unwrap()),
+        Rule::BoolLiteral => Expr::Bool(pair.as_str().parse().unwrap()),
+        Rule::CharLiteral => Expr::Char(get_str_content(pair.as_str()).parse().unwrap()),
+        Rule::StrLiteral => Expr::String(get_str_content(pair.as_str()).to_string()),
+        Rule::JNull => Expr::Jnull,
+        Rule::ThisExpr => Expr::This,
+        _ => todo!(),
+    }
 }
+
+fn get_str_content(s: &str) -> &str {
+    &s[1..s.len() - 1]
+}
+
 fn parse_value(pair: Pair<Rule>) -> Expr {
     match pair.as_rule() {
         // Rule::ID => Example::ID(String::from(pair.as_str())),
