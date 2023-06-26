@@ -490,9 +490,12 @@ fn generate_class(class: &Class, dir: &DIR) -> IRClass {
         ir_class.fields.push(field.clone());
     }
     for method in &class.methods {
-        ir_class
-            .methods
-            .push(generate_method(method, dir, &mut constant_pool));
+        ir_class.methods.push(generate_method(
+            method,
+            dir,
+            &mut constant_pool,
+            &class.name,
+        ));
     }
     ir_class
 }
@@ -512,6 +515,7 @@ fn generate_method(
     method: &MethodDecl,
     dir: &DIR,
     constant_pool: &mut ConstantPool,
+    class_name: &str,
 ) -> CompiledMethod {
     let mut local_var_pool = LocalVarPool(
         method
@@ -534,6 +538,7 @@ fn generate_method(
         dir,
         constant_pool,
         &mut local_var_pool,
+        class_name,
     ));
 
     compiled_method
@@ -544,6 +549,7 @@ fn generate_code_stmt(
     dir: &DIR,
     constant_pool: &mut ConstantPool,
     local_var_pool: &mut LocalVarPool,
+    class_name: &str,
 ) -> Vec<Instruction> {
     let mut result = vec![];
     match stmt {
@@ -555,7 +561,13 @@ fn generate_code_stmt(
                     &mut stmts
                         .iter()
                         .map(|stmt| {
-                            generate_code_stmt(stmt.clone(), dir, constant_pool, local_var_pool)
+                            generate_code_stmt(
+                                stmt.clone(),
+                                dir,
+                                constant_pool,
+                                local_var_pool,
+                                class_name,
+                            )
                         })
                         // Flatten to avoid vecs in our vec
                         .flatten()
@@ -568,6 +580,7 @@ fn generate_code_stmt(
                                 expr,
                                 constant_pool,
                                 local_var_pool,
+                                class_name,
                             ));
                             result.push(Instruction::ireturn);
                         }
@@ -579,6 +592,7 @@ fn generate_code_stmt(
                                 expr,
                                 constant_pool,
                                 local_var_pool,
+                                class_name,
                             ));
                             result.push(Instruction::areturn);
                         }
@@ -587,6 +601,7 @@ fn generate_code_stmt(
                                 expr,
                                 constant_pool,
                                 local_var_pool,
+                                class_name,
                             ));
                             result.push(Instruction::ireturn);
                         }
@@ -599,6 +614,7 @@ fn generate_code_stmt(
                                 expr,
                                 constant_pool,
                                 local_var_pool,
+                                class_name,
                             ));
                             result.push(Instruction::ireturn);
                         }
@@ -607,6 +623,7 @@ fn generate_code_stmt(
                                 expr,
                                 constant_pool,
                                 local_var_pool,
+                                class_name,
                             ));
                             result.push(Instruction::areturn);
                         }
@@ -615,9 +632,15 @@ fn generate_code_stmt(
                     _ => panic!("This should never happen"),
                 },
                 Stmt::While(expr, stmt) => {
-                    result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
+                    result.append(&mut generate_code_expr(
+                        expr,
+                        constant_pool,
+                        local_var_pool,
+                        class_name,
+                    ));
                     // Generate bytecode for our body
-                    let mut body = generate_code_stmt(*stmt, dir, constant_pool, local_var_pool);
+                    let mut body =
+                        generate_code_stmt(*stmt, dir, constant_pool, local_var_pool, class_name);
                     result.push(Instruction::reljumpifeq(body.len() as i16));
                     result.append(&mut body);
                     result.push(Instruction::reljumpifeq(-(body.len() as i16)));
@@ -653,10 +676,15 @@ fn generate_code_stmt(
                 Stmt::If(expr, stmt1, stmt2) => {
                     // Generate bytecode for if
                     // Evaluate the expression
-                    result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
+                    result.append(&mut generate_code_expr(
+                        expr,
+                        constant_pool,
+                        local_var_pool,
+                        class_name,
+                    ));
                     // We set a label to jump to if the expression is false
                     let mut if_stmt =
-                        generate_code_stmt(*stmt1, dir, constant_pool, local_var_pool);
+                        generate_code_stmt(*stmt1, dir, constant_pool, local_var_pool, class_name);
                     // If the expression is false, jump to the else block
                     result.push(Instruction::reljumpifeq(if_stmt.len() as i16));
                     // If the expression is true, execute the if block
@@ -668,6 +696,7 @@ fn generate_code_stmt(
                             dir,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                     }
                 }
@@ -676,6 +705,7 @@ fn generate_code_stmt(
                         &stmt_expr,
                         constant_pool,
                         local_var_pool,
+                        class_name,
                     ));
                 }
                 Stmt::TypedStmt(_, _) => panic!("Expected untyped statement, got typed statement"),
@@ -690,6 +720,7 @@ fn generate_code_stmt_expr(
     stmt_expr: &StmtExpr,
     constant_pool: &mut ConstantPool,
     local_var_pool: &mut LocalVarPool,
+    class_name: &str,
 ) -> Vec<Instruction> {
     let mut result = vec![];
     match stmt_expr {
@@ -701,6 +732,7 @@ fn generate_code_stmt_expr(
                         expr.clone(),
                         constant_pool,
                         local_var_pool,
+                        class_name,
                     ));
                     local_var_pool.add(name.clone());
                 }
@@ -712,6 +744,7 @@ fn generate_code_stmt_expr(
                             expr.clone(),
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                     });
                 }
@@ -725,7 +758,12 @@ fn generate_code_stmt_expr(
                         &mut args
                             .iter()
                             .flat_map(|arg| {
-                                generate_code_expr(arg.clone(), constant_pool, local_var_pool)
+                                generate_code_expr(
+                                    arg.clone(),
+                                    constant_pool,
+                                    local_var_pool,
+                                    class_name,
+                                )
                             })
                             .collect(),
                     );
@@ -750,6 +788,7 @@ fn generate_code_expr(
     expr: Expr,
     constant_pool: &mut ConstantPool,
     local_var_pool: &mut LocalVarPool,
+    class_name: &str,
 ) -> Vec<Instruction> {
     let mut result = vec![];
     match expr {
@@ -783,11 +822,13 @@ fn generate_code_expr(
                             *left,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.append(&mut generate_code_expr(
                             *right,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.push(Instruction::iadd);
                     }
@@ -796,11 +837,13 @@ fn generate_code_expr(
                             *left,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.append(&mut generate_code_expr(
                             *right,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.push(Instruction::isub);
                     }
@@ -809,11 +852,13 @@ fn generate_code_expr(
                             *left,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.append(&mut generate_code_expr(
                             *right,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.push(Instruction::imul);
                     }
@@ -822,11 +867,13 @@ fn generate_code_expr(
                             *left,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.append(&mut generate_code_expr(
                             *right,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.push(Instruction::idiv);
                     }
@@ -835,11 +882,13 @@ fn generate_code_expr(
                             *left,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.append(&mut generate_code_expr(
                             *right,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.push(Instruction::irem);
                     }
@@ -848,6 +897,7 @@ fn generate_code_expr(
                             *left,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.push(Instruction::reljumpifeq(3));
                         result.push(Instruction::bipush(1));
@@ -857,6 +907,7 @@ fn generate_code_expr(
                             *right,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.push(Instruction::reljumpifeq(3));
                         result.push(Instruction::bipush(1));
@@ -868,6 +919,7 @@ fn generate_code_expr(
                             *left,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.push(Instruction::reljumpifne(3));
                         result.push(Instruction::bipush(0));
@@ -877,6 +929,7 @@ fn generate_code_expr(
                             *right,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.push(Instruction::reljumpifne(3));
                         result.push(Instruction::bipush(0));
@@ -888,11 +941,13 @@ fn generate_code_expr(
                             *left,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.append(&mut generate_code_expr(
                             *right,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.push(Instruction::reljumpiflt(3));
                         result.push(Instruction::bipush(1));
@@ -904,11 +959,13 @@ fn generate_code_expr(
                             *left,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.append(&mut generate_code_expr(
                             *right,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.push(Instruction::reljumpifge(3));
                         result.push(Instruction::bipush(1));
@@ -920,11 +977,13 @@ fn generate_code_expr(
                             *left,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.append(&mut generate_code_expr(
                             *right,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.push(Instruction::reljumpifge(3));
                         result.push(Instruction::bipush(1));
@@ -936,11 +995,13 @@ fn generate_code_expr(
                             *left,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.append(&mut generate_code_expr(
                             *right,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.push(Instruction::reljumpiflt(3));
                         result.push(Instruction::bipush(1));
@@ -952,11 +1013,13 @@ fn generate_code_expr(
                             *left,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.append(&mut generate_code_expr(
                             *right,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.push(Instruction::reljumpifne(3));
                         result.push(Instruction::bipush(1));
@@ -968,11 +1031,13 @@ fn generate_code_expr(
                             *left,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.append(&mut generate_code_expr(
                             *right,
                             constant_pool,
                             local_var_pool,
+                            class_name,
                         ));
                         result.push(Instruction::reljumpifeq(3));
                         result.push(Instruction::bipush(1));
@@ -985,6 +1050,7 @@ fn generate_code_expr(
                         *expr,
                         constant_pool,
                         local_var_pool,
+                        class_name,
                     ));
                     match UnaryOp::from(&op as &str) {
                         UnaryOp::Not => {
@@ -1010,6 +1076,7 @@ fn generate_code_expr(
                         &stmt_expr,
                         constant_pool,
                         local_var_pool,
+                        class_name,
                     ));
                 }
                 Expr::FieldVar(name) => {
