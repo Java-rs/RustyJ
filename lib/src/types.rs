@@ -40,8 +40,8 @@ impl FieldDecl {
         let mut bytes = Vec::new();
         // Public access modifier
         bytes.extend_from_slice(&[0x0, 0x1]);
-        bytes.extend_from_slice(&self.field_type.as_bytes());
         bytes.extend_from_slice(&self.name.as_bytes());
+        bytes.extend_from_slice(&self.field_type.as_bytes());
         if let Some(val) = &self.val {
             // bytes.extend_from_slice(&val.as_bytes());
             todo!()
@@ -217,7 +217,7 @@ impl Display for Type {
 
 impl Type {
     fn as_bytes(&self) -> Vec<u8> {
-        todo!()
+        self.to_ir_string().as_bytes().to_vec()
     }
     pub fn to_ir_string(&self) -> String {
         match self {
