@@ -6,6 +6,7 @@ extern crate pest;
 extern crate pest_derive;
 
 use crate::types::{Class, Expr, FieldDecl, MethodDecl, Stmt, StmtExpr, Type};
+use lib::types::Type::String;
 use pest::error::Error;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
@@ -90,11 +91,6 @@ fn parse_method(pair: Pair<Rule>) -> MethodDecl {
         }
         _ => unreachable!(),
     }
-}
-
-// TODO
-fn parse_block_stmt(pair: Pair<Rule>) -> Stmt {
-    Stmt::Block(vec![])
 }
 
 fn parse_BlockStmt(pair: Pair<Rule>) -> Vec<Stmt> {
@@ -209,13 +205,46 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
             StmtExpr::Assign(String_name, Expr)
         }
         Rule::NewExpr => {
-            todo!()
+            let id_name = parse_Type(inners.next().unwrap());
+            let paramList = inners.next().unwrap().into_inner();
+            let mut exprList: Vec<Expr> = vec![];
+            for param in paramList {
+                exprList.push(parse_expr(param));
+            }
+
+            StmtExpr::New(id_name, exprList)
         }
         Rule::MethodCallExpr => {
+            let mut identifORinstVar = inners.next().unwrap();
+            let String_name;
+            let MethodExpr;
+            match identifORinstVar.as_rule() {
+                Rule::Identifier => {
+                    String_name = identifORinstVar.as_str().trim().to_string();
+                    MethodExpr = Expr::This;
+                }
+                Rule::InstVarExpr => {
+                    MethodExpr = parse_expr(pair);
+                    String_name = String::new("what is my name?");
+                }
+                _ => unreachable!(),
+            }
+            let paramList = inners.next().unwrap().into_inner();
+            let mut exprList: Vec<Expr> = vec![];
+            for param in paramList {
+                exprList.push(parse_expr(param));
+            }
+
+            StmtExpr::MethodCall(MethodExpr, id_name, exprList);
+
             todo!()
         }
         _ => unreachable!(),
     }
+}
+
+fn parse_innerInstVar(pair: Pair<Rule>) -> Expr::InstVar(Expr(), String) {
+    let inners = pair.next().unwrap();
 }
 
 //fn parse_variabledeclarators(pair: Pair<Rule>)->
