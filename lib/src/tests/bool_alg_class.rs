@@ -45,20 +45,17 @@ fn bool_alg_class() -> Class {
                                 Box::new(Binary(
                                     "&&".to_string(),
                                     Box::new(TypedExpr(
-                                        Box::new(LocalOrFieldVar("a".to_string())),
+                                        Box::new(LocalVar("a".to_string())),
                                         Type::Bool,
                                     )),
                                     Box::new(TypedExpr(
-                                        Box::new(LocalOrFieldVar("b".to_string())),
+                                        Box::new(LocalVar("b".to_string())),
                                         Type::Bool,
                                     )),
                                 )),
                                 Type::Bool,
                             )),
-                            Box::new(TypedExpr(
-                                Box::new(LocalOrFieldVar("c".to_string())),
-                                Type::Bool,
-                            )),
+                            Box::new(TypedExpr(Box::new(LocalVar("c".to_string())), Type::Bool)),
                         )),
                         Type::Bool,
                     ))),

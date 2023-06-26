@@ -34,13 +34,7 @@ pub fn class_to_java(class: &Class) -> String {
 pub fn field_to_java(field: &FieldDecl) -> String {
     let mut s: String = format!("\t{} {}", field.field_type, field.name);
     if let Some(x) = &field.val {
-        if field.field_type == Type::Char {
-            s = format!("{} = '{}'", s, expr_to_java(x));
-        } else if field.field_type == Type::String && *x != Expr::Jnull {
-            s = format!("{} = \"{}\"", s, expr_to_java(x));
-        } else {
-            s = format!("{} = {}", s, expr_to_java(x));
-        }
+        s = format!("{} = {}", s, expr_to_java(x));
     }
     s += ";\n";
     s
@@ -131,7 +125,10 @@ pub fn expr_to_java(expr: &Expr) -> String {
     match expr {
         Expr::Binary(op, l, r) => format!("({}) {} ({})", expr_to_java(l), op, expr_to_java(r)),
         Expr::Bool(b) => b.to_string(),
-        Expr::Char(c) => format!("'{}'", c),
+        Expr::Char(c) => {
+            println!("{}", format!("{c}"));
+            format!("'{}'", c)
+        }
         Expr::InstVar(expr, var) => format!("{}.{}", expr_to_java(expr), var),
         Expr::Integer(i) => i.to_string(),
         Expr::Jnull => "null".to_string(),
@@ -139,7 +136,10 @@ pub fn expr_to_java(expr: &Expr) -> String {
         Expr::LocalVar(var) => var.to_owned(),
         Expr::FieldVar(var) => var.to_owned(),
         Expr::StmtExprExpr(stmt_expr) => stmt_expr_to_java(stmt_expr),
-        Expr::String(s) => format!("\"{}\"", s),
+        Expr::String(s) => {
+            println!("{}", format!("{s}"));
+            format!("\"{}\"", s)
+        }
         Expr::This => "this".to_string(),
         Expr::TypedExpr(expr, typ) => expr_to_java(expr),
         Expr::Unary(op, expr) => format!("{}({})", op, expr_to_java(expr)),

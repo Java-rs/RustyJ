@@ -58,7 +58,7 @@ pub fn typechecker_test(ast: &Class, tast: &Class) {
     let v: Vec<&Class> = tc.typed_classes.values().collect();
     let typed = v[0];
     println!("{}", typed);
-    assert_eq!(*typed, *ast);
+    assert_eq!(*typed, *tast);
 }
 
 const TEST_VALS_AMOUNT: usize = 5;
@@ -162,12 +162,9 @@ pub fn class_test(ast: &Class, tast: Option<&Class>, name: &str) {
         .expect("failed to open original java file");
     let og_java_code = read_to_string(file).expect("failed to read original java file");
 
-    let res = test_helper(ast, tast, name, &og_java_code);
-}
-
-fn test_helper(ast: &Class, tast: Option<&Class>, name: &str, og_java_code: &str) {
     // Generate Java Code from AST and write to file
     let class_code = class_to_java(ast);
+    println!("{class_code}");
     let mut file = File::create(format!("lib/testcases/{name}.java"))
         .expect("failed to open original java file for writing generated code");
     file.write(class_code.as_bytes())

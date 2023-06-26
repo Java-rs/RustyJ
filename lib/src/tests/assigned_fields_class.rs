@@ -36,7 +36,7 @@ fn assigned_fields_class() -> Class {
             FieldDecl {
                 field_type: Type::Char,
                 name: "c".to_string(),
-                val: Some(Expr::LocalOrFieldVar("x".to_string())),
+                val: Some(Expr::Char('x')),
             },
             FieldDecl {
                 field_type: Type::String,
