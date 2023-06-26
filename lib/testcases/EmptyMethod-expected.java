@@ -1,4 +1,4 @@
 class EmptyMethod {
 	void f() {
-	}
+{}	}
 }

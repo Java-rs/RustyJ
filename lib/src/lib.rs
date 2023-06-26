@@ -1,5 +1,5 @@
-mod parser;
-mod codegen;
+pub mod codegen;
+pub mod parser;
 #[cfg(test)]
 mod tests;
 pub mod typechecker;

@@ -1,3 +1,4 @@
+use lib::codegen::generate_dir;
 use lib::typechecker::typechecker;
 use lib::types::{Class, Expr, FieldDecl, MethodDecl, Prg, Stmt, StmtExpr, Type};
 use serde_json::Value;

@@ -31,27 +31,27 @@ fn assigned_fields_class() -> Class {
             FieldDecl {
                 field_type: Type::Int,
                 name: "x".to_string(),
-                val: Some("69".to_string()),
+                val: Some(Expr::Integer(69)),
             },
             FieldDecl {
                 field_type: Type::Char,
                 name: "c".to_string(),
-                val: Some("x".to_string()),
+                val: Some(Expr::Char('x')),
             },
             FieldDecl {
                 field_type: Type::String,
                 name: "s".to_string(),
-                val: Some("Hello World".to_string()),
+                val: Some(Expr::String("Hello World".to_string())),
             },
             FieldDecl {
                 field_type: Type::String,
                 name: "stringsCanBeNull".to_string(),
-                val: Some("null".to_string()),
+                val: Some(Expr::Jnull),
             },
             FieldDecl {
                 field_type: Type::Bool,
                 name: "b".to_string(),
-                val: Some("true".to_string()),
+                val: Some(Expr::Bool(true)),
             },
         ],
         methods: vec![],

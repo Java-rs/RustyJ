@@ -38,6 +38,16 @@ fn int_fields_class() -> Class {
                 name: "y".to_string(),
                 val: None,
             },
+            FieldDecl {
+                field_type: Type::Int,
+                name: "z".to_string(),
+                val: None,
+            },
+            FieldDecl {
+                field_type: Type::Int,
+                name: "another_int".to_string(),
+                val: None,
+            },
         ],
         methods: vec![],
     }
