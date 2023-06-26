@@ -30,10 +30,7 @@ fn str_add_class() -> Class {
         fields: vec![FieldDecl {
             field_type: Type::String,
             name: "hello".to_string(),
-            val: Some(TypedExpr(
-                Box::new(Expr::String("Hi".to_string())),
-                Type::String,
-            )),
+            val: Some(Expr::String("Hi".to_string())),
         }],
         methods: vec![MethodDecl {
             ret_type: Type::String,
