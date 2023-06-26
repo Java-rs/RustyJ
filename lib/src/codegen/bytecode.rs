@@ -1,4 +1,5 @@
+#![allow(unused)]
 //! Utilities for bytecode generation
 
-use crate::codegen::ir::*;
-use crate::types::*;
+// use crate::codegen::ir::*;
+// use crate::types::*;

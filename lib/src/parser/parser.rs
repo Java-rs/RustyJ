@@ -1,3 +1,7 @@
+#![allow(non_camel_case_types)]
+#![allow(unused)]
+#![allow(non_snake_case)]
+
 extern crate pest;
 extern crate pest_derive;
 
@@ -11,7 +15,7 @@ use pest_derive::Parser;
 #[grammar = "../lib/src/parser/JavaGrammar.pest"]
 struct ExampleParser;
 
-pub fn parse_Programm(file: &str) -> Result<Vec<Class>, Error<Rule>> {
+pub fn parse_programm(file: &str) -> Result<Vec<Class>, Error<Rule>> {
     let example: Pair<Rule> = ExampleParser::parse(Rule::Program, file)?.next().unwrap();
 
     if example.as_rule() != Rule::Program {
@@ -142,7 +146,7 @@ fn parse_field(pair: Pair<Rule>) -> Vec<FieldDecl> {
     match pair.as_rule() {
         Rule::FieldDecl => {
             let mut inners = pair.into_inner();
-            let JType = parse_Type(inners.next().unwrap());
+            let jtype = parse_Type(inners.next().unwrap());
             let varDecels = inners.next().unwrap().into_inner();
 
             varDecels
@@ -151,12 +155,12 @@ fn parse_field(pair: Pair<Rule>) -> Vec<FieldDecl> {
                     let other_name = next_id(&mut inner);
                     match inner.next() {
                         None => FieldDecl {
-                            field_type: JType.clone(),
+                            field_type: jtype.clone(),
                             name: other_name,
                             val: None,
                         },
                         Some(val) => FieldDecl {
-                            field_type: JType.clone(),
+                            field_type: jtype.clone(),
                             name: other_name,
                             val: Some(parse_expr(val)),
                         },
