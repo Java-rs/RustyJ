@@ -1,3 +1,4 @@
+use crate::codegen::ConstantPool;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
@@ -43,7 +44,23 @@ pub struct FieldDecl {
     pub val: Option<Expr>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+impl FieldDecl {
+    /// See https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.5
+    pub fn as_bytes(&self, constant_pool: &mut ConstantPool) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        // Public access modifier
+        bytes.extend_from_slice(&[0x0, 0x1]);
+        bytes.extend_from_slice(&self.field_type.as_bytes());
+        bytes.extend_from_slice(&self.name.as_bytes());
+        if let Some(val) = &self.val {
+            // bytes.extend_from_slice(&val.as_bytes());
+            todo!()
+        }
+        bytes
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct MethodDecl {
     pub ret_type: Type,
     pub name: String,
@@ -51,7 +68,7 @@ pub struct MethodDecl {
     pub body: Stmt,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum Stmt {
     Block(Vec<Stmt>),
     Return(Expr),
@@ -64,6 +81,8 @@ pub enum Stmt {
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum StmtExpr {
+    // @Decide should actually be Assign(Expr, Expr) for assigning values to instance variables
+    // See for example the SetterGetter test (i.e. cases like `this.x = 5`)
     Assign(String, Expr), // first the name of the variable, then the value it is being assigned to
     New(Type, Vec<Expr>), // first the class type, that should be instantiated, then the list of arguments for the constructor
     MethodCall(Expr, String, Vec<Expr>), // first the object to which the method belongs (e.g. Expr::This), then the name of the method and lastly the list of arguments for the method call
@@ -200,16 +219,21 @@ impl Display for Type {
 }
 
 impl Type {
-    pub fn to_ir_string(&self) -> &str {
+    fn as_bytes(&self) -> Vec<u8> {
+        todo!()
+    }
+    pub fn to_ir_string(&self) -> String {
         match self {
             Type::Int => "I",
             Type::Char => "C",
             Type::Bool => "Z",
             Type::String => "Ljava/lang/String;",
+            Type::Void => "V",
             // TODO: Either the class has the formatting `L<class>;' or we have to add it here.
             Type::Class(name) => name,
             _ => panic!("Invalid type: {}", self),
         }
+        .to_string()
     }
 }
 

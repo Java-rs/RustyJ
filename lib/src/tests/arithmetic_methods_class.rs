@@ -49,14 +49,8 @@ fn arithmetic_methods_class() -> Class {
                         Box::new(Return(TypedExpr(
                             Box::new(Binary(
                                 "+".to_string(),
-                                Box::new(TypedExpr(
-                                    Box::new(LocalOrFieldVar("x".to_string())),
-                                    Type::Int,
-                                )),
-                                Box::new(TypedExpr(
-                                    Box::new(LocalOrFieldVar("a".to_string())),
-                                    Type::Int,
-                                )),
+                                Box::new(TypedExpr(Box::new(FieldVar("x".to_string())), Type::Int)),
+                                Box::new(TypedExpr(Box::new(LocalVar("a".to_string())), Type::Int)),
                             )),
                             Type::Int,
                         ))),
@@ -74,14 +68,8 @@ fn arithmetic_methods_class() -> Class {
                         Box::new(Return(TypedExpr(
                             Box::new(Binary(
                                 "+".to_string(),
-                                Box::new(TypedExpr(
-                                    Box::new(LocalOrFieldVar("y".to_string())),
-                                    Type::Int,
-                                )),
-                                Box::new(TypedExpr(
-                                    Box::new(LocalOrFieldVar("a".to_string())),
-                                    Type::Int,
-                                )),
+                                Box::new(TypedExpr(Box::new(FieldVar("y".to_string())), Type::Int)),
+                                Box::new(TypedExpr(Box::new(LocalVar("a".to_string())), Type::Int)),
                             )),
                             Type::Int,
                         ))),
@@ -107,22 +95,18 @@ fn arithmetic_methods_class() -> Class {
                                                 Box::new(Binary(
                                                     "*".to_string(),
                                                     Box::new(TypedExpr(
-                                                        Box::new(LocalOrFieldVar("y".to_string())),
+                                                        Box::new(FieldVar("y".to_string())),
                                                         Type::Int,
                                                     )),
                                                     Box::new(TypedExpr(
                                                         Box::new(Binary(
                                                             "+".to_string(),
                                                             Box::new(TypedExpr(
-                                                                Box::new(LocalOrFieldVar(
-                                                                    "a".to_string(),
-                                                                )),
+                                                                Box::new(LocalVar("a".to_string())),
                                                                 Type::Int,
                                                             )),
                                                             Box::new(TypedExpr(
-                                                                Box::new(LocalOrFieldVar(
-                                                                    "b".to_string(),
-                                                                )),
+                                                                Box::new(LocalVar("b".to_string())),
                                                                 Type::Int,
                                                             )),
                                                         )),
@@ -132,7 +116,7 @@ fn arithmetic_methods_class() -> Class {
                                                 Type::Int,
                                             )),
                                             Box::new(TypedExpr(
-                                                Box::new(LocalOrFieldVar("x".to_string())),
+                                                Box::new(FieldVar("x".to_string())),
                                                 Type::Int,
                                             )),
                                         )),
@@ -151,14 +135,14 @@ fn arithmetic_methods_class() -> Class {
                                         Box::new(Binary(
                                             "+".to_string(),
                                             Box::new(TypedExpr(
-                                                Box::new(LocalOrFieldVar("a".to_string())),
+                                                Box::new(LocalVar("a".to_string())),
                                                 Type::Int,
                                             )),
                                             Box::new(TypedExpr(
                                                 Box::new(Unary(
                                                     "-".to_string(),
                                                     Box::new(TypedExpr(
-                                                        Box::new(LocalOrFieldVar("b".to_string())),
+                                                        Box::new(LocalVar("b".to_string())),
                                                         Type::Int,
                                                     )),
                                                 )),
@@ -180,18 +164,18 @@ fn arithmetic_methods_class() -> Class {
                                         Box::new(Binary(
                                             "+".to_string(),
                                             Box::new(TypedExpr(
-                                                Box::new(LocalOrFieldVar("x".to_string())),
+                                                Box::new(FieldVar("x".to_string())),
                                                 Type::Int,
                                             )),
                                             Box::new(TypedExpr(
                                                 Box::new(Binary(
                                                     "*".to_string(),
                                                     Box::new(TypedExpr(
-                                                        Box::new(LocalOrFieldVar("b".to_string())),
+                                                        Box::new(LocalVar("b".to_string())),
                                                         Type::Int,
                                                     )),
                                                     Box::new(TypedExpr(
-                                                        Box::new(LocalOrFieldVar("a".to_string())),
+                                                        Box::new(LocalVar("a".to_string())),
                                                         Type::Int,
                                                     )),
                                                 )),
@@ -210,11 +194,11 @@ fn arithmetic_methods_class() -> Class {
                                 Box::new(Binary(
                                     "*".to_string(),
                                     Box::new(TypedExpr(
-                                        Box::new(LocalOrFieldVar("x".to_string())),
+                                        Box::new(FieldVar("x".to_string())),
                                         Type::Int,
                                     )),
                                     Box::new(TypedExpr(
-                                        Box::new(LocalOrFieldVar("a".to_string())),
+                                        Box::new(LocalVar("a".to_string())),
                                         Type::Int,
                                     )),
                                 )),

@@ -8,7 +8,7 @@ use pest::Parser;
 use pest_derive::Parser;
 
 #[derive(Parser)]
-#[grammar = "src/parser/JavaGrammar.pest"]
+#[grammar = "../lib/src/parser/JavaGrammar.pest"]
 struct ExampleParser;
 
 pub fn parse_Programm(file: &str) -> Result<Vec<Class>, Error<Rule>> {

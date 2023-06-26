@@ -60,7 +60,7 @@ fn while_class() -> Class {
                         Box::new(StmtExprStmt(TypedStmtExpr(
                             Box::new(Assign(
                                 "a".to_string(),
-                                TypedExpr(Box::new(LocalOrFieldVar("n".to_string())), Type::Int),
+                                TypedExpr(Box::new(LocalVar("n".to_string())), Type::Int),
                             )),
                             Type::Int,
                         ))),
@@ -72,11 +72,11 @@ fn while_class() -> Class {
                                 Box::new(Binary(
                                     "<".to_string(),
                                     Box::new(TypedExpr(
-                                        Box::new(LocalOrFieldVar("i".to_string())),
+                                        Box::new(FieldVar("i".to_string())),
                                         Type::Int,
                                     )),
                                     Box::new(TypedExpr(
-                                        Box::new(LocalOrFieldVar("x".to_string())),
+                                        Box::new(FieldVar("x".to_string())),
                                         Type::Int,
                                     )),
                                 )),
@@ -90,17 +90,13 @@ fn while_class() -> Class {
                                                 "a".to_string(),
                                                 TypedExpr(
                                                     Box::new(Binary(
-                                                        "*".to_string(),
+                                                        "+".to_string(),
                                                         Box::new(TypedExpr(
-                                                            Box::new(LocalOrFieldVar(
-                                                                "a".to_string(),
-                                                            )),
+                                                            Box::new(FieldVar("a".to_string())),
                                                             Type::Int,
                                                         )),
                                                         Box::new(TypedExpr(
-                                                            Box::new(LocalOrFieldVar(
-                                                                "a".to_string(),
-                                                            )),
+                                                            Box::new(FieldVar("a".to_string())),
                                                             Type::Int,
                                                         )),
                                                     )),
@@ -119,9 +115,7 @@ fn while_class() -> Class {
                                                     Box::new(Binary(
                                                         "+".to_string(),
                                                         Box::new(TypedExpr(
-                                                            Box::new(LocalOrFieldVar(
-                                                                "i".to_string(),
-                                                            )),
+                                                            Box::new(FieldVar("i".to_string())),
                                                             Type::Int,
                                                         )),
                                                         Box::new(TypedExpr(
@@ -144,7 +138,7 @@ fn while_class() -> Class {
                     ),
                     TypedStmt(
                         Box::new(Return(TypedExpr(
-                            Box::new(LocalOrFieldVar("a".to_string())),
+                            Box::new(FieldVar("a".to_string())),
                             Type::Int,
                         ))),
                         Type::Int,
