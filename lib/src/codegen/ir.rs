@@ -757,13 +757,12 @@ fn generate_code_stmt_expr(
                             })
                             .collect(),
                     );
-                    let method_index = constant_pool.add_method_ref(MethodRef {
-                        class: class_name.to_string(), // TODO: Bene Get the class name because we don't get it passed to us... Maybe pass a Classname to the function?
-                        method: NameAndType {
-                            name: name.clone(),
-                            r#type: expr_type.to_ir_string(),
-                        },
-                    });
+                    let method_index = constant_pool.add_method_ref(
+                        class_name.to_string(),
+                        name.clone(),
+                        expr_type.to_ir_string(),
+                    );
+                    // FIXME: Also pass argument types. See https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html
                     result.push(Instruction::invokespecial(method_index));
                 }
                 _ => panic!("StmtExpr typed: {:?}", new_stmt_expr),

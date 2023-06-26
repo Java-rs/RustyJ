@@ -2,7 +2,6 @@ use crate::codegen::Instruction;
 
 fn get_instruction_length(istr: &Instruction) -> u16 {
     match istr {
-        // TODO: These are just Copilots guesses
         Instruction::reljumpifeq(_) => 3,
         Instruction::reljumpifge(_) => 3,
         Instruction::relgoto(_) => 3,
