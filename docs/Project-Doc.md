@@ -5,7 +5,7 @@
 
 ## Typchecker
 
--   Wer hat welche Arbeit am Typchecker gemacht?
+Geschrieben von: Maximilian Floto, Philipp Wolf
 
 ## Codegenerierung
 
