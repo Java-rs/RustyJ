@@ -13,15 +13,15 @@ use pest_derive::Parser;
 
 #[derive(Parser)]
 #[grammar = "../lib/src/parser/JavaGrammar.pest"]
-struct ExampleParser;
+struct JavaParser;
 
 pub fn parse_programm(file: &str) -> Result<Vec<Class>, Error<Rule>> {
-    let example: Pair<Rule> = ExampleParser::parse(Rule::Program, file)?.next().unwrap();
+    let prg: Pair<Rule> = JavaParser::parse(Rule::Program, file)?.next().unwrap();
 
-    if example.as_rule() != Rule::Program {
+    if prg.as_rule() != Rule::Program {
         panic!();
     }
-    let pased_clases = example.into_inner().map(parse_class).collect();
+    let pased_clases = prg.into_inner().map(parse_class).collect();
     Ok(pased_clases)
 }
 
