@@ -1,3 +1,8 @@
+#![allow(non_camel_case_types)]
+#![allow(unused)]
+#![allow(non_snake_case)]
+#![allow(dead_code)]
+
 use crate::types::*;
 use std::any::type_name;
 use std::collections::HashMap;

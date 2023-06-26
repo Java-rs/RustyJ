@@ -1,4 +1,6 @@
 #![allow(non_camel_case_types)]
+#![allow(unused)]
+#![allow(non_snake_case)]
 
 use crate::typechecker::*;
 use crate::types;
