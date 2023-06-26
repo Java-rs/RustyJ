@@ -1,12 +1,9 @@
 #![allow(non_camel_case_types)]
 
-use crate::typechecker::*;
-use crate::types;
 use crate::types::Expr::Binary;
 use crate::types::*;
-use std::any::TypeId;
 use std::fmt::Debug;
-use std::io::Bytes;
+use std::ops::Deref;
 
 static JAVA_LANG_OBJECT: &str = "java/lang/Object";
 static OBJECT_INIT_METHOD: &str = "<init>";
@@ -550,120 +547,138 @@ fn generate_code_stmt(
 ) -> Vec<Instruction> {
     let mut result = vec![];
     match stmt {
-        Stmt::Block(stmts) => result.append(
-            &mut stmts
-                .iter()
-                .map(|stmt| generate_code_stmt(stmt.clone(), dir, constant_pool, local_var_pool))
-                // Flatten to avoid vecs in our vec
-                .flatten()
-                .collect(),
-        ),
-        Stmt::Return(expr) => match &expr {
-            Expr::TypedExpr(_, r#type) => match r#type {
-                Type::Int => {
-                    result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
-                    result.push(Instruction::ireturn);
-                }
-                Type::Void => {
-                    result.push(Instruction::r#return);
-                }
-                Type::String => {
-                    result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
-                    result.push(Instruction::areturn);
-                }
-                Type::Bool => {
-                    result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
-                    result.push(Instruction::ireturn);
-                }
-                Type::Null => {
-                    result.push(Instruction::aconst_null);
-                    result.push(Instruction::areturn);
-                }
-                Type::Char => {
-                    result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
-                    result.push(Instruction::ireturn);
-                }
-                Type::Class(_) => {
-                    result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
-                    result.push(Instruction::areturn);
-                }
-                _ => panic!("This should never happen"),
-            },
-            _ => panic!("This should never happen"),
-        },
-        Stmt::While(expr, stmt) => {
-            // TODO: Test, Bene
-            result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
-            // Generate bytecode for our body
-            let mut body = generate_code_stmt(*stmt, dir, constant_pool, local_var_pool);
-            result.push(Instruction::reljumpifeq(body.len() as i16));
-            result.append(&mut body);
-            result.push(Instruction::reljumpifeq(-(body.len() as i16)));
-        }
-        Stmt::LocalVarDecl(types, name) => {
-            let index: u8 = local_var_pool.0.len() as u8 + 1;
-            // FIXME: Add the variable name to localvarpool and use the index of the added variable for the istore instruction
-            match types {
-                Type::Int => result.append(&mut vec![
-                    Instruction::bipush(index.clone()),
-                    Instruction::istore(index),
-                ]),
-                Type::Bool => result.append(&mut vec![
-                    Instruction::bipush(index.clone()),
-                    Instruction::istore(index),
-                ]),
-                Type::Char => result.append(&mut vec![
-                    Instruction::bipush(index.clone()),
-                    Instruction::istore(index),
-                ]),
-                Type::String => result.append(&mut vec![
-                    Instruction::bipush(index.clone()),
-                    Instruction::astore(index),
-                ]),
-                Type::Null => result.append(&mut vec![
-                    Instruction::bipush(index.clone()),
-                    Instruction::astore(index),
-                ]),
-                _ => panic!("Invalid return type"),
-            }
-            local_var_pool.0.push(name);
-        }
-        Stmt::If(expr, stmt1, stmt2) => {
-            // Generate bytecode for if
-            // TODO: Bene, testing
-            // Evaluate the expression
-            result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
-            // We set a label to jump to if the expression is false
-            let mut if_stmt = generate_code_stmt(*stmt1, dir, constant_pool, local_var_pool);
-            // If the expression is false, jump to the else block
-            result.push(Instruction::reljumpifeq(if_stmt.len() as i16));
-            // If the expression is true, execute the if block
-            result.append(&mut if_stmt);
-            // If there is an else block, execute it
-            if let Some(stmt) = stmt2 {
-                result.append(&mut generate_code_stmt(
-                    *stmt,
-                    dir,
-                    constant_pool,
-                    local_var_pool,
-                ));
-            }
-        }
-        Stmt::StmtExprStmt(stmt_expr) => {
-            result.append(&mut generate_code_stmt_expr(
-                &stmt_expr,
-                constant_pool,
-                local_var_pool,
-            ));
-        }
-        Stmt::TypedStmt(stmt, _) => {
+        Stmt::TypedStmt(stmt, stmt_type) => {
             // Generate bytecode for typed stmt
-            result.append(&mut generate_code_stmt(
-                *stmt,
-                &dir,
-                constant_pool,
-                local_var_pool,
-            ));
+            let stmt = *stmt.deref();
+            match stmt {
+                Stmt::Block(stmts) => result.append(
+                    &mut stmts
+                        .iter()
+                        .map(|stmt| {
+                            generate_code_stmt(stmt.clone(), dir, constant_pool, local_var_pool)
+                        })
+                        // Flatten to avoid vecs in our vec
+                        .flatten()
+                        .collect(),
+                ),
+                Stmt::Return(expr) => match &expr {
+                    Expr::TypedExpr(_, r#type) => match r#type {
+                        Type::Int => {
+                            result.append(&mut generate_code_expr(
+                                expr,
+                                constant_pool,
+                                local_var_pool,
+                            ));
+                            result.push(Instruction::ireturn);
+                        }
+                        Type::Void => {
+                            result.push(Instruction::r#return);
+                        }
+                        Type::String => {
+                            result.append(&mut generate_code_expr(
+                                expr,
+                                constant_pool,
+                                local_var_pool,
+                            ));
+                            result.push(Instruction::areturn);
+                        }
+                        Type::Bool => {
+                            result.append(&mut generate_code_expr(
+                                expr,
+                                constant_pool,
+                                local_var_pool,
+                            ));
+                            result.push(Instruction::ireturn);
+                        }
+                        Type::Null => {
+                            result.push(Instruction::aconst_null);
+                            result.push(Instruction::areturn);
+                        }
+                        Type::Char => {
+                            result.append(&mut generate_code_expr(
+                                expr,
+                                constant_pool,
+                                local_var_pool,
+                            ));
+                            result.push(Instruction::ireturn);
+                        }
+                        Type::Class(_) => {
+                            result.append(&mut generate_code_expr(
+                                expr,
+                                constant_pool,
+                                local_var_pool,
+                            ));
+                            result.push(Instruction::areturn);
+                        }
+                        _ => panic!("This should never happen"),
+                    },
+                    _ => panic!("This should never happen"),
+                },
+                Stmt::While(expr, stmt) => {
+                    result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
+                    // Generate bytecode for our body
+                    let mut body = generate_code_stmt(*stmt, dir, constant_pool, local_var_pool);
+                    result.push(Instruction::reljumpifeq(body.len() as i16));
+                    result.append(&mut body);
+                    result.push(Instruction::reljumpifeq(-(body.len() as i16)));
+                }
+                Stmt::LocalVarDecl(types, name) => {
+                    let index: u8 = local_var_pool.0.len() as u8 + 1;
+                    // FIXME: Add the variable name to localvarpool and use the index of the added variable for the istore instruction
+                    match types {
+                        Type::Int => result.append(&mut vec![
+                            Instruction::bipush(index.clone()),
+                            Instruction::istore(index),
+                        ]),
+                        Type::Bool => result.append(&mut vec![
+                            Instruction::bipush(index.clone()),
+                            Instruction::istore(index),
+                        ]),
+                        Type::Char => result.append(&mut vec![
+                            Instruction::bipush(index.clone()),
+                            Instruction::istore(index),
+                        ]),
+                        Type::String => result.append(&mut vec![
+                            Instruction::bipush(index.clone()),
+                            Instruction::astore(index),
+                        ]),
+                        Type::Null => result.append(&mut vec![
+                            Instruction::bipush(index.clone()),
+                            Instruction::astore(index),
+                        ]),
+                        _ => panic!("Invalid return type"),
+                    }
+                    local_var_pool.0.push(name);
+                }
+                Stmt::If(expr, stmt1, stmt2) => {
+                    // Generate bytecode for if
+                    // Evaluate the expression
+                    result.append(&mut generate_code_expr(expr, constant_pool, local_var_pool));
+                    // We set a label to jump to if the expression is false
+                    let mut if_stmt =
+                        generate_code_stmt(*stmt1, dir, constant_pool, local_var_pool);
+                    // If the expression is false, jump to the else block
+                    result.push(Instruction::reljumpifeq(if_stmt.len() as i16));
+                    // If the expression is true, execute the if block
+                    result.append(&mut if_stmt);
+                    // If there is an else block, execute it
+                    if let Some(stmt) = stmt2 {
+                        result.append(&mut generate_code_stmt(
+                            *stmt,
+                            dir,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                    }
+                }
+                Stmt::StmtExprStmt(stmt_expr) => {
+                    result.append(&mut generate_code_stmt_expr(
+                        &stmt_expr,
+                        constant_pool,
+                        local_var_pool,
+                    ));
+                }
+            }
         }
     }
     return result;
@@ -676,54 +691,55 @@ fn generate_code_stmt_expr(
 ) -> Vec<Instruction> {
     let mut result = vec![];
     match stmt_expr {
-        StmtExpr::Assign(name, expr) => {
-            // Generate bytecode for assignment
-            result.append(&mut generate_code_expr(
-                expr.clone(),
-                constant_pool,
-                local_var_pool,
-            ));
-            local_var_pool.add(name.clone());
+        StmtExpr::TypedStmtExpr(new_stmt_expr, expr_type) => {
+            match new_stmt_expr.deref() {
+                StmtExpr::Assign(name, expr) => {
+                    // Generate bytecode for assignment
+                    result.append(&mut generate_code_expr(
+                        expr.clone(),
+                        constant_pool,
+                        local_var_pool,
+                    ));
+                    local_var_pool.add(name.clone());
+                }
+                StmtExpr::New(types, exprs) => {
+                    // Generate bytecode for new
+                    constant_pool.add(Constant::Class(types.to_ir_string().to_string()));
+                    exprs.iter().for_each(|expr| {
+                        result.append(&mut generate_code_expr(
+                            expr.clone(),
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                    });
+                }
+                StmtExpr::MethodCall(_expr, name, args) => {
+                    // Generate bytecode for method call
+                    // Principally this should work this way:
+                    // 1. Write Function Name into Constant Pool generating the necessary Constants
+                    // 2. Push all arguments onto the stack
+                    // 3. Call invokespecial on the given back function index
+                    result.append(
+                        &mut args
+                            .iter()
+                            .flat_map(|arg| {
+                                generate_code_expr(arg.clone(), constant_pool, local_var_pool)
+                            })
+                            .collect(),
+                    );
+                    let method_index = constant_pool.add_method_ref(MethodRef {
+                        class: "Test", // TODO: Get the class name because we don't get it passed to us...
+                        method: NameAndType {
+                            name: name.clone(),
+                            r#type: expr_type.to_ir_string(),
+                        },
+                    });
+                    result.push(Instruction::invokespecial(method_index));
+                }
+                _ => panic!("StmtExpr typed: {:?}", new_stmt_expr),
+            }
         }
-        StmtExpr::New(types, exprs) => {
-            // Generate bytecode for new
-            constant_pool.add(Constant::Class(types.to_ir_string().to_string()));
-            exprs.iter().for_each(|expr| {
-                result.append(&mut generate_code_expr(
-                    expr.clone(),
-                    constant_pool,
-                    local_var_pool,
-                ));
-            });
-        }
-        StmtExpr::MethodCall(_expr, name, args) => {
-            // Generate bytecode for method call
-            // Principally this should work this way:
-            // 1. Write Function Name into Constant Pool generating the necessary Constants
-            // 2. Push all arguments onto the stack
-            // 3. Call invokespecial on the given back function index
-            result.append(
-                &mut args
-                    .iter()
-                    .flat_map(|arg| generate_code_expr(arg.clone(), constant_pool, local_var_pool))
-                    .collect(),
-            );
-            let method_index = constant_pool.add_method_ref(MethodRef {
-                class: todo!(),
-                method: NameAndType {
-                    name: name.clone(),
-                    r#type: todo!(),
-                },
-            });
-            result.push(Instruction::invokespecial(method_index));
-        }
-        StmtExpr::TypedStmtExpr(stmt_expr, _) => {
-            result.append(&mut generate_code_stmt_expr(
-                stmt_expr,
-                constant_pool,
-                local_var_pool,
-            ));
-        }
+        e => panic!("StmtExpr not typed: {:?}", e),
     }
     result
 }
@@ -734,280 +750,278 @@ fn generate_code_expr(
     local_var_pool: &mut LocalVarPool,
 ) -> Vec<Instruction> {
     let mut result = vec![];
-    // TODO
     match expr {
-        Expr::Integer(i) => {
-            result.push(Instruction::bipush(i as u8));
-        }
-        Expr::Bool(b) => {
-            result.push(Instruction::bipush(b as u8));
-        }
-        Expr::Char(c) => {
-            result.push(Instruction::bipush(c as u8));
-        }
-        Expr::String(s) => {
-            let ind = constant_pool.add(Constant::Utf8(s.to_string()));
-            let index = constant_pool.add(Constant::String(ind));
-            result.push(Instruction::ldc(index));
-        }
-        Expr::Jnull => {
-            result.push(Instruction::aconst_null);
-        }
-        Expr::This => result.push(Instruction::aload(0)),
-        Expr::InstVar(exprs, name) => {
-            panic!("This should not happen")
-        }
-        Binary(op, left, right) => match BinaryOp::from(&op as &str) {
-            BinaryOp::Add => {
-                result.append(&mut generate_code_expr(
-                    *left,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.append(&mut generate_code_expr(
-                    *right,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.push(Instruction::iadd);
-            }
-            BinaryOp::Sub => {
-                result.append(&mut generate_code_expr(
-                    *left,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.append(&mut generate_code_expr(
-                    *right,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.push(Instruction::isub);
-            }
-            BinaryOp::Mul => {
-                result.append(&mut generate_code_expr(
-                    *left,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.append(&mut generate_code_expr(
-                    *right,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.push(Instruction::imul);
-            }
-            BinaryOp::Div => {
-                result.append(&mut generate_code_expr(
-                    *left,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.append(&mut generate_code_expr(
-                    *right,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.push(Instruction::idiv);
-            }
-            BinaryOp::Mod => {
-                result.append(&mut generate_code_expr(
-                    *left,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.append(&mut generate_code_expr(
-                    *right,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.push(Instruction::irem);
-            }
-            BinaryOp::And => {
-                result.append(&mut generate_code_expr(
-                    *left,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.push(Instruction::reljumpifeq(3));
-                result.push(Instruction::bipush(1));
-                result.push(Instruction::relgoto(2));
-                result.push(Instruction::bipush(0));
-                result.append(&mut generate_code_expr(
-                    *right,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.push(Instruction::reljumpifeq(3));
-                result.push(Instruction::bipush(1));
-                result.push(Instruction::relgoto(2));
-                result.push(Instruction::bipush(0));
-            }
-            BinaryOp::Or => {
-                result.append(&mut generate_code_expr(
-                    *left,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.push(Instruction::reljumpifne(3));
-                result.push(Instruction::bipush(0));
-                result.push(Instruction::relgoto(2));
-                result.push(Instruction::bipush(1));
-                result.append(&mut generate_code_expr(
-                    *right,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.push(Instruction::reljumpifne(3));
-                result.push(Instruction::bipush(0));
-                result.push(Instruction::relgoto(2));
-                result.push(Instruction::bipush(1));
-            }
-            BinaryOp::Le => {
-                result.append(&mut generate_code_expr(
-                    *left,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.append(&mut generate_code_expr(
-                    *right,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.push(Instruction::reljumpiflt(3));
-                result.push(Instruction::bipush(1));
-                result.push(Instruction::relgoto(2));
-                result.push(Instruction::bipush(0));
-            }
-            BinaryOp::Ge => {
-                result.append(&mut generate_code_expr(
-                    *left,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.append(&mut generate_code_expr(
-                    *right,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.push(Instruction::reljumpifge(3));
-                result.push(Instruction::bipush(1));
-                result.push(Instruction::relgoto(2));
-                result.push(Instruction::bipush(0));
-            }
-            BinaryOp::Lt => {
-                result.append(&mut generate_code_expr(
-                    *left,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.append(&mut generate_code_expr(
-                    *right,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.push(Instruction::reljumpifge(3));
-                result.push(Instruction::bipush(1));
-                result.push(Instruction::relgoto(2));
-                result.push(Instruction::bipush(0));
-            }
-            BinaryOp::Gt => {
-                result.append(&mut generate_code_expr(
-                    *left,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.append(&mut generate_code_expr(
-                    *right,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.push(Instruction::reljumpiflt(3));
-                result.push(Instruction::bipush(1));
-                result.push(Instruction::relgoto(2));
-                result.push(Instruction::bipush(0));
-            }
-            BinaryOp::Eq => {
-                result.append(&mut generate_code_expr(
-                    *left,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.append(&mut generate_code_expr(
-                    *right,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.push(Instruction::reljumpifne(3));
-                result.push(Instruction::bipush(1));
-                result.push(Instruction::relgoto(2));
-                result.push(Instruction::bipush(0));
-            }
-            BinaryOp::Ne => {
-                result.append(&mut generate_code_expr(
-                    *left,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.append(&mut generate_code_expr(
-                    *right,
-                    constant_pool,
-                    local_var_pool,
-                ));
-                result.push(Instruction::reljumpifeq(3));
-                result.push(Instruction::bipush(1));
-                result.push(Instruction::relgoto(2));
-                result.push(Instruction::bipush(0))
-            }
-        },
-        Expr::Unary(op, expr) => {
-            result.append(&mut generate_code_expr(
-                *expr,
-                constant_pool,
-                local_var_pool,
-            ));
-            match UnaryOp::from(&op as &str) {
-                UnaryOp::Not => {
-                    result.push(Instruction::reljumpifne(3));
-                    result.push(Instruction::bipush(1));
-                    result.push(Instruction::relgoto(2));
-                    result.push(Instruction::bipush(0));
-                }
-                UnaryOp::Neg => {
-                    result.push(Instruction::ineg);
-                }
-                UnaryOp::Pos => {}
-            }
-        }
-        Expr::LocalVar(name) => {
-            //Todo: Match for type
-            let index = local_var_pool.get_index(&name);
-            result.push(Instruction::iload(index as u8));
-        }
         Expr::TypedExpr(expr, r#type) => {
-            result.append(&mut generate_code_expr(
-                *expr,
-                constant_pool,
-                local_var_pool,
-            ));
-        }
-        Expr::StmtExprExpr(stmt_expr) => {
-            result.append(&mut generate_code_stmt_expr(
-                &stmt_expr,
-                constant_pool,
-                local_var_pool,
-            ));
-        }
-        Expr::FieldVar(name) => {
-            //TODO: How to get class name and type?
-            constant_pool.add(Constant::FieldRef(FieldRef {
-                class: "0".to_string(),
-                field: NameAndType {
-                    name: name.clone(),
-                    r#type: "Int".to_string(),
+            let expr = expr.deref();
+            match *expr {
+                Expr::Integer(i) => {
+                    result.push(Instruction::bipush(i as u8));
+                }
+                Expr::Bool(b) => {
+                    result.push(Instruction::bipush(b as u8));
+                }
+                Expr::Char(c) => {
+                    result.push(Instruction::bipush(c as u8));
+                }
+                Expr::String(s) => {
+                    let ind = constant_pool.add(Constant::Utf8(s.to_string()));
+                    let index = constant_pool.add(Constant::String(ind));
+                    result.push(Instruction::ldc(index));
+                }
+                Expr::Jnull => {
+                    result.push(Instruction::aconst_null);
+                }
+                Expr::This => result.push(Instruction::aload(0)),
+                Expr::InstVar(exprs, name) => {
+                    panic!("This should not happen")
+                }
+                Binary(op, left, right) => match BinaryOp::from(&op as &str) {
+                    BinaryOp::Add => {
+                        result.append(&mut generate_code_expr(
+                            *left,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.append(&mut generate_code_expr(
+                            *right,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.push(Instruction::iadd);
+                    }
+                    BinaryOp::Sub => {
+                        result.append(&mut generate_code_expr(
+                            *left,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.append(&mut generate_code_expr(
+                            *right,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.push(Instruction::isub);
+                    }
+                    BinaryOp::Mul => {
+                        result.append(&mut generate_code_expr(
+                            *left,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.append(&mut generate_code_expr(
+                            *right,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.push(Instruction::imul);
+                    }
+                    BinaryOp::Div => {
+                        result.append(&mut generate_code_expr(
+                            *left,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.append(&mut generate_code_expr(
+                            *right,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.push(Instruction::idiv);
+                    }
+                    BinaryOp::Mod => {
+                        result.append(&mut generate_code_expr(
+                            *left,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.append(&mut generate_code_expr(
+                            *right,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.push(Instruction::irem);
+                    }
+                    BinaryOp::And => {
+                        result.append(&mut generate_code_expr(
+                            *left,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.push(Instruction::reljumpifeq(3));
+                        result.push(Instruction::bipush(1));
+                        result.push(Instruction::relgoto(2));
+                        result.push(Instruction::bipush(0));
+                        result.append(&mut generate_code_expr(
+                            *right,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.push(Instruction::reljumpifeq(3));
+                        result.push(Instruction::bipush(1));
+                        result.push(Instruction::relgoto(2));
+                        result.push(Instruction::bipush(0));
+                    }
+                    BinaryOp::Or => {
+                        result.append(&mut generate_code_expr(
+                            *left,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.push(Instruction::reljumpifne(3));
+                        result.push(Instruction::bipush(0));
+                        result.push(Instruction::relgoto(2));
+                        result.push(Instruction::bipush(1));
+                        result.append(&mut generate_code_expr(
+                            *right,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.push(Instruction::reljumpifne(3));
+                        result.push(Instruction::bipush(0));
+                        result.push(Instruction::relgoto(2));
+                        result.push(Instruction::bipush(1));
+                    }
+                    BinaryOp::Le => {
+                        result.append(&mut generate_code_expr(
+                            *left,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.append(&mut generate_code_expr(
+                            *right,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.push(Instruction::reljumpiflt(3));
+                        result.push(Instruction::bipush(1));
+                        result.push(Instruction::relgoto(2));
+                        result.push(Instruction::bipush(0));
+                    }
+                    BinaryOp::Ge => {
+                        result.append(&mut generate_code_expr(
+                            *left,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.append(&mut generate_code_expr(
+                            *right,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.push(Instruction::reljumpifge(3));
+                        result.push(Instruction::bipush(1));
+                        result.push(Instruction::relgoto(2));
+                        result.push(Instruction::bipush(0));
+                    }
+                    BinaryOp::Lt => {
+                        result.append(&mut generate_code_expr(
+                            *left,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.append(&mut generate_code_expr(
+                            *right,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.push(Instruction::reljumpifge(3));
+                        result.push(Instruction::bipush(1));
+                        result.push(Instruction::relgoto(2));
+                        result.push(Instruction::bipush(0));
+                    }
+                    BinaryOp::Gt => {
+                        result.append(&mut generate_code_expr(
+                            *left,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.append(&mut generate_code_expr(
+                            *right,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.push(Instruction::reljumpiflt(3));
+                        result.push(Instruction::bipush(1));
+                        result.push(Instruction::relgoto(2));
+                        result.push(Instruction::bipush(0));
+                    }
+                    BinaryOp::Eq => {
+                        result.append(&mut generate_code_expr(
+                            *left,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.append(&mut generate_code_expr(
+                            *right,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.push(Instruction::reljumpifne(3));
+                        result.push(Instruction::bipush(1));
+                        result.push(Instruction::relgoto(2));
+                        result.push(Instruction::bipush(0));
+                    }
+                    BinaryOp::Ne => {
+                        result.append(&mut generate_code_expr(
+                            *left,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.append(&mut generate_code_expr(
+                            *right,
+                            constant_pool,
+                            local_var_pool,
+                        ));
+                        result.push(Instruction::reljumpifeq(3));
+                        result.push(Instruction::bipush(1));
+                        result.push(Instruction::relgoto(2));
+                        result.push(Instruction::bipush(0))
+                    }
                 },
-            }));
-            //Todo: Write Fieldvar as Fieldref into Constantpool
+                Expr::Unary(op, expr) => {
+                    result.append(&mut generate_code_expr(
+                        *expr,
+                        constant_pool,
+                        local_var_pool,
+                    ));
+                    match UnaryOp::from(&op as &str) {
+                        UnaryOp::Not => {
+                            result.push(Instruction::reljumpifne(3));
+                            result.push(Instruction::bipush(1));
+                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::bipush(0));
+                        }
+                        UnaryOp::Neg => {
+                            result.push(Instruction::ineg);
+                        }
+                        UnaryOp::Pos => {}
+                    }
+                }
+                Expr::LocalVar(name) => {
+                    //Todo: Match for type
+                    let index = local_var_pool.get_index(&name);
+                    result.push(Instruction::iload(index as u8));
+                }
+
+                Expr::StmtExprExpr(stmt_expr) => {
+                    result.append(&mut generate_code_stmt_expr(
+                        &stmt_expr,
+                        constant_pool,
+                        local_var_pool,
+                    ));
+                }
+                Expr::FieldVar(name) => {
+                    //TODO: How to get class name and type?
+                    constant_pool.add(Constant::FieldRef(FieldRef {
+                        class: "0".to_string(),
+                        field: NameAndType {
+                            name: name.clone(),
+                            r#type: "Int".to_string(),
+                        },
+                    }));
+                    //Todo: Write Fieldvar as Fieldref into Constantpool
+                }
+            }
         }
         unexpected => panic!("Unexpected expression: {:?}", unexpected),
     }
