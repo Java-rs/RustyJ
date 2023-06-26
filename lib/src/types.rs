@@ -53,7 +53,8 @@ impl FieldDecl {
         bytes.extend_from_slice(&self.field_type.as_bytes());
         bytes.extend_from_slice(&self.name.as_bytes());
         if let Some(val) = &self.val {
-            bytes.extend_from_slice(&val.as_bytes());
+            // bytes.extend_from_slice(&val.as_bytes());
+            todo!()
         }
         bytes
     }
