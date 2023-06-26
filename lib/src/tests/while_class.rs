@@ -30,7 +30,7 @@ fn while_class() -> Class {
         fields: vec![FieldDecl {
             field_type: Type::Int,
             name: "n".to_string(),
-            val: Some("2".to_string()),
+            val: Some(Expr::Integer(2)),
         }],
         methods: vec![MethodDecl {
             name: "f".to_string(),

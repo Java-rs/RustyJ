@@ -35,11 +35,11 @@ pub fn field_to_java(field: &FieldDecl) -> String {
     let mut s: String = format!("\t{} {}", field.field_type, field.name);
     if let Some(x) = &field.val {
         if field.field_type == Type::Char {
-            s = format!("{} = '{}'", s, x);
-        } else if field.field_type == Type::String && x != "null" {
-            s = format!("{} = \"{}\"", s, x);
+            s = format!("{} = '{}'", s, expr_to_java(x));
+        } else if field.field_type == Type::String && *x != Expr::Jnull {
+            s = format!("{} = \"{}\"", s, expr_to_java(x));
         } else {
-            s = format!("{} = {}", s, x);
+            s = format!("{} = {}", s, expr_to_java(x));
         }
     }
     s += ";\n";
