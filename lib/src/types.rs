@@ -81,6 +81,8 @@ pub enum Stmt {
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum StmtExpr {
+    // @Decide should actually be Assign(Expr, Expr) for assigning values to instance variables
+    // See for example the SetterGetter test (i.e. cases like `this.x = 5`)
     Assign(String, Expr), // first the name of the variable, then the value it is being assigned to
     New(Type, Vec<Expr>), // first the class type, that should be instantiated, then the list of arguments for the constructor
     MethodCall(Expr, String, Vec<Expr>), // first the object to which the method belongs (e.g. Expr::This), then the name of the method and lastly the list of arguments for the method call

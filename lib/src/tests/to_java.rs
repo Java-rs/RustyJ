@@ -61,10 +61,13 @@ pub fn method_to_java(method: &MethodDecl) -> String {
 
 pub fn stmt_to_java(stmt: &Stmt, indent: u8) -> String {
     match stmt {
-        Stmt::Block(stmts) => stmts
-            .into_iter()
-            .map(|stmt| stmt_to_java(stmt, indent))
-            .fold("".to_string(), |acc, s| acc + &s),
+        Stmt::Block(stmts) => format!(
+            "{{{}}}",
+            stmts
+                .into_iter()
+                .map(|stmt| stmt_to_java(stmt, indent))
+                .fold("".to_string(), |acc, s| acc + &s)
+        ),
         Stmt::If(cond, body, elze) => {
             let mut s = format!(
                 "{}if ({}) {{\n{}{}}}",
