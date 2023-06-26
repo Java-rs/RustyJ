@@ -31,7 +31,7 @@ impl Display for Class {
 pub struct FieldDecl {
     pub field_type: Type,
     pub name: String,
-    pub val: Option<String>, // @Decide: Should probably Option<Expr> instead
+    pub val: Option<Expr>,
 }
 
 impl FieldDecl {
@@ -43,7 +43,8 @@ impl FieldDecl {
         bytes.extend_from_slice(&self.field_type.as_bytes());
         bytes.extend_from_slice(&self.name.as_bytes());
         if let Some(val) = &self.val {
-            bytes.extend_from_slice(&val.as_bytes());
+            // bytes.extend_from_slice(&val.as_bytes());
+            todo!()
         }
         bytes
     }
@@ -70,6 +71,8 @@ pub enum Stmt {
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum StmtExpr {
+    // @Decide should actually be Assign(Expr, Expr) for assigning values to instance variables
+    // See for example the SetterGetter test (i.e. cases like `this.x = 5`)
     Assign(String, Expr), // first the name of the variable, then the value it is being assigned to
     New(Type, Vec<Expr>), // first the class type, that should be instantiated, then the list of arguments for the constructor
     // FIXME: This needs to be changed to represent more how the JVM handles method calls. We need a class(at least name) and a method name with the typed arguments inside it, also the return type

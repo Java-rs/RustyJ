@@ -35,10 +35,7 @@ fn complex_if_class() -> Class {
             body: Block(vec![If(
                 Binary(
                     "==".to_string(),
-                    Box::new(TypedExpr(
-                        Box::new(LocalOrFieldVar("c".to_string())),
-                        Type::Char,
-                    )),
+                    Box::new(TypedExpr(Box::new(LocalVar("c".to_string())), Type::Char)),
                     Box::new(TypedExpr(Box::new(Expr::Char('a')), Type::Char)),
                 ),
                 Box::new(TypedStmt(
@@ -54,7 +51,7 @@ fn complex_if_class() -> Class {
                             Box::new(Binary(
                                 "==".to_string(),
                                 Box::new(TypedExpr(
-                                    Box::new(LocalOrFieldVar("c".to_string())),
+                                    Box::new(LocalVar("c".to_string())),
                                     Type::Char,
                                 )),
                                 Box::new(TypedExpr(Box::new(Expr::Char('b')), Type::Char)),
@@ -77,7 +74,7 @@ fn complex_if_class() -> Class {
                                     Box::new(Binary(
                                         "==".to_string(),
                                         Box::new(TypedExpr(
-                                            Box::new(LocalOrFieldVar("c".to_string())),
+                                            Box::new(LocalVar("c".to_string())),
                                             Type::Char,
                                         )),
                                         Box::new(TypedExpr(Box::new(Expr::Char('c')), Type::Char)),
@@ -101,9 +98,7 @@ fn complex_if_class() -> Class {
                                                         Box::new(Binary(
                                                             "==".to_string(),
                                                             Box::new(TypedExpr(
-                                                                Box::new(LocalOrFieldVar(
-                                                                    "c".to_string(),
-                                                                )),
+                                                                Box::new(LocalVar("c".to_string())),
                                                                 Type::Char,
                                                             )),
                                                             Box::new(TypedExpr(
@@ -117,9 +112,7 @@ fn complex_if_class() -> Class {
                                                         Box::new(Binary(
                                                             "==".to_string(),
                                                             Box::new(TypedExpr(
-                                                                Box::new(LocalOrFieldVar(
-                                                                    "c".to_string(),
-                                                                )),
+                                                                Box::new(LocalVar("c".to_string())),
                                                                 Type::Char,
                                                             )),
                                                             Box::new(TypedExpr(
@@ -148,7 +141,7 @@ fn complex_if_class() -> Class {
                                                                 Box::new(Binary(
                                                                     "==".to_string(),
                                                                     Box::new(TypedExpr(
-                                                                        Box::new(LocalOrFieldVar(
+                                                                        Box::new(LocalVar(
                                                                             "c".to_string(),
                                                                         )),
                                                                         Type::Char,
@@ -164,7 +157,7 @@ fn complex_if_class() -> Class {
                                                                 Box::new(Binary(
                                                                     "==".to_string(),
                                                                     Box::new(TypedExpr(
-                                                                        Box::new(LocalOrFieldVar(
+                                                                        Box::new(LocalVar(
                                                                             "c".to_string(),
                                                                         )),
                                                                         Type::Char,

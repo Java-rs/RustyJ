@@ -6,13 +6,20 @@ mod empty_class;
 mod empty_method_class;
 mod fib_class;
 mod fields_class;
+mod full_test_class;
 mod if_class;
 mod int_fields_class;
 mod local_var_decl_class;
 mod method_call_class;
+mod naming_conflict_class;
+mod negator_class;
+mod return_class;
+mod setter_getter_class;
+mod str_add_class;
 mod tast_to_ast;
 mod to_java;
 mod while_class;
+mod wonky_assignments_class;
 
 use self::to_java::class_to_java;
 use crate::codegen;
@@ -43,18 +50,19 @@ fn normalize_str(s: std::string::String) -> std::string::String {
 pub fn parser_test(ast: &Class, name: &str) {
     // Call parser with java code
     // TODO: Can only be done, once we have a parsing method that returns a Class
-    // let parse_res = parser::parse(&read_to_string(File::open(format!("lib/testcases/{name}.java"))));
-    // assert_eq!(parse_res, ast);
+    let parse_res = parser::parse_Programm(
+        &read_to_string(File::open(format!("lib/testcases/{name}.java")).unwrap()).unwrap(),
+    )
+    .unwrap();
+    let parse_res = parse_res.get(0).unwrap();
+    assert_eq!(parse_res, ast);
 }
 
 pub fn typechecker_test(ast: &Class, tast: &Class) {
     // TODO: Errors are just ignored for now, oops
     let mut tc = TypeChecker::new(vec![ast.clone()]).unwrap();
-    tc.check_and_type_program().unwrap();
-    let v: Vec<&Class> = tc.typed_classes.values().collect();
-    let typed = v[0];
-    println!("{}", typed);
-    assert_eq!(*typed, *ast);
+    let typed_classes = tc.check_and_type_program().unwrap();
+    assert_eq!(typed_classes[0], *tast);
 }
 
 const TEST_VALS_AMOUNT: usize = 5;
@@ -158,12 +166,9 @@ pub fn class_test(ast: &Class, tast: Option<&Class>, name: &str) {
         .expect("failed to open original java file");
     let og_java_code = read_to_string(file).expect("failed to read original java file");
 
-    let res = test_helper(ast, tast, name, &og_java_code);
-}
-
-fn test_helper(ast: &Class, tast: Option<&Class>, name: &str, og_java_code: &str) {
     // Generate Java Code from AST and write to file
     let class_code = class_to_java(ast);
+    println!("{class_code}");
     let mut file = File::create(format!("lib/testcases/{name}.java"))
         .expect("failed to open original java file for writing generated code");
     file.write(class_code.as_bytes())

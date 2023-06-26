@@ -1,11 +1,11 @@
 class MethodCall {
 	String world() {
-		return "World";
-	}
+{		return "World";
+}	}
 	String hello() {
-		return "Hello";
-	}
+{		return "Hello";
+}	}
 	String f() {
-		return (this.hello()) + ((" ") + (this.world()));
-	}
+{		return (this.hello()) + ((" ") + (this.world()));
+}	}
 }
