@@ -72,7 +72,7 @@ fn main() -> color_eyre::Result<()> {
     )?;
 
     let dir = generate_dir(&typechecker.typed_classes.values().cloned().collect());
-    println!("{:#?}", dir);
+    // println!("{:#?}", dir);
 
     //let mut file = File::create("typed_if-ast.txt")?;
     //file.write_all(typed_ast_string.as_bytes())?;

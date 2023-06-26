@@ -26,7 +26,7 @@ fn test_codegen() {
 
 fn empty_method_class() -> Class {
     Class {
-        name: "emptyMethod".to_string(),
+        name: "EmptyMethod".to_string(),
         fields: vec![],
         methods: vec![MethodDecl {
             ret_type: Type::Void,
