@@ -86,7 +86,7 @@ impl TypeChecker {
             .is_err()
         {
             return Err(format!(
-                "Field value '{0}' does not match type '{1}'",
+                "Field value '{:?}' does not match type '{}'",
                 field.val.clone().unwrap(),
                 field.field_type
             ));
@@ -107,38 +107,50 @@ impl TypeChecker {
         Ok(())
     }
 
-    fn check_field_type(&self, field_type: &Type, val: &Option<String>) -> Result<(), String> {
+    fn type_of_expr(&self, expr: &Expr) -> Type {
+        if let Expr::TypedExpr(x, t) = expr {
+            t.clone()
+        } else if let Expr::TypedExpr(x, t) = self.type_expr(expr) {
+            t.clone()
+        } else {
+            unreachable!()
+        }
+    }
+
+    fn check_field_type(&self, field_type: &Type, val: &Option<Expr>) -> Result<(), String> {
         if let Some(val) = val {
             match field_type {
                 Type::Int => {
-                    if val.parse::<i32>().is_err() {
+                    if self.type_of_expr(val) != *field_type {
                         return Err(format!("Field type is int, but val is not int"));
                     }
                 }
                 Type::Bool => {
-                    if val.parse::<bool>().is_err() {
+                    if self.type_of_expr(val) != *field_type {
                         return Err(format!("Field type is bool, but val is not bool"));
                     }
                 }
                 Type::Char => {
-                    if val.parse::<char>().is_err() {
+                    if self.type_of_expr(val) != *field_type {
                         return Err(format!("Field type is char, but val is not char"));
                     }
                 }
                 Type::String => {
-                    if val.parse::<String>().is_err() {
+                    if self.type_of_expr(val) != *field_type {
                         return Err(format!("Field type is string, but val is not string"));
                     }
                 }
                 Type::Void => {
-                    return Err(format!("Field type is void, but val is not void"));
+                    return Err(format!("Field type cannot be void"));
                 }
                 Type::Null => {
-                    return Err(format!("Field type is null, but val is not null"));
+                    return Err(format!("Field type cannot be null"));
                 }
                 Type::Class(str) => {
                     if !self.classes.contains_key(str) {
-                        return Err(format!("Field type is class, but class does not exist"));
+                        return Err(format!(
+                            "Field type is {str}, but class {str} does not exist"
+                        ));
                     }
                 }
             }

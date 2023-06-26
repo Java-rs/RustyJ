@@ -42,8 +42,12 @@ fn normalize_str(s: std::string::String) -> std::string::String {
 pub fn parser_test(ast: &Class, name: &str) {
     // Call parser with java code
     // TODO: Can only be done, once we have a parsing method that returns a Class
-    // let parse_res = parser::parse(&read_to_string(File::open(format!("testcases/{name}.java"))));
-    // assert_eq!(parse_res, ast);
+    let parse_res = parser::parse_Programm(
+        &read_to_string(File::open(format!("testcases/{name}.java")).unwrap()).unwrap(),
+    )
+    .unwrap();
+    let parse_res = parse_res.get(0).unwrap();
+    assert_eq!(parse_res, ast);
 }
 
 pub fn typechecker_test(ast: &Class, tast: &Class) {
