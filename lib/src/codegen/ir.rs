@@ -145,6 +145,27 @@ impl ConstantPool {
         let index = self.0.len() as u16;
         index
     }
+    fn add_name_and_type(&mut self, name: String, r#type: String) -> u16 {
+        self.add(Constant::Utf8(name.clone()));
+        self.add(Constant::Utf8(r#type.clone()));
+        self.add(Constant::NameAndType(NameAndType { name, r#type }))
+    }
+    fn add_class(&mut self, class_name: String) {
+        self.add(Constant::Utf8(class_name.clone()));
+        self.add(Constant::Class(class_name));
+    }
+    fn add_field_ref(&mut self, class: String, name: String, r#type: String) -> u16 {
+        self.add_class(class.clone());
+        self.add_name_and_type(name.clone(), r#type.clone());
+        self.add(Constant::FieldRef(FieldRef {
+            class,
+            field: NameAndType { name, r#type },
+        }))
+    }
+    fn add_method_ref(&mut self, method_ref: MethodRef) -> u16 {
+        0
+        // TODO: Meri
+    }
     fn index_of(&self, constant: &Constant) -> Option<u16> {
         self.0
             .iter()
@@ -361,8 +382,9 @@ impl CompiledMethod {
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub(crate) enum Constant {
     Class(String),
+    /// This has to be of format `class_index.name_and_type_index`
     FieldRef(FieldRef),
-    /// This has to be of format class_name.method_name. If it is later found to be beneficial however we could split this into two Strings
+    /// This has to be of format `class_index.method_name_index`. If it is later found to be beneficial however we could split this into two Strings
     MethodRef(MethodRef),
     NameAndType(NameAndType),
     String(u16),
@@ -390,15 +412,15 @@ pub struct NameAndType {
 pub(crate) enum Instruction {
     invokespecial(u16), //Calling a method from the super class (probably only used in constructor)
     aload_0,
-    aload(u8),          //Load reference from local variable
-    iload(u8),          //Load int from local variable
-    ifeq(u16),          //Branch if int is 0
-    ireturn,            //return int, char, boolean
-    r#return,           //return void
-    areturn,            //return object(string, integer, null)
-    bipush(u8),         //Push byte onto stack
-    istore(u8),         //Store int into local variable
-    astore(u8),         //Store reference into local variable
+    aload(u8),        //Load reference from local variable
+    iload(u8),        //Load int from local variable
+    ifeq(u16),        //Branch if int is 0
+    ireturn,          //return int, char, boolean
+    r#return,         //return void
+    areturn,          //return object(string, integer, null)
+    bipush(u8),       //Push byte onto stack
+    istore(u8),       //Store int into local variable
+    astore(u8),       //Store reference into local variable
     reljumpifeq(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
     aconst_null,      //Push null onto stack
     ldc(u16),         //Push item from constant pool onto stack
@@ -409,7 +431,6 @@ pub(crate) enum Instruction {
     reljumpifne(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
     reljumpiflt(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
     reljumpifge(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
-    invokespecial(u16), // TODO: Check if u16 is correct here
     iadd,             //Add int
     isub,             //Subtract int
     imul,             //Multiply int
@@ -497,6 +518,7 @@ fn generate_method(
     constant_pool: &mut ConstantPool,
 ) -> CompiledMethod {
     let mut local_var_pool = LocalVarPool(
+        // FIXME: This is done right on a per-method basis but this works hopefully too
         method
             .params
             .iter()
