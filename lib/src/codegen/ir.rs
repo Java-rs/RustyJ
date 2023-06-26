@@ -768,7 +768,7 @@ fn generate_code_stmt_expr(
                             .collect(),
                     );
                     let method_index = constant_pool.add_method_ref(MethodRef {
-                        class: "Test".to_string(), // TODO: Bene Get the class name because we don't get it passed to us... Maybe pass a Classname to the function?
+                        class: class_name.to_string(), // TODO: Bene Get the class name because we don't get it passed to us... Maybe pass a Classname to the function?
                         method: NameAndType {
                             name: name.clone(),
                             r#type: expr_type.to_ir_string(),
@@ -1080,7 +1080,6 @@ fn generate_code_expr(
                     ));
                 }
                 Expr::FieldVar(name) => {
-                    //TODO: Meri How to get class name and type?
                     constant_pool.add(Constant::FieldRef(FieldRef {
                         class: "0".to_string(),
                         field: NameAndType {
@@ -1088,7 +1087,7 @@ fn generate_code_expr(
                             r#type: "Int".to_string(),
                         },
                     }));
-                    //Todo: Write Fieldvar as Fieldref into Constantpool
+                    //Todo: Meri Write Fieldvar as Fieldref into Constantpool
                 }
                 p => panic!(
                     "Unexpected expression where untyped expression was expected: {:?}",
