@@ -40,7 +40,7 @@ ReturnStmt = {"return" ~ Expr ~ ";"}
 WhileStmt = {"while" ~ "(" ~ Expr ~ ")" ~ Stmt}
 
 // @Question: Is this a correct and easy-to-use definition?
-IfElseStmt = {IfStmt ~ "else" ~ IfStmt}
+IfElseStmt = {IfStmt ~ "else" ~ Stmt}
 
 IfStmt = {"if" ~ "(" ~ Expr ~ ")" ~ Stmt}
 
