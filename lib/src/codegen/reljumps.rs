@@ -4,9 +4,9 @@ fn get_instruction_length(istr: &Instruction) -> u16 {
     match istr {
         // TODO: These are just Copilots guesses
         Instruction::reljumpifeq(_) => 3,
-        Instruction::reljumpifge(_) => 2,
+        Instruction::reljumpifge(_) => 3,
         Instruction::relgoto(_) => 3,
-        Instruction::reljumpiflt(_) => 2,
+        Instruction::reljumpiflt(_) => 3,
         i => i.as_bytes().len() as u16,
     }
 }
