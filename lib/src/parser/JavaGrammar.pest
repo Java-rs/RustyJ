@@ -6,7 +6,7 @@ Program = {ClassDecl+}
 
 ClassDecl = {"class" ~ Identifier ~ "{" ~ (MethodDecl|FieldDecl)* ~ "}"}
 
-FieldDecl = {JType ~ FieldVarDecl+}
+FieldDecl = {JType ~ FieldVarDeclList ~ ";"}
 
 MethodDecl = {JType ~ Identifier ~ "(" ~ ParamDeclList? ~ ")" ~ BlockStmt}
 
@@ -14,7 +14,9 @@ ParamDeclList = {ParamDecl ~ (","~ParamDecl)*}
 
 ParamDecl = {JType ~ Identifier}
 
-FieldVarDecl = {Identifier ~ ("="~Expr)? ~ ";"}
+FieldVarDeclList = {FieldVarDecl ~ (","~FieldVarDeclList)*}
+
+FieldVarDecl = {Identifier ~ ("="~Expr)?}
 
 JType = {PrimitiveType | Identifier}
 

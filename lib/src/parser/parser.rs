@@ -147,30 +147,28 @@ fn parse_field(pair: Pair<Rule>) -> Vec<FieldDecl> {
         Rule::FieldDecl => {
             let mut inners = pair.into_inner();
             let jtype = parse_Type(inners.next().unwrap());
-            let varDecels = inners.next().unwrap().into_inner();
-
-            varDecels
-                .map(|x| {
-                    let mut inner = x.into_inner();
-                    let other_name = next_id(&mut inner);
-                    match inner.next() {
-                        None => FieldDecl {
-                            field_type: jtype.clone(),
-                            name: other_name,
-                            val: None,
-                        },
-                        Some(val) => FieldDecl {
-                            field_type: jtype.clone(),
-                            name: other_name,
-                            val: Some(parse_expr(val)),
-                        },
-                    }
-                })
-                .collect()
+            parse_field_var_decl_list(jtype, inners.next().unwrap())
         }
 
         _ => unreachable!(),
     }
+}
+
+fn parse_field_var_decl_list(jtype: Type, pair: Pair<Rule>) -> Vec<FieldDecl> {
+    assert_eq!(pair.as_rule(), Rule::FieldVarDeclList);
+    let mut inners = pair.into_inner();
+    let mut var_decl = inners.next().unwrap().into_inner();
+    let name = next_id(&mut var_decl);
+    let val = var_decl.next().and_then(|expr| Some(parse_expr(expr)));
+    let mut out = vec![FieldDecl {
+        field_type: jtype.clone(),
+        name,
+        val,
+    }];
+    if let Some(p) = inners.next() {
+        out.append(&mut parse_field_var_decl_list(jtype, p));
+    }
+    return out;
 }
 
 fn parse_Type(pair: Pair<Rule>) -> Type {
