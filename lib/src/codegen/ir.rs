@@ -160,9 +160,13 @@ impl ConstantPool {
             field: NameAndType { name, r#type },
         }))
     }
-    fn add_method_ref(&mut self, method_ref: MethodRef) -> u16 {
-        0
-        // TODO: Meri
+    fn add_method_ref(&mut self, class: String, name: String, r#type: String) -> u16 {
+        self.add_class(class.clone());
+        self.add_name_and_type(name.clone(), r#type.clone());
+        self.add(Constant::MethodRef(MethodRef {
+            class,
+            method: NameAndType { name, r#type },
+        }))
     }
     fn index_of(&self, constant: &Constant) -> Option<u16> {
         self.0
@@ -468,6 +472,11 @@ impl Instruction {
             Instruction::ineg => vec![116],
             Instruction::goto(jmp) => vec![167, high_byte(*jmp), low_byte(*jmp)],
             Instruction::ifne(jmp) => vec![154, high_byte(*jmp), low_byte(*jmp)],
+            Instruction::iadd => vec![96],
+            Instruction::isub => vec![100],
+            Instruction::imul => vec![104],
+            Instruction::idiv => vec![108],
+            Instruction::irem => vec![112],
             // Instruction::relgoto() =>
             // Instruction::reljumpifeq(idx) =>
             // Instruction::reljumpifne(idx) =>
@@ -651,32 +660,8 @@ fn generate_code_stmt(
                     result.push(Instruction::reljumpifeq(-(body.len() as i16)));
                 }
                 Stmt::LocalVarDecl(types, name) => {
-                    let index: u8 = local_var_pool.0.len() as u8 + 1;
                     // FIXME: Add the variable name to localvarpool and use the index of the added variable for the istore instruction
-                    match types {
-                        Type::Int => result.append(&mut vec![
-                            Instruction::bipush(index.clone()),
-                            Instruction::istore(index),
-                        ]),
-                        Type::Bool => result.append(&mut vec![
-                            Instruction::bipush(index.clone()),
-                            Instruction::istore(index),
-                        ]),
-                        Type::Char => result.append(&mut vec![
-                            Instruction::bipush(index.clone()),
-                            Instruction::istore(index),
-                        ]),
-                        Type::String => result.append(&mut vec![
-                            Instruction::bipush(index.clone()),
-                            Instruction::astore(index),
-                        ]),
-                        Type::Null => result.append(&mut vec![
-                            Instruction::bipush(index.clone()),
-                            Instruction::astore(index),
-                        ]),
-                        _ => panic!("Invalid return type"),
-                    }
-                    local_var_pool.0.push(name);
+                    local_var_pool.add(name.clone());
                 }
                 Stmt::If(expr, stmt1, stmt2) => {
                     // Generate bytecode for if
@@ -819,7 +804,7 @@ fn generate_code_expr(
                 }
                 Expr::This => result.push(Instruction::aload(0)),
                 Expr::InstVar(exprs, name) => {
-                    panic!("This should not happen")
+                    result.push(Instruction::aload(0));
                 }
                 Binary(op, left, right) => match BinaryOp::from(&op as &str) {
                     BinaryOp::Add => {
@@ -1071,9 +1056,23 @@ fn generate_code_expr(
                     }
                 }
                 Expr::LocalVar(name) => {
-                    //Todo: Meri Match for type
+                    //Todo: Match for type
                     let index = local_var_pool.get_index(&name);
-                    result.push(Instruction::iload(index as u8));
+                    match r#type {
+                        Type::Int => {
+                            result.push(Instruction::iload(index as u8));
+                        }
+                        Type::Bool => {
+                            result.push(Instruction::iload(index as u8));
+                        }
+                        Type::Char => {
+                            result.push(Instruction::iload(index as u8));
+                        }
+                        Type::String => {
+                            result.push(Instruction::aload(index as u8));
+                        }
+                        _ => panic!("Unexpected type: {:?}", r#type),
+                    }
                 }
 
                 Expr::StmtExprExpr(stmt_expr) => {
