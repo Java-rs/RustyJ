@@ -549,7 +549,7 @@ fn generate_code_stmt(
     match stmt {
         Stmt::TypedStmt(stmt, stmt_type) => {
             // Generate bytecode for typed stmt
-            let stmt = *stmt.deref();
+            let stmt = stmt.deref().clone();
             match stmt {
                 Stmt::Block(stmts) => result.append(
                     &mut stmts
@@ -678,8 +678,10 @@ fn generate_code_stmt(
                         local_var_pool,
                     ));
                 }
+                Stmt::TypedStmt(_, _) => panic!("Expected untyped statement, got typed statement"),
             }
         }
+        statement => panic!("Expected Typed Statement, got {:?}", statement),
     }
     return result;
 }
@@ -728,7 +730,7 @@ fn generate_code_stmt_expr(
                             .collect(),
                     );
                     let method_index = constant_pool.add_method_ref(MethodRef {
-                        class: "Test", // TODO: Get the class name because we don't get it passed to us...
+                        class: "Test".to_string(), // TODO: Bene Get the class name because we don't get it passed to us... Maybe pass a Classname to the function?
                         method: NameAndType {
                             name: name.clone(),
                             r#type: expr_type.to_ir_string(),
@@ -752,8 +754,8 @@ fn generate_code_expr(
     let mut result = vec![];
     match expr {
         Expr::TypedExpr(expr, r#type) => {
-            let expr = expr.deref();
-            match *expr {
+            let expr = expr.deref().clone();
+            match expr {
                 Expr::Integer(i) => {
                     result.push(Instruction::bipush(i as u8));
                 }
@@ -998,7 +1000,7 @@ fn generate_code_expr(
                     }
                 }
                 Expr::LocalVar(name) => {
-                    //Todo: Match for type
+                    //Todo: Meri Match for type
                     let index = local_var_pool.get_index(&name);
                     result.push(Instruction::iload(index as u8));
                 }
@@ -1011,7 +1013,7 @@ fn generate_code_expr(
                     ));
                 }
                 Expr::FieldVar(name) => {
-                    //TODO: How to get class name and type?
+                    //TODO: Meri How to get class name and type?
                     constant_pool.add(Constant::FieldRef(FieldRef {
                         class: "0".to_string(),
                         field: NameAndType {
@@ -1021,6 +1023,10 @@ fn generate_code_expr(
                     }));
                     //Todo: Write Fieldvar as Fieldref into Constantpool
                 }
+                p => panic!(
+                    "Unexpected expression where untyped expression was expected: {:?}",
+                    p
+                ),
             }
         }
         unexpected => panic!("Unexpected expression: {:?}", unexpected),
