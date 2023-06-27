@@ -1073,7 +1073,6 @@ fn generate_code_expr(
                     }
                 }
                 Expr::LocalVar(name) => {
-                    //Todo: Match for type
                     let index = local_var_pool.get_index(&name);
                     match r#type {
                         Type::Int => {
@@ -1102,13 +1101,12 @@ fn generate_code_expr(
                 }
                 Expr::FieldVar(name) => {
                     constant_pool.add(Constant::FieldRef(FieldRef {
-                        class: "0".to_string(),
+                        class: class_name.to_string(),
                         field: NameAndType {
                             name: name.clone(),
-                            r#type: "Int".to_string(),
+                            r#type: r#type.to_string(),
                         },
                     }));
-                    //Todo: Meri Write Fieldvar as Fieldref into Constantpool
                 }
                 p => panic!(
                     "Unexpected expression where untyped expression was expected: {:?}",
