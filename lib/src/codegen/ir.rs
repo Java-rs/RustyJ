@@ -135,7 +135,7 @@ impl ConstantPool {
         self.0.len() as u16 + 1
     }
     /// Adds a constant to the constant pool, returning its index
-    fn add(&mut self, constant: Constant) -> u16 {
+    pub(crate) fn add(&mut self, constant: Constant) -> u16 {
         if let Some(index) = self.index_of(&constant) {
             return index;
         }
