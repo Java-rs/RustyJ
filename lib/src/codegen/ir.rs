@@ -574,7 +574,7 @@ fn generate_code_stmt(
                 Stmt::Block(stmts) => result.append(
                     &mut stmts
                         .iter()
-                        .map(|stmt| {
+                        .flat_map(|stmt| {
                             generate_code_stmt(
                                 stmt.clone(),
                                 dir,
@@ -583,8 +583,6 @@ fn generate_code_stmt(
                                 class_name,
                             )
                         })
-                        // Flatten to avoid vecs in our vec
-                        .flatten()
                         .collect(),
                 ),
                 Stmt::Return(expr) => match &expr {
