@@ -6,7 +6,6 @@ extern crate pest;
 extern crate pest_derive;
 
 use crate::types::{Class, Expr, FieldDecl, MethodDecl, Stmt, StmtExpr, Type};
-use lib::types::Type::String;
 use pest::error::Error;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
@@ -77,7 +76,7 @@ fn parse_method(pair: Pair<Rule>) -> MethodDecl {
                         let param_name = next_id(&mut inner_param);
                         params.push((param_type, param_name));
                     }
-                    Rule::BlockStmt => body = Some(parse_block_stmt(p)),
+                    Rule::BlockStmt => body = Some(parse_BlockStmt(p)),
                     _ => unreachable!(),
                 };
             }
@@ -86,7 +85,7 @@ fn parse_method(pair: Pair<Rule>) -> MethodDecl {
                 ret_type,
                 name: method_name,
                 params,
-                body: body.unwrap(),
+                body: Stmt::Block(body.unwrap()),
             }
         }
         _ => unreachable!(),
@@ -186,9 +185,10 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
 
 fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
     let rule = pair.as_rule().clone();
-    let mut inners = pair.into_inner();
     match rule {
         Rule::AssignExpr => {
+            let mut inners = pair.into_inner();
+
             let mut name = inners.next().unwrap();
             let String_name;
             match name.as_rule() {
@@ -205,6 +205,8 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
             StmtExpr::Assign(String_name, Expr)
         }
         Rule::NewExpr => {
+            let mut inners = pair.into_inner();
+
             let id_name = parse_Type(inners.next().unwrap());
             let paramList = inners.next().unwrap().into_inner();
             let mut exprList: Vec<Expr> = vec![];
@@ -215,6 +217,7 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
             StmtExpr::New(id_name, exprList)
         }
         Rule::MethodCallExpr => {
+            let mut inners = pair.clone().into_inner(); //i fogot how to do this withouth cone
             let mut identifORinstVar = inners.next().unwrap();
             let String_name;
             let MethodExpr;
@@ -224,8 +227,10 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
                     MethodExpr = Expr::This;
                 }
                 Rule::InstVarExpr => {
-                    MethodExpr = parse_expr(pair);
-                    String_name = String::new("what is my name?");
+                    let Expr::InstVar(a, b) = parse_expr(pair) else { unreachable!() };
+
+                    MethodExpr = *a;
+                    String_name = b;
                 }
                 _ => unreachable!(),
             }
@@ -235,16 +240,10 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
                 exprList.push(parse_expr(param));
             }
 
-            StmtExpr::MethodCall(MethodExpr, id_name, exprList);
-
-            todo!()
+            StmtExpr::MethodCall(MethodExpr, String_name, exprList)
         }
         _ => unreachable!(),
     }
-}
-
-fn parse_innerInstVar(pair: Pair<Rule>) -> Expr::InstVar(Expr(), String) {
-    let inners = pair.next().unwrap();
 }
 
 //fn parse_variabledeclarators(pair: Pair<Rule>)->
