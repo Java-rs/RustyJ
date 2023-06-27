@@ -1,3 +1,7 @@
+#![allow(non_camel_case_types)]
+#![allow(unused)]
+#![allow(non_snake_case)]
+
 extern crate pest;
 extern crate pest_derive;
 
@@ -11,7 +15,7 @@ use pest_derive::Parser;
 #[grammar = "../lib/src/parser/JavaGrammar.pest"]
 struct ExampleParser;
 
-pub fn parse_Programm(file: &str) -> Result<Vec<Class>, Error<Rule>> {
+pub fn parse_programm(file: &str) -> Result<Vec<Class>, Error<Rule>> {
     let example: Pair<Rule> = ExampleParser::parse(Rule::Program, file)?.next().unwrap();
 
     if example.as_rule() != Rule::Program {
@@ -53,7 +57,7 @@ fn next_id(inners: &mut Pairs<Rule>) -> String {
     // calling to_string() immediately would return "Identifier(<location>)",
     // while as_str() returns the actual str-slice captured by the Identifier-rule
     // We still have to copy that str-slice into its own string object with to_string() though
-    inners.next().unwrap().as_str().to_string()
+    inners.next().unwrap().as_str().trim().to_string()
 }
 
 fn parse_method(pair: Pair<Rule>) -> MethodDecl {
@@ -142,31 +146,29 @@ fn parse_field(pair: Pair<Rule>) -> Vec<FieldDecl> {
     match pair.as_rule() {
         Rule::FieldDecl => {
             let mut inners = pair.into_inner();
-            let JType = parse_Type(inners.next().unwrap());
-            let varDecels = inners.next().unwrap().into_inner();
-
-            varDecels
-                .map(|x| {
-                    let mut inner = x.into_inner();
-                    let other_name = next_id(&mut inner);
-                    match inner.next() {
-                        None => FieldDecl {
-                            field_type: JType.clone(),
-                            name: other_name,
-                            val: None,
-                        },
-                        Some(val) => FieldDecl {
-                            field_type: JType.clone(),
-                            name: other_name,
-                            val: Some(parse_expr(val)),
-                        },
-                    }
-                })
-                .collect()
+            let jtype = parse_Type(inners.next().unwrap());
+            parse_field_var_decl_list(jtype, inners.next().unwrap())
         }
 
         _ => unreachable!(),
     }
+}
+
+fn parse_field_var_decl_list(jtype: Type, pair: Pair<Rule>) -> Vec<FieldDecl> {
+    assert_eq!(pair.as_rule(), Rule::FieldVarDeclList);
+    let mut inners = pair.into_inner();
+    let mut var_decl = inners.next().unwrap().into_inner();
+    let name = next_id(&mut var_decl);
+    let val = var_decl.next().and_then(|expr| Some(parse_expr(expr)));
+    let mut out = vec![FieldDecl {
+        field_type: jtype.clone(),
+        name,
+        val,
+    }];
+    if let Some(p) = inners.next() {
+        out.append(&mut parse_field_var_decl_list(jtype, p));
+    }
+    return out;
 }
 
 fn parse_Type(pair: Pair<Rule>) -> Type {
@@ -185,9 +187,26 @@ fn parse_Type(pair: Pair<Rule>) -> Type {
         _ => unreachable!(),
     }
 }
+
 fn parse_expr(pair: Pair<Rule>) -> Expr {
-    todo!()
+    println!("{:?}", pair);
+    match pair.as_rule() {
+        Rule::Expr => parse_expr(pair.into_inner().next().unwrap()),
+        Rule::NonBinaryExpr => parse_expr(pair.into_inner().next().unwrap()),
+        Rule::IntLiteral => Expr::Integer(pair.as_str().parse().unwrap()),
+        Rule::BoolLiteral => Expr::Bool(pair.as_str().parse().unwrap()),
+        Rule::CharLiteral => Expr::Char(get_str_content(pair.as_str()).parse().unwrap()),
+        Rule::StrLiteral => Expr::String(get_str_content(pair.as_str()).to_string()),
+        Rule::JNull => Expr::Jnull,
+        Rule::ThisExpr => Expr::This,
+        _ => todo!(),
+    }
 }
+
+fn get_str_content(s: &str) -> &str {
+    &s[1..s.len() - 1]
+}
+
 fn parse_value(pair: Pair<Rule>) -> Expr {
     match pair.as_rule() {
         // Rule::ID => Example::ID(String::from(pair.as_str())),

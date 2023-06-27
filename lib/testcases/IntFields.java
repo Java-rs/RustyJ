@@ -1,4 +1,4 @@
 class IntFields {
-	int x;
-	int y;
+	int x, y, z;
+	int another_int;
 }

@@ -1,3 +1,7 @@
+#![allow(non_camel_case_types)]
+#![allow(unused)]
+#![allow(non_snake_case)]
+
 mod arithmetic_methods_class;
 mod assigned_fields_class;
 mod bool_alg_class;
@@ -22,7 +26,6 @@ mod while_class;
 mod wonky_assignments_class;
 
 use self::to_java::class_to_java;
-use crate::codegen;
 use crate::codegen::*;
 use crate::parser;
 use crate::typechecker::typechecker::TypeChecker;
@@ -32,7 +35,6 @@ use crate::types::StmtExpr::*;
 use crate::types::*;
 use std::fs::read;
 use std::fs::File;
-use std::fs::OpenOptions;
 use std::io::read_to_string;
 use std::io::Read;
 use std::io::Write;
@@ -50,7 +52,7 @@ fn normalize_str(s: std::string::String) -> std::string::String {
 pub fn parser_test(ast: &Class, name: &str) {
     // Call parser with java code
     // TODO: Can only be done, once we have a parsing method that returns a Class
-    let parse_res = parser::parse_Programm(
+    let parse_res = parser::parse_programm(
         &read_to_string(File::open(format!("lib/testcases/{name}.java")).unwrap()).unwrap(),
     )
     .unwrap();
