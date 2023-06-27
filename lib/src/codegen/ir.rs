@@ -221,7 +221,7 @@ impl ConstantPool {
                     );
                 }
                 Constant::FieldRef(FieldRef { class, field }) => {
-                    //TODO: Maybe this should be moved
+                    //TODO: Maybe this should be moved Prio2
                     result.push(9);
                     result.extend_from_slice(
                         &self
@@ -661,6 +661,7 @@ fn generate_code_stmt(
                 }
                 Stmt::LocalVarDecl(types, name) => {
                     // FIXME: Add the variable name to localvarpool and use the index of the added variable for the istore instruction
+
                     local_var_pool.add(name.clone());
                 }
                 Stmt::If(expr, stmt1, stmt2) => {

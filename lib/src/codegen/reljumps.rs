@@ -6,6 +6,7 @@ fn get_instruction_length(istr: &Instruction) -> u16 {
         Instruction::reljumpifge(_) => 3,
         Instruction::relgoto(_) => 3,
         Instruction::reljumpiflt(_) => 3,
+        Instruction::reljumpifne(_) => 3,
         i => i.as_bytes().len() as u16,
     }
 }
@@ -55,6 +56,16 @@ pub(crate) fn convert_to_absolute_jumps(instructions: Vec<Instruction>) -> Vec<I
             Instruction::reljumpiflt(target) => {
                 let modifier: i32 = if *target < 0 { -1 } else { 1 };
                 result.push(Instruction::iflt(
+                    (get_instructions_length(
+                        &instructions[j..j.saturating_add_signed(*target as isize)],
+                    ) as i32
+                        * modifier
+                        + j as i32) as u16,
+                ))
+            }
+            Instruction::reljumpifne(target) => {
+                let modifier: i32 = if *target < 0 { -1 } else { 1 };
+                result.push(Instruction::ifne(
                     (get_instructions_length(
                         &instructions[j..j.saturating_add_signed(*target as isize)],
                     ) as i32

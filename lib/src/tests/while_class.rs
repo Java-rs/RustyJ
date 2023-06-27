@@ -60,7 +60,7 @@ fn while_class() -> Class {
                         Box::new(StmtExprStmt(TypedStmtExpr(
                             Box::new(Assign(
                                 "a".to_string(),
-                                TypedExpr(Box::new(LocalVar("n".to_string())), Type::Int),
+                                TypedExpr(Box::new(FieldVar("n".to_string())), Type::Int),
                             )),
                             Type::Int,
                         ))),
