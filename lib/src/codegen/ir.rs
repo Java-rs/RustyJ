@@ -474,6 +474,8 @@ impl Instruction {
             Instruction::ineg => vec![116],
             Instruction::goto(jmp) => vec![167, high_byte(*jmp), low_byte(*jmp)],
             Instruction::ifne(jmp) => vec![154, high_byte(*jmp), low_byte(*jmp)],
+            Instruction::ifge(jmp) => vec![156, high_byte(*jmp), low_byte(*jmp)],
+            Instruction::iflt(jmp) => vec![155, high_byte(*jmp), low_byte(*jmp)],
             Instruction::iadd => vec![96],
             Instruction::isub => vec![100],
             Instruction::imul => vec![104],
