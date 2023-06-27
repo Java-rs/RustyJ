@@ -95,7 +95,7 @@ fn wonky_assignments_class() -> Class {
                             )),
                             Type::Bool,
                         ))),
-                        Type::Bool, //TODO: should be Void
+                        Type::Bool,
                     ),
                     TypedStmt(
                         Box::new(LocalVarDecl(Type::Int, "i".to_string())),
@@ -125,7 +125,7 @@ fn wonky_assignments_class() -> Class {
                             )),
                             Type::Int,
                         ))),
-                        Type::Int, // TODO: should be Void
+                        Type::Int,
                     ),
                     TypedStmt(
                         Box::new(LocalVarDecl(Type::Int, "k".to_string())),
@@ -139,7 +139,7 @@ fn wonky_assignments_class() -> Class {
                             )),
                             Type::Int,
                         ))),
-                        Type::Int, //TODO: should be Void
+                        Type::Int,
                     ),
                     TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
@@ -177,7 +177,7 @@ fn wonky_assignments_class() -> Class {
                             )),
                             Type::Bool,
                         ))),
-                        Type::Bool, //TODO: should be Void
+                        Type::Bool,
                     ),
                     TypedStmt(
                         Box::new(If(
@@ -192,9 +192,9 @@ fn wonky_assignments_class() -> Class {
                             Some(Box::new(TypedStmt(
                                 Box::new(Return(TypedExpr(
                                     Box::new(LocalVar("k".to_string())),
-                                    Type::Int, //TODO: Bool?
+                                    Type::Int,
                                 ))),
-                                Type::Int, // TODO: Bool?
+                                Type::Int,
                             ))),
                         )),
                         Type::Int,
