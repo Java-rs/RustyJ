@@ -443,6 +443,7 @@ pub(crate) enum Instruction {
     imul,             //Multiply int
     idiv,             //Divide int
     irem,             //Remainder int
+    getfield(u16),    //Get field from object
 }
 
 fn high_byte(short: u16) -> u8 {
@@ -479,6 +480,7 @@ impl Instruction {
             Instruction::imul => vec![104],
             Instruction::idiv => vec![108],
             Instruction::irem => vec![112],
+            Instruction::getfield(idx) => vec![180, high_byte(*idx), low_byte(*idx)],
             // Instruction::relgoto() =>
             // Instruction::reljumpifeq(idx) =>
             // Instruction::reljumpifne(idx) =>
@@ -1100,13 +1102,16 @@ fn generate_code_expr(
                     ));
                 }
                 Expr::FieldVar(name) => {
-                    constant_pool.add(Constant::FieldRef(FieldRef {
+                    let index = constant_pool.add(Constant::FieldRef(FieldRef {
                         class: class_name.to_string(),
                         field: NameAndType {
                             name: name.clone(),
                             r#type: r#type.to_string(),
                         },
                     }));
+                    // We only do getfield here because we don't know what operation we're doing
+                    // with the field
+                    result.push(Instruction::getfield(index));
                 }
                 p => panic!(
                     "Unexpected expression where untyped expression was expected: {:?}",
