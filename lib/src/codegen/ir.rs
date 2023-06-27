@@ -25,8 +25,6 @@ impl DIR {
     /// Since we have a DIR we can assume the methods have been expanded into Vectors of Instructions
     // We also assume that the constant pool has already been filled completely
     pub fn as_bytes(&mut self) -> Vec<u8> {
-        // TODO: Some steps here should really be done in advance
-        // TODO: We should really check if all of these have the right size. Most lengths are u16
         // Only one class for now
         let current_class = &self.classes[0];
         let mut result = vec![0xCA, 0xFE, 0xBA, 0xBE];
@@ -491,7 +489,6 @@ impl Instruction {
 
 pub fn generate_dir(ast: &Prg) -> DIR {
     let mut dir = DIR {
-        // TODO: Assumes that Prg only has a single program
         constant_pool: ConstantPool::new(&ast.get(0).unwrap().name),
         classes: vec![],
     };
@@ -662,7 +659,6 @@ fn generate_code_stmt(
                     result.push(Instruction::reljumpifeq(-(body.len() as i16)));
                 }
                 Stmt::LocalVarDecl(types, name) => {
-                    // FIXME: Add the variable name to localvarpool and use the index of the added variable for the istore instruction
                     local_var_pool.add(name.clone());
                 }
                 Stmt::If(expr, stmt1, stmt2) => {
