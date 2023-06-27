@@ -197,7 +197,7 @@ fn run_java(name: &str) -> std::process::Output {
     Command::new("java")
         .arg(name)
         .output()
-        .expect(&format!("failed to run 'java {name}'"))
+        .unwrap_or_else(|_| panic!("failed to run 'java {name}'"))
 }
 
 fn compile_java(name: &str) {
@@ -206,10 +206,10 @@ fn compile_java(name: &str) {
         .arg(format!("{name}.java"))
         .arg("-g:none")
         .spawn()
-        .expect(&format!("failed to compile {name}.java"));
+        .unwrap_or_else(|_| panic!("failed to compile {name}.java"));
     let ecode = child
         .wait()
-        .expect(&format!("failed to wait on child compiling {name}.java"));
+        .unwrap_or_else(|_| panic!("failed to wait on child compiling {name}.java"));
     assert!(ecode.success());
 }
 
@@ -218,7 +218,7 @@ fn disassemble_java(name: &str, out: &str) -> Vec<u8> {
     let clz_file_path = format!("lib/testcases/{name}.class");
     let clz_file = read(clz_file_path.clone()).expect("failed to read generated java class file");
     let file = File::create(format!("lib/testcases/{out}.txt"))
-        .expect(&format!("failed to create {out}.txt"));
+        .unwrap_or_else(|_| panic!("failed to create {out}.txt"));
     let mut child = Command::new("javap")
         .arg("-v")
         .arg("-c")
@@ -226,9 +226,9 @@ fn disassemble_java(name: &str, out: &str) -> Vec<u8> {
         .stdout(Stdio::from(file))
         .spawn()
         .expect(&format!("failed to disassemble {name}.java"));
-    let ecode = child.wait().expect(&format!(
-        "failed to wait on child disassembling {name}.java"
-    ));
+    let ecode = child
+        .wait()
+        .unwrap_or_else(|_| panic!("failed to wait on child disassembling {name}.java"));
     assert!(ecode.success());
     clz_file
 }
