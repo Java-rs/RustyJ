@@ -44,7 +44,7 @@ impl FieldDecl {
         let mut bytes = Vec::new();
         // Public access modifier
         bytes.extend_from_slice(&[0x0, 0x1]);
-        bytes.extend_from_slice(&self.name.as_bytes());
+        bytes.extend_from_slice(self.name.as_bytes());
         bytes.extend_from_slice(&self.field_type.as_bytes());
         if let Some(val) = &self.val {
             // bytes.extend_from_slice(&val.as_bytes());
@@ -106,6 +106,16 @@ pub enum Expr {
     Jnull,
     StmtExprExpr(Box<StmtExpr>),
     TypedExpr(Box<Expr>, Type),
+}
+
+impl Expr {
+    /// Gets the type if one is present
+    pub(crate) fn get_type(&self) -> Option<Type> {
+        match self {
+            Expr::TypedExpr(_, t) => Some(t.clone()),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
