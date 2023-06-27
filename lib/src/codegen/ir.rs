@@ -757,12 +757,30 @@ fn generate_code_stmt_expr(
                             })
                             .collect(),
                     );
+                    fn generate_name_and_type(return_type: &Type, args: &Vec<Expr>) -> String {
+                        // Argument types comma seperated
+                        let argument_types = args
+                            .iter()
+                            .map(|arg| {
+                                arg.get_type()
+                                    .expect("Expected typed argument")
+                                    .to_ir_string()
+                                    + ","
+                            })
+                            .collect::<String>();
+                        let argument_types = &argument_types[..argument_types.len() - 1];
+                        format!(
+                            "{}:({}){}",
+                            return_type.to_ir_string(),
+                            argument_types,
+                            return_type.to_ir_string()
+                        )
+                    }
                     let method_index = constant_pool.add_method_ref(
                         class_name.to_string(),
                         name.clone(),
-                        expr_type.to_ir_string(),
+                        generate_name_and_type(expr_type, args),
                     );
-                    // FIXME: Also pass argument types. See https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html
                     result.push(Instruction::invokespecial(method_index));
                 }
                 _ => panic!("StmtExpr typed: {:?}", new_stmt_expr),
