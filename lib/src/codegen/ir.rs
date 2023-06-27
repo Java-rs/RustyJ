@@ -1,5 +1,6 @@
 #![allow(non_camel_case_types)]
 
+use crate::codegen::reljumps::convert_to_absolute_jumps;
 use crate::types::Expr::Binary;
 use crate::types::*;
 use std::fmt::Debug;
@@ -358,13 +359,15 @@ impl CompiledMethod {
                 .unwrap()
                 .to_be_bytes(),
         );
+        // Expand the relative jumps in the code to absolute jumps
+        let expanded_code = convert_to_absolute_jumps(self.code.clone());
         // attr = attribute after attribute_length
         let mut attr = vec![];
         attr.extend_from_slice(&self.max_stack.to_be_bytes());
         attr.extend_from_slice(&self.max_locals.to_be_bytes());
-        attr.extend_from_slice(&(self.code.len() as u32).to_be_bytes());
+        attr.extend_from_slice(&(expanded_code.len() as u32).to_be_bytes());
         let mut code_bytes = vec![];
-        self.code
+        expanded_code
             .iter()
             .for_each(|i| code_bytes.append(&mut i.as_bytes()));
         attr.extend_from_slice(&(code_bytes.len() as u16).to_be_bytes());
@@ -408,13 +411,15 @@ pub struct NameAndType {
 
 /// The instructions for the JVM
 /// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.areturn
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub(crate) enum Instruction {
     invokespecial(u16), //Calling a method from the super class (probably only used in constructor)
     aload_0,
     aload(u8),        //Load reference from local variable
     iload(u8),        //Load int from local variable
     ifeq(u16),        //Branch if int is 0
+    iflt(u16),        //Branch if int is < 0
+    ifge(u16),        //Branch if int is >= 0
     ireturn,          //return int, char, boolean
     r#return,         //return void
     areturn,          //return object(string, integer, null)
@@ -447,7 +452,7 @@ fn low_byte(short: u16) -> u8 {
 }
 
 impl Instruction {
-    fn as_bytes(&self) -> Vec<u8> {
+    pub(crate) fn as_bytes(&self) -> Vec<u8> {
         match self {
             Instruction::invokespecial(idx) => {
                 vec![183, high_byte(*idx), low_byte(*idx)]
@@ -752,13 +757,12 @@ fn generate_code_stmt_expr(
                             })
                             .collect(),
                     );
-                    let method_index = constant_pool.add_method_ref(MethodRef {
-                        class: class_name.to_string(), // TODO: Bene Get the class name because we don't get it passed to us... Maybe pass a Classname to the function?
-                        method: NameAndType {
-                            name: name.clone(),
-                            r#type: expr_type.to_ir_string(),
-                        },
-                    });
+                    let method_index = constant_pool.add_method_ref(
+                        class_name.to_string(),
+                        name.clone(),
+                        expr_type.to_ir_string(),
+                    );
+                    // FIXME: Also pass argument types. See https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html
                     result.push(Instruction::invokespecial(method_index));
                 }
                 _ => panic!("StmtExpr typed: {:?}", new_stmt_expr),
@@ -1096,30 +1100,4 @@ fn generate_code_expr(
         unexpected => panic!("Unexpected expression: {:?}", unexpected),
     }
     result
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_generate_fields() {
-        let mut constant_pool = ConstantPool::new("Test");
-        let field = FieldDecl {
-            field_type: Type::Int,
-            name: String::from("test"),
-            val: None,
-        };
-        let ir_field = generate_field(&field, &mut constant_pool);
-        assert_eq!(ir_field.name_index, 1);
-        assert_eq!(ir_field.type_index, 2);
-        assert_eq!(
-            constant_pool.get(1),
-            Some(&Constant::Utf8(String::from("test")))
-        );
-        assert_eq!(
-            constant_pool.get(2),
-            Some(&Constant::Utf8(String::from("int")))
-        );
-    }
 }
