@@ -7,6 +7,12 @@ TBD
 
 ## Typchecker
 
+1. Projekt bauen: `cargo build`
+2. Go to lib folder: `cd lib`
+3. Typechecker tests ausführen: `cargo test test_typechecker`
+
+Spezifischen Test ausführen: `cargo test <test_name>::test_typechecker`
+
 ## Codegenerierung
 
 ## Testing
