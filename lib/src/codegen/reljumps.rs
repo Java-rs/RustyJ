@@ -20,7 +20,6 @@ fn get_instructions_length(instructions: &[Instruction]) -> u16 {
 /// size_of_instructions_to_jump_over (*-1 if negative)+ current_position
 pub(crate) fn convert_to_absolute_jumps(instructions: Vec<Instruction>) -> Vec<Instruction> {
     let mut result = vec![];
-    let mut i = 0;
     for (j, istr) in instructions.iter().enumerate() {
         match istr {
             Instruction::reljumpifeq(target) => {

@@ -25,8 +25,6 @@ impl DIR {
     /// Since we have a DIR we can assume the methods have been expanded into Vectors of Instructions
     // We also assume that the constant pool has already been filled completely
     pub fn as_bytes(&mut self) -> Vec<u8> {
-        // TODO: Some steps here should really be done in advance
-        // TODO: We should really check if all of these have the right size. Most lengths are u16
         // Only one class for now
         let current_class = &self.classes[0];
         let mut result = vec![0xCA, 0xFE, 0xBA, 0xBE];
@@ -472,6 +470,9 @@ pub(crate) enum Instruction {
     idiv,             //Divide int
     irem,             //Remainder int
     putfield(u16), //Sets a value for the field at the given index. The stack must have the reference to the object to which the field belongs and on top of that the value to set the field to
+    getfield(u16), // Get field from object via an index into the constant pool
+    new(u16),      //Create new object
+    dup,           //Duplicate the top value on the stack
 }
 
 fn high_byte(short: u16) -> u8 {
@@ -511,6 +512,9 @@ impl Instruction {
             Instruction::idiv => vec![108],
             Instruction::irem => vec![112],
             Instruction::putfield(idx) => vec![181, high_byte(*idx), low_byte(*idx)],
+            Instruction::getfield(idx) => vec![180, high_byte(*idx), low_byte(*idx)],
+            Instruction::new(idx) => vec![187, high_byte(*idx), low_byte(*idx)],
+            Instruction::dup => vec![89],
             // Instruction::relgoto() =>
             // Instruction::reljumpifeq(idx) =>
             // Instruction::reljumpifne(idx) =>
@@ -521,7 +525,6 @@ impl Instruction {
 
 pub fn generate_dir(ast: &Prg) -> DIR {
     let mut dir = DIR {
-        // TODO: Assumes that Prg only has a single program
         constant_pool: ConstantPool::new(&ast.get(0).unwrap().name),
         classes: vec![],
     };
@@ -734,9 +737,8 @@ fn generate_code_stmt(
                     result.push(Instruction::reljumpifeq(-(body.len() as i16)));
                 }
                 Stmt::LocalVarDecl(types, name) => {
-                    // FIXME: Add the variable name to localvarpool and use the index of the added variable for the istore instruction
-                    // FIXME: Potentially update stack
                     local_var_pool.add(name.clone());
+                    stack.update(1);
                 }
                 Stmt::If(expr, stmt1, stmt2) => {
                     // Generate bytecode for if
@@ -849,19 +851,20 @@ fn generate_code_stmt_expr(
                 }
                 StmtExpr::New(types, exprs) => {
                     // Generate bytecode for new
-                    constant_pool.add(Constant::Class(types.to_ir_string().to_string()));
-                    exprs.iter().for_each(|expr| {
-                        result.append(&mut generate_code_expr(
-                            expr.clone(),
-                            stack,
-                            constant_pool,
-                            local_var_pool,
-                            class_name,
-                        ));
-                    });
-                    // FIXME: Add instruction for `new`
-                    // FIXME: Probably needs method call to <init> as well
-                    // FIXME: Don't forget to update stack as required
+                    let class_index =
+                        constant_pool.add(Constant::Class(types.to_ir_string().to_string()));
+                    let method_index = constant_pool.add(Constant::MethodRef(MethodRef {
+                        class: types.to_ir_string(),
+                        method: NameAndType {
+                            name: "<init>".to_string(),
+                            r#type: "()V".to_string(),
+                        },
+                    }));
+                    result.push(Instruction::new(class_index));
+                    result.push(Instruction::dup);
+                    result.push(Instruction::invokespecial(method_index));
+                    stack.update(1);
+                    stack.update(-1);
                 }
                 StmtExpr::MethodCall(_expr, name, args) => {
                     // FIXME: Needs to update stack + probably doesn't work yet anyways
@@ -915,6 +918,7 @@ fn generate_code_stmt_expr(
                         },
                     }));
                     result.push(Instruction::invokespecial(method_index));
+                    stack.update(1);
                 }
                 _ => panic!("StmtExpr typed: {:?}", new_stmt_expr),
             }
@@ -965,8 +969,10 @@ fn generate_code_expr(
                 Expr::InstVar(exprs, name) => {
                     result.push(Instruction::aload(0));
                     stack.update(1);
+
                     // FIXME: There should be more here, right?
                 }
+
                 Binary(op, left, right) => {
                     stack.update(-1);
                     match BinaryOp::from(&op as &str) {
@@ -1276,14 +1282,16 @@ fn generate_code_expr(
                     ));
                 }
                 Expr::FieldVar(name) => {
-                    constant_pool.add(Constant::FieldRef(FieldRef {
+                    let index = constant_pool.add(Constant::FieldRef(FieldRef {
                         class: class_name.to_string(),
                         field: NameAndType {
                             name: name.clone(),
                             r#type: r#type.to_string(),
                         },
                     }));
-                    // FIXME: Instructions are missing here still
+                    // We only do getfield here because we don't know what operation we're doing
+                    // with the field
+                    result.push(Instruction::getfield(index));
                     stack.update(1);
                 }
                 p => panic!(
