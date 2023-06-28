@@ -5,6 +5,7 @@
 use crate::codegen::reljumps::convert_to_absolute_jumps;
 use crate::types::Expr::Binary;
 use crate::types::*;
+use lib::codegen::Instruction::getfield;
 use std::fmt::Debug;
 use std::ops::Deref;
 
@@ -1005,7 +1006,16 @@ fn generate_code_expr(
                         }
                         _ => panic!("Expected this"),
                     }
-                    stack.update(1);
+                    let field_index = constant_pool.add(Constant::FieldRef(FieldRef {
+                        class: class_name.to_string(),
+                        field: NameAndType {
+                            name: name.clone(),
+                            r#type: r#type.to_ir_string(),
+                        },
+                    }));
+                    result.push(getfield(field_index));
+                    // I'm thinking 2 here since we load the field here too and leave the class on the stack
+                    stack.update(2);
                     // TODO: Val check if thats correct pls
                 }
 

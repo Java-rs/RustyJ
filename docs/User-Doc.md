@@ -8,6 +8,8 @@ TBD
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
+- [JDK 20](https://www.oracle.com/java/technologies/downloads/)(Wird in Tests für die Validierung des Codegens benötigt)
+
 # Ausführen
 Um eine .java in eine .class-datei zu kompilieren:
 ```bash
