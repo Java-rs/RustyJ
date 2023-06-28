@@ -844,7 +844,10 @@ fn generate_code_stmt_expr(
                                 result.push(Instruction::putfield(idx));
                                 stack.update(-2);
                             }
-                            _ => panic!("Unexpected variable type for assignment"),
+                            t => panic!(
+                                "Unexpected type, expected LocalVar or FieldVar, got {:?}",
+                                t
+                            ),
                         },
                         _ => panic!("Expected typed stmt"),
                     }
