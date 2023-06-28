@@ -41,7 +41,6 @@ fn parse_class(pair: Pair<Rule>) -> Class {
                         methods.push(parse_method(fieldOrMethod));
                     }
                     _ => {
-                        dbg!(pair.as_rule());
                         unreachable!()
                     }
                 };
@@ -141,15 +140,13 @@ fn parse_BlockStmt(pair: Pair<Rule>) -> Vec<Stmt> {
                         .flatten()
                         .collect()
                 }
-                Rule::Stmt => parse_Stmt(inner.next().unwrap()),
+                Rule::Stmt => parse_Stmt(first.into_inner().next().unwrap()),
                 _ => {
-                    dbg!(pair.as_rule());
                     unreachable!()
                 }
             }
         }
         _ => {
-            dbg!(pair.as_rule());
             unreachable!()
         }
     }
@@ -231,7 +228,6 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
                     todo!() // until further notice ignored
                 }
                 _ => {
-                    dbg!(pair.as_rule());
                     unreachable!()
                 }
             }
