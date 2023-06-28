@@ -79,7 +79,13 @@ fn setter_getter_class() -> Class {
                     Box::new(Block(vec![TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
                             Box::new(Assign(
-                                "this.x".to_string(),
+                                Expr::TypedExpr(
+                                    Box::new(Expr::InstVar(
+                                        Box::new(TypedExpr(Box::new(Expr::This), Type::Int)),
+                                        "x".to_string(),
+                                    )),
+                                    Type::Int,
+                                ),
                                 TypedExpr(Box::new(LocalVar("x".to_string())), Type::Int),
                             )),
                             Type::Int,
@@ -118,7 +124,13 @@ fn setter_getter_class() -> Class {
                     Box::new(Block(vec![TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
                             Box::new(Assign(
-                                "this.b".to_string(),
+                                Expr::TypedExpr(
+                                    Box::new(Expr::InstVar(
+                                        Box::new(TypedExpr(Box::new(Expr::This), Type::Int)),
+                                        "b".to_string(),
+                                    )),
+                                    Type::Int,
+                                ),
                                 TypedExpr(Box::new(LocalVar("b".to_string())), Type::Bool),
                             )),
                             Type::Bool,
@@ -157,7 +169,13 @@ fn setter_getter_class() -> Class {
                     Box::new(Block(vec![TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
                             Box::new(Assign(
-                                "this.c".to_string(),
+                                Expr::TypedExpr(
+                                    Box::new(Expr::InstVar(
+                                        Box::new(TypedExpr(Box::new(Expr::This), Type::Int)),
+                                        "c".to_string(),
+                                    )),
+                                    Type::Int,
+                                ),
                                 TypedExpr(Box::new(LocalVar("c".to_string())), Type::Char),
                             )),
                             Type::Char,
@@ -196,7 +214,13 @@ fn setter_getter_class() -> Class {
                     Box::new(Block(vec![TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
                             Box::new(Assign(
-                                "this.s".to_string(),
+                                Expr::TypedExpr(
+                                    Box::new(Expr::InstVar(
+                                        Box::new(TypedExpr(Box::new(Expr::This), Type::Int)),
+                                        "s".to_string(),
+                                    )),
+                                    Type::Int,
+                                ),
                                 TypedExpr(Box::new(LocalVar("s".to_string())), Type::String),
                             )),
                             Type::String,
