@@ -41,7 +41,10 @@ fn local_var_decl_class() -> Class {
                     TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
                             Box::new(Assign(
-                                "x".to_string(),
+                                Expr::TypedExpr(
+                                    Box::new(Expr::LocalVar("x".to_string())),
+                                    Type::Int,
+                                ),
                                 TypedExpr(Box::new(Integer(69)), Type::Int),
                             )),
                             Type::Int,

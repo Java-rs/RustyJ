@@ -87,7 +87,10 @@ fn arithmetic_methods_class() -> Class {
                         TypedStmt(
                             Box::new(StmtExprStmt(TypedStmtExpr(
                                 Box::new(Assign(
-                                    "a".to_string(),
+                                    Expr::TypedExpr(
+                                        Box::new(Expr::LocalVar("a".to_string())),
+                                        Type::Int,
+                                    ),
                                     TypedExpr(
                                         Box::new(Binary(
                                             "/".to_string(),
@@ -130,7 +133,10 @@ fn arithmetic_methods_class() -> Class {
                         TypedStmt(
                             Box::new(StmtExprStmt(TypedStmtExpr(
                                 Box::new(Assign(
-                                    "b".to_string(),
+                                    Expr::TypedExpr(
+                                        Box::new(Expr::LocalVar("b".to_string())),
+                                        Type::Int,
+                                    ),
                                     TypedExpr(
                                         Box::new(Binary(
                                             "+".to_string(),
@@ -159,7 +165,10 @@ fn arithmetic_methods_class() -> Class {
                         TypedStmt(
                             Box::new(StmtExprStmt(TypedStmtExpr(
                                 Box::new(Assign(
-                                    "a".to_string(),
+                                    Expr::TypedExpr(
+                                        Box::new(Expr::LocalVar("a".to_string())),
+                                        Type::Int,
+                                    ),
                                     TypedExpr(
                                         Box::new(Binary(
                                             "+".to_string(),

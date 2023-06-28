@@ -111,7 +111,7 @@ fn parse_BlockStmt(pair: Pair<Rule>) -> Vec<Stmt> {
                                 Some(expresion) => vec![
                                     Stmt::LocalVarDecl(jtype.clone(), other_name.clone()),
                                     Stmt::StmtExprStmt(StmtExpr::Assign(
-                                        other_name,
+                                        Expr::LocalOrFieldVar(other_name),
                                         parse_expr(expresion),
                                     )),
                                 ],
@@ -170,7 +170,8 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
             match inners.next() {
                 None => vec![lVD],
                 Some(expr_pair) => {
-                    let expr = StmtExpr::Assign(var_name, parse_expr(expr_pair));
+                    let expr =
+                        StmtExpr::Assign(Expr::LocalOrFieldVar(var_name), parse_expr(expr_pair));
                     vec![lVD, Stmt::StmtExprStmt(expr)]
                 }
             }
@@ -190,10 +191,10 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
             let mut inners = pair.into_inner();
 
             let mut name = inners.next().unwrap();
-            let String_name;
+            let var;
             match name.as_rule() {
                 Rule::Identifier => {
-                    String_name = name.as_str().trim().to_string();
+                    var = Expr::LocalOrFieldVar(name.as_str().trim().to_string());
                 }
                 Rule::InstVarExpr => {
                     todo!() // until further notice ignored
@@ -202,7 +203,7 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
             }
             let Expr = parse_expr(inners.next().unwrap());
 
-            StmtExpr::Assign(String_name, Expr)
+            StmtExpr::Assign(var, Expr)
         }
         Rule::NewExpr => {
             let mut inners = pair.into_inner();

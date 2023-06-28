@@ -40,16 +40,32 @@ pub struct FieldDecl {
 
 impl FieldDecl {
     /// See https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.5
-    pub fn as_bytes(&self, constant_pool: &mut ConstantPool) -> Vec<u8> {
+    pub fn as_bytes(&self, class_name: &str, constant_pool: &mut ConstantPool) -> Vec<u8> {
+        use crate::codegen::Constant;
+        use crate::codegen::FieldRef;
+        use crate::codegen::NameAndType;
+
         let mut bytes = Vec::new();
-        // Public access modifier
-        bytes.extend_from_slice(&[0x0, 0x1]);
-        bytes.extend_from_slice(self.name.as_bytes());
-        bytes.extend_from_slice(&self.field_type.as_bytes());
-        if let Some(val) = &self.val {
-            // bytes.extend_from_slice(&val.as_bytes());
-            todo!()
-        }
+        // No access modifier
+        bytes.extend_from_slice(&[0x0, 0x0]);
+        // Name index
+        bytes.extend_from_slice(
+            &constant_pool
+                .add(Constant::Utf8(self.name.clone()))
+                .to_be_bytes(),
+        );
+        // Descripter index
+        bytes.extend_from_slice(
+            &constant_pool
+                .add(Constant::NameAndType(NameAndType {
+                    name: self.name.clone(),
+                    r#type: self.field_type.to_ir_string(),
+                }))
+                .to_be_bytes(),
+        );
+        // Attributes count
+        bytes.extend_from_slice(&[0x0, 0x0]);
+        if let Some(val) = &self.val {}
         bytes
     }
 }
@@ -75,9 +91,7 @@ pub enum Stmt {
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum StmtExpr {
-    // @Decide should actually be Assign(Expr, Expr) for assigning values to instance variables
-    // See for example the SetterGetter test (i.e. cases like `this.x = 5`)
-    Assign(String, Expr), // first the name of the variable, then the value it is being assigned to
+    Assign(Expr, Expr), // first the name of the variable, then the value it is being assigned to
     New(Type, Vec<Expr>), // first the class type, that should be instantiated, then the list of arguments for the constructor
     // FIXME: This needs to be changed to represent more how the JVM handles method calls. We need a class(at least name) and a method name with the typed arguments inside it, also the return type
     //    #2 = Methodref          #3.#17         // MethodTest.y:(I)I
