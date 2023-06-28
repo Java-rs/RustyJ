@@ -7,3 +7,4 @@ Cargo.lock
 lib/testcases/*.json
 lib/testcases/*.txt
 lib/testcases/*-gen.java
+lib/testcases/*-Test.java

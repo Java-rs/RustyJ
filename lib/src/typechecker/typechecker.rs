@@ -260,12 +260,25 @@ impl TypeChecker {
 
     fn check_stmt_expr(&self, stmt_expr: &StmtExpr) -> Result<(), String> {
         match stmt_expr {
-            StmtExpr::Assign(name, expr) => {
+            StmtExpr::Assign(var, expr) => {
                 let class = self.current_class.as_ref().ok_or("No current class")?;
-                if !class.fields.iter().any(|field| field.name == *name) {
-                    return Err(format!("Unknown variable: {}", name));
+                self.check_expr(var);
+                self.check_expr(expr);
+                let t1 = match var {
+                    Expr::TypedExpr(_, t) => t,
+                    _ => panic!("Expected typed stmt"),
+                };
+                let t2 = match expr {
+                    Expr::TypedExpr(_, t) => t,
+                    _ => panic!("Expected typed stmt"),
+                };
+                if t1 != t2 {
+                    Err(format!(
+                        "Value of type {t2} can't be assigned to a variable of type {t1}"
+                    ))
+                } else {
+                    Ok(())
                 }
-                self.check_expr(expr)
             }
             StmtExpr::New(_, exprs) => {
                 for expr in exprs {
@@ -284,7 +297,6 @@ impl TypeChecker {
                 panic!("TypedStmtExpr not expected here: {:?}", expr);
                 Ok(())
             }
-            _ => Ok(()),
         }
     }
 
@@ -599,14 +611,18 @@ impl TypeChecker {
 
     fn type_stmt_expr(&self, stmt_expr: &StmtExpr) -> StmtExpr {
         match stmt_expr {
-            StmtExpr::Assign(name, expr) => {
-                let typed_stmt = match self.type_expr(expr) {
+            StmtExpr::Assign(var, expr) => {
+                let typed_expr = match self.type_expr(expr) {
                     Expr::TypedExpr(expr, t) => (Expr::TypedExpr(Box::new(*expr), t.clone()), t),
                     _ => panic!("Expected typed stmt"),
                 };
+                let typed_var = match self.type_expr(var) {
+                    Expr::TypedExpr(var, t) => (Expr::TypedExpr(Box::new(*var), t.clone()), t),
+                    _ => panic!("Expected typed stmt"),
+                };
                 StmtExpr::TypedStmtExpr(
-                    Box::new(StmtExpr::Assign(name.clone(), typed_stmt.0)),
-                    typed_stmt.1,
+                    Box::new(StmtExpr::Assign(typed_var.0, typed_expr.0)),
+                    typed_expr.1,
                 )
             }
             StmtExpr::TypedStmtExpr(stmt_expr, t) => panic!("Expected untyped stmt"),

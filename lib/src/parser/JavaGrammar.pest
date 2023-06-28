@@ -1,6 +1,7 @@
 // @Note: WHITESPACE and COMMENT are implicit rules and thus can always be matched in between "~"
 WHITESPACE = _{ WHITE_SPACE }
-COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
+COMMENT = _{ ("/*" ~ (!"*/" ~ ANY)* ~ "*/") | ("//" ~ (!"\n" ~ ANY)*)}
+
 
 Program = {ClassDecl+}
 
@@ -27,33 +28,27 @@ Identifier ={ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 
 BlockStmt = {"{" ~ Stmt* ~ "}"}
 
-Stmt = {  WhileStmt
-		| IfElseStmt
-		| IfStmt
-		| ReturnStmt
-		| LocalVarDeclStmt
-		| StmtExpr ~ ";"
-		| BlockStmt }
+Stmt = {  WhileStmt | IfElseStmt | IfStmt | ReturnStmt | LocalVarDeclStmt | StmtExpr ~ ";" | BlockStmt }
 
 ReturnStmt = {"return" ~ Expr ~ ";"}
 
 WhileStmt = {"while" ~ "(" ~ Expr ~ ")" ~ Stmt}
 
 // @Question: Is this a correct and easy-to-use definition?
-IfElseStmt = {IfStmt ~ "else" ~ IfStmt}
+IfElseStmt = {IfStmt ~ "else" ~ Stmt}
 
 IfStmt = {"if" ~ "(" ~ Expr ~ ")" ~ Stmt}
 
 // @Cleanup: Can maybe be unified with FieldVarDecl and AssignExpr?
-LocalVarDeclStmt = {JType ~ Identifier ~ ("="~Expr)?}
+LocalVarDeclStmt = {JType ~ Identifier ~ ("="~Expr)? ~ ";"}
 
 StmtExpr = {AssignExpr | NewExpr | MethodCallExpr}
 
-AssignExpr = {(Identifier | InstVarExpr) ~ "=" ~ Expr}
+AssignExpr = {(InstVarExpr | Identifier) ~ "=" ~ Expr}
 
 NewExpr = {"new" ~ Identifier ~ "(" ~ ParamList? ~ ")"}
 
-MethodCallExpr = {(Identifier|InstVarExpr) ~ "(" ~ ParamList? ~ ")"}
+MethodCallExpr = {(InstVarExpr | Identifier) ~ "(" ~ ParamList? ~ ")"}
 
 ParamList = {Expr ~ (","~Expr)*}
 
@@ -62,15 +57,15 @@ Expr = {NonBinaryExpr | Prec3BinExpr}
 
 NonBinaryExpr = { ThisExpr
 		        | JNull
-		        | InstVarExpr
-		        | UnaryExpr
 		        | ParanthesizedExpr
+		        | UnaryExpr
+		        | InstVarExpr
 		        | IntLiteral
 		        | BoolLiteral
 		        | CharLiteral
 		        | StrLiteral
-		        | Identifier // LocalOrFieldVar
-		        | StmtExpr}
+		        | StmtExpr
+				| Identifier }
 
 ThisExpr = {"this"}
 JNull    = {"null"}
@@ -82,19 +77,20 @@ StrLiteral  = { "\"" ~ (!("\"" | "\\") ~ ANY | EscapedChar)* ~ "\""}
 EscapedChar = { "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
     		  | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})}
 
-InstVarExpr      = {(Identifier|ThisExpr) ~ "." ~ InnerInstVarExpr}
-InnerInstVarExpr = {Identifier ~ ("." ~ (InnerInstVarExpr|Identifier))?}
+// @Note We don't support an Expression as the instantiated object
+// i.e. something like `someMethodCall().identifier`
+InstVarExpr = {(ThisExpr|Identifier) ~ "." ~ Identifier}
 
 ParanthesizedExpr = {"(" ~ Expr ~ ")"}
 
-UnaryExpr = {UnaryOp ~ (InstVarExpr|Identifier|ParanthesizedExpr)}
+UnaryExpr = {UnaryOp ~ (InstVarExpr|ParanthesizedExpr|Identifier)}
 UnaryOp = {"+" | "-" | "!"}
 
 Prec3BinExpr = {(Prec2BinExpr  ~ Prec3BinOp ~ Prec3BinExpr) | Prec2BinExpr}
 Prec2BinExpr = {(Prec1BinExpr  ~ Prec2BinOp ~ Prec2BinExpr) | Prec1BinExpr}
 Prec1BinExpr = {(Prec0BinExpr  ~ Prec1BinOp ~ Prec1BinExpr) | Prec0BinExpr}
 Prec0BinExpr = {(NonBinaryExpr ~ Prec0BinOp ~ Prec0BinExpr) | NonBinaryExpr}
-Prec3BinOp = {"*" | "/" | "%"}
-Prec2BinOp = {"+" | "-"}
-Prec1BinOp = {"<=" | ">=" | "<" | ">"}
-Prec0BinOp = {"==" | "!=" | "&&" | "||"}
+Prec3BinOp = {"==" | "!=" | "&&" | "||"}
+Prec2BinOp = {"<=" | ">=" | "<" | ">"}
+Prec1BinOp = {"+" | "-"}
+Prec0BinOp = {"*" | "/" | "%"}

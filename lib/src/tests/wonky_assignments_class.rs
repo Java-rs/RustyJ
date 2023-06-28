@@ -68,14 +68,20 @@ fn wonky_assignments_class() -> Class {
                     TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
                             Box::new(Assign(
-                                "c".to_string(),
+                                Expr::TypedExpr(
+                                    Box::new(Expr::FieldVar("c".to_string())),
+                                    Type::Bool,
+                                ),
                                 TypedExpr(
                                     Box::new(Binary(
                                         ">".to_string(),
                                         Box::new(TypedExpr(
                                             Box::new(StmtExprExpr(Box::new(TypedStmtExpr(
                                                 Box::new(Assign(
-                                                    "x".to_string(),
+                                                    Expr::TypedExpr(
+                                                        Box::new(Expr::FieldVar("x".to_string())),
+                                                        Type::Int,
+                                                    ),
                                                     TypedExpr(
                                                         Box::new(LocalVar("newX".to_string())),
                                                         Type::Int,
@@ -108,11 +114,17 @@ fn wonky_assignments_class() -> Class {
                     TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
                             Box::new(Assign(
-                                "j".to_string(),
+                                Expr::TypedExpr(
+                                    Box::new(Expr::LocalVar("j".to_string())),
+                                    Type::Int,
+                                ),
                                 TypedExpr(
                                     Box::new(StmtExprExpr(Box::new(TypedStmtExpr(
                                         Box::new(Assign(
-                                            "z".to_string(),
+                                            Expr::TypedExpr(
+                                                Box::new(Expr::FieldVar("z".to_string())),
+                                                Type::Int,
+                                            ),
                                             TypedExpr(
                                                 Box::new(FieldVar("x".to_string())),
                                                 Type::Int,
@@ -134,7 +146,10 @@ fn wonky_assignments_class() -> Class {
                     TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
                             Box::new(Assign(
-                                "k".to_string(),
+                                Expr::TypedExpr(
+                                    Box::new(Expr::LocalVar("k".to_string())),
+                                    Type::Int,
+                                ),
                                 TypedExpr(Box::new(Expr::Integer(-1)), Type::Int),
                             )),
                             Type::Int,
@@ -144,14 +159,20 @@ fn wonky_assignments_class() -> Class {
                     TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
                             Box::new(Assign(
-                                "a".to_string(),
+                                Expr::TypedExpr(
+                                    Box::new(Expr::FieldVar("a".to_string())),
+                                    Type::Bool,
+                                ),
                                 TypedExpr(
                                     Box::new(Unary(
                                         "!".to_string(),
                                         Box::new(TypedExpr(
                                             Box::new(StmtExprExpr(Box::new(TypedStmtExpr(
                                                 Box::new(Assign(
-                                                    "b".to_string(),
+                                                    Expr::TypedExpr(
+                                                        Box::new(Expr::FieldVar("b".to_string())),
+                                                        Type::Bool,
+                                                    ),
                                                     TypedExpr(
                                                         Box::new(Binary(
                                                             "==".to_string(),

@@ -112,7 +112,7 @@ pub fn params_to_java(params: &Vec<Expr>) -> String {
 
 pub fn stmt_expr_to_java(stmt_expr: &StmtExpr) -> String {
     match stmt_expr {
-        StmtExpr::Assign(var, expr) => format!("{} = {}", var, expr_to_java(expr)),
+        StmtExpr::Assign(var, expr) => format!("{} = {}", expr_to_java(var), expr_to_java(expr)),
         StmtExpr::MethodCall(expr, name, params) => format!(
             "{}.{}({})",
             expr_to_java(expr),
