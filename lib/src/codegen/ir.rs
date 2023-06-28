@@ -844,7 +844,27 @@ fn generate_code_stmt_expr(
                                 result.push(Instruction::putfield(idx));
                                 stack.update(-2);
                             }
-                            _ => panic!("Unexpected variable type for assignment"),
+                            Expr::InstVar(expr, name) => {
+                                // FIXME: Searches for something here
+                                let idx = constant_pool.add(Constant::FieldRef(FieldRef {
+                                    class: class_name.to_string(),
+                                    field: NameAndType {
+                                        name: name.to_string(),
+                                        r#type: t.to_ir_string(),
+                                    },
+                                }));
+                                result.append(&mut generate_code_expr(
+                                    expr.deref().clone(),
+                                    stack,
+                                    constant_pool,
+                                    local_var_pool,
+                                    class_name,
+                                ));
+                                result.append(&mut expr_code);
+                                result.push(Instruction::putfield(idx));
+                                stack.update(-2);
+                            }
+                            _ => panic!("Unexpected variable type for assignment: {:?}", var),
                         },
                         _ => panic!("Expected typed stmt"),
                     }
@@ -867,7 +887,6 @@ fn generate_code_stmt_expr(
                     stack.update(-1);
                 }
                 StmtExpr::MethodCall(_expr, name, args) => {
-                    // FIXME: Needs to update stack + probably doesn't work yet anyways
                     // Generate bytecode for method call
                     // Principally this should work this way:
                     // 1. Write Function Name into Constant Pool generating the necessary Constants
@@ -967,10 +986,27 @@ fn generate_code_expr(
                     stack.update(1);
                 }
                 Expr::InstVar(exprs, name) => {
-                    result.push(Instruction::aload(0));
+                    match exprs.deref() {
+                        Expr::This => {
+                            result.push(Instruction::aload(0));
+                        }
+                        Expr::LocalVar(name) => {
+                            let index = local_var_pool.get_index(name);
+                            result.push(Instruction::aload(index));
+                        }
+                        Expr::FieldVar(name) => {
+                            result.append(&mut generate_code_expr(
+                                exprs.deref().clone(),
+                                stack,
+                                constant_pool,
+                                local_var_pool,
+                                class_name,
+                            ));
+                        }
+                        _ => panic!("Expected this"),
+                    }
                     stack.update(1);
-
-                    // FIXME: There should be more here, right?
+                    // TODO: Val check if thats correct pls
                 }
 
                 Binary(op, left, right) => {
