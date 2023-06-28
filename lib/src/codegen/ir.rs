@@ -3,9 +3,9 @@
 #![allow(non_snake_case)]
 
 use crate::codegen::reljumps::convert_to_absolute_jumps;
+use crate::codegen::Instruction::getfield;
 use crate::types::Expr::Binary;
 use crate::types::*;
-use lib::codegen::Instruction::getfield;
 use std::fmt::Debug;
 use std::ops::Deref;
 
@@ -988,23 +988,22 @@ fn generate_code_expr(
                 }
                 Expr::InstVar(exprs, name) => {
                     match exprs.deref() {
-                        Expr::This => {
-                            result.push(Instruction::aload(0));
-                        }
-                        Expr::LocalVar(name) => {
-                            let index = local_var_pool.get_index(name);
-                            result.push(Instruction::aload(index));
-                        }
-                        Expr::FieldVar(name) => {
-                            result.append(&mut generate_code_expr(
-                                exprs.deref().clone(),
-                                stack,
-                                constant_pool,
-                                local_var_pool,
-                                class_name,
-                            ));
-                        }
-                        _ => panic!("Expected this"),
+                        Expr::TypedExpr(expr, r#type) => match expr.deref() {
+                            Expr::This => {
+                                result.push(Instruction::aload(0));
+                                result.push(Instruction::getfield(constant_pool.add(
+                                    Constant::FieldRef(FieldRef {
+                                        class: class_name.to_string(),
+                                        field: NameAndType {
+                                            name: name.clone(),
+                                            r#type: r#type.to_ir_string(),
+                                        },
+                                    }),
+                                )));
+                            }
+                            _ => panic!("Expected this got {:?}", exprs),
+                        },
+                        _ => panic!("Expected typed stmt got {:?}", exprs),
                     }
                     let field_index = constant_pool.add(Constant::FieldRef(FieldRef {
                         class: class_name.to_string(),
