@@ -76,7 +76,7 @@ static STR_TEST_VALS: [&str; TEST_VALS_AMOUNT] = [
     "\"test\"",
     "\"Hello World!?!\"",
     "\"A bit of escaping going on here... \\\"\"",
-    "Just another string test",
+    "\"Just another string test\"",
 ];
 
 pub fn get_test_val(t: Type, i: usize) -> std::string::String {
