@@ -162,8 +162,8 @@ fn fib_class() -> Class {
                         ),
                         TypedStmt(
                             Box::new(LocalVarDecl(Type::Int, "x".to_string())),
-                            Type::Void,
-                        ), // TODO: Should the type of a declaration be `void`?
+                            Type::Int,
+                        ),
                         TypedStmt(
                             Box::new(StmtExprStmt(TypedStmtExpr(
                                 Box::new(Assign(
@@ -176,8 +176,8 @@ fn fib_class() -> Class {
                         ),
                         TypedStmt(
                             Box::new(LocalVarDecl(Type::Int, "y".to_string())),
-                            Type::Void,
-                        ), // TODO: Should the type of a declaration be `void`?
+                            Type::Int,
+                        ),
                         TypedStmt(
                             Box::new(StmtExprStmt(TypedStmtExpr(
                                 Box::new(Assign(
@@ -190,8 +190,8 @@ fn fib_class() -> Class {
                         ),
                         TypedStmt(
                             Box::new(LocalVarDecl(Type::Int, "i".to_string())),
-                            Type::Void,
-                        ), // TODO: Should the type of a declaration be `void`?
+                            Type::Int,
+                        ),
                         TypedStmt(
                             Box::new(StmtExprStmt(TypedStmtExpr(
                                 Box::new(Assign(
@@ -222,7 +222,7 @@ fn fib_class() -> Class {
                                     Box::new(Block(vec![
                                         TypedStmt(
                                             Box::new(LocalVarDecl(Type::Int, "next".to_string())),
-                                            Type::Void,
+                                            Type::Int,
                                         ),
                                         TypedStmt(
                                             Box::new(StmtExprStmt(TypedStmtExpr(
@@ -300,7 +300,7 @@ fn fib_class() -> Class {
                                     Type::Void,
                                 )),
                             )),
-                            Type::Int,
+                            Type::Void,
                         ),
                         TypedStmt(
                             Box::new(Return(TypedExpr(

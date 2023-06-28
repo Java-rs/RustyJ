@@ -71,7 +71,10 @@ fn method_call_class() -> Class {
                                 Box::new(TypedExpr(
                                     Box::new(StmtExprExpr(Box::new(TypedStmtExpr(
                                         Box::new(MethodCall(
-                                            TypedExpr(Box::new(This), Type::String),
+                                            TypedExpr(
+                                                Box::new(This),
+                                                Type::Class("MethodCall".to_string()),
+                                            ),
                                             "hello".to_string(),
                                             vec![],
                                         )),
@@ -89,7 +92,10 @@ fn method_call_class() -> Class {
                                         Box::new(TypedExpr(
                                             Box::new(StmtExprExpr(Box::new(TypedStmtExpr(
                                                 Box::new(MethodCall(
-                                                    TypedExpr(Box::new(This), Type::String),
+                                                    TypedExpr(
+                                                        Box::new(This),
+                                                        Type::Class("MethodCall".to_string()),
+                                                    ),
                                                     "world".to_string(),
                                                     vec![],
                                                 )),

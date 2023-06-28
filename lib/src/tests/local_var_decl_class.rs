@@ -36,7 +36,7 @@ fn local_var_decl_class() -> Class {
                 Box::new(Block(vec![
                     TypedStmt(
                         Box::new(LocalVarDecl(Type::Int, "x".to_string())),
-                        Type::Void,
+                        Type::Int,
                     ),
                     TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
