@@ -70,14 +70,22 @@ fn parse_method(pair: Pair<Rule>) -> MethodDecl {
             let mut body = None;
             while let Some(p) = inners.next() {
                 match p.as_rule() {
-                    Rule::ParamDecl => {
+                    Rule::ParamDeclList => {
                         let mut inner_param = p.into_inner();
-                        let param_type = parse_Type(inner_param.next().unwrap());
-                        let param_name = next_id(&mut inner_param);
-                        params.push((param_type, param_name));
+                        for parm in inner_param {
+                            assert_eq!(parm.as_rule(), Rule::ParamDecl);
+                            let mut inTheParm = parm.into_inner();
+                            let param_type = parse_Type(inTheParm.next().unwrap());
+                            let param_name = next_id(&mut inTheParm);
+                            params.push((param_type, param_name));
+                        }
                     }
                     Rule::BlockStmt => body = Some(parse_BlockStmt(p)),
-                    _ => unreachable!(),
+                    _ => {
+                        dbg!("REGEL NICHT ABGEFANGEN: ");
+                        dbg!(p.as_rule());
+                        unreachable!()
+                    }
                 };
             }
 
@@ -88,7 +96,11 @@ fn parse_method(pair: Pair<Rule>) -> MethodDecl {
                 body: Stmt::Block(body.unwrap()),
             }
         }
-        _ => unreachable!(),
+        _ => {
+            dbg!("REGEL NICHT ABGEFANGEN: ");
+            dbg!(pair.as_rule());
+            unreachable!()
+        }
     }
 }
 
@@ -97,7 +109,11 @@ fn parse_BlockStmt(pair: Pair<Rule>) -> Vec<Stmt> {
     let mut inner = pair.into_inner();
     match rule {
         Rule::BlockStmt => {
-            let first = inner.next().unwrap();
+            let first = inner.next();
+            if (first.is_none()) {
+                return vec![];
+            }
+            let first = first.unwrap();
             match first.as_rule() {
                 Rule::JType => {
                     let jtype = parse_Type(first);
@@ -107,7 +123,9 @@ fn parse_BlockStmt(pair: Pair<Rule>) -> Vec<Stmt> {
                             let mut inner = x.into_inner();
                             let other_name = next_id(&mut inner);
                             match inner.next() {
-                                None => vec![Stmt::LocalVarDecl(jtype.clone(), other_name)],
+                                None => {
+                                    vec![Stmt::LocalVarDecl(jtype.clone(), other_name)]
+                                }
                                 Some(expresion) => vec![
                                     Stmt::LocalVarDecl(jtype.clone(), other_name.clone()),
                                     Stmt::StmtExprStmt(StmtExpr::Assign(
@@ -129,6 +147,7 @@ fn parse_BlockStmt(pair: Pair<Rule>) -> Vec<Stmt> {
 }
 fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
     match pair.as_rule() {
+        Rule::Stmt => parse_Stmt(pair.into_inner().next().unwrap()), //@Notice this may be very wrong !!
         Rule::WhileStmt => {
             let mut inners = pair.into_inner();
 
@@ -179,7 +198,10 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
             vec![Stmt::StmtExprStmt(parse_StmtExpr(pair))]
         }
         Rule::BlockStmt => parse_BlockStmt(pair),
-        _ => unreachable!(),
+        _ => {
+            dbg!(pair.as_rule());
+            unreachable!()
+        }
     }
 }
 
@@ -290,20 +312,18 @@ fn parse_Type(pair: Pair<Rule>) -> Type {
             _ => unreachable!(),
         },
         Rule::Identifier => Type::Class(next_id(&mut pair.into_inner())),
-        _ => unreachable!(),
+        _ => {
+            dbg!(pair.as_rule());
+            unreachable!()
+        }
     }
 }
 
 fn parse_expr(pair: Pair<Rule>) -> Expr {
     match pair.as_rule() {
         Rule::Expr => parse_expr(pair.into_inner().next().unwrap()),
-        Rule::NonBinaryExpr => parse_expr(pair.into_inner().next().unwrap()),
-        Rule::IntLiteral => Expr::Integer(pair.as_str().parse().unwrap()),
-        Rule::BoolLiteral => Expr::Bool(pair.as_str().parse().unwrap()),
-        Rule::CharLiteral => Expr::Char(get_str_content(pair.as_str()).parse().unwrap()),
-        Rule::StrLiteral => Expr::String(get_str_content(pair.as_str()).to_string()),
-        Rule::JNull => Expr::Jnull,
         Rule::ThisExpr => Expr::This,
+        Rule::JNull => Expr::Jnull,
         Rule::InstVarExpr => {
             let mut pairs = pair.into_inner();
             let x = pairs.next().unwrap();
@@ -318,7 +338,19 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
             }
             obj
         }
-        _ => todo!(),
+        Rule::UnaryExpr => {
+            todo!()
+        }
+        Rule::ParanthesizedExpr => {
+            todo!()
+        }
+        Rule::IntLiteral => Expr::Integer(pair.as_str().parse().unwrap()),
+        Rule::BoolLiteral => Expr::Bool(pair.as_str().parse().unwrap()),
+        Rule::CharLiteral => Expr::Char(get_str_content(pair.as_str()).parse().unwrap()),
+        Rule::StrLiteral => Expr::String(get_str_content(pair.as_str()).to_string()),
+        Rule::StmtExpr => Expr::StmtExprExpr(Box::new(parse_StmtExpr(pair))),
+        Rule::NonBinaryExpr => parse_expr(pair.into_inner().next().unwrap()),
+        _ => unreachable!(),
     }
 }
 
