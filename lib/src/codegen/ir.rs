@@ -77,7 +77,6 @@ impl DIR {
         result.extend_from_slice(&(current_class.methods.len() as u16 + 1).to_be_bytes());
         result.append(&mut method_infos);
 
-        // TODO: Attributes
         result.extend_from_slice(&[0, 0]);
         result.extend_from_slice(&[]);
         result
@@ -298,11 +297,6 @@ impl IRClass {
             fields,
             methods,
         }
-    }
-    fn as_bytes(&self) -> Vec<u8> {
-        let mut result = vec![];
-        // TODO
-        result
     }
 }
 
@@ -846,7 +840,6 @@ fn generate_code_stmt_expr(
                                 stack.update(-2);
                             }
                             Expr::InstVar(expr, name) => {
-                                // FIXME: Searches for something here
                                 let idx = constant_pool.add(Constant::FieldRef(FieldRef {
                                     class: class_name.to_string(),
                                     field: NameAndType {
@@ -1001,6 +994,29 @@ fn generate_code_expr(
                                     }),
                                 )));
                             }
+                            Expr::LocalVar(name) => {
+                                let idx = local_var_pool.get_index(name);
+                                result.push(Instruction::aload(idx));
+                                result.push(Instruction::getfield(constant_pool.add(
+                                    Constant::FieldRef(FieldRef {
+                                        class: class_name.to_string(),
+                                        field: NameAndType {
+                                            name: name.clone(),
+                                            r#type: r#type.to_ir_string(),
+                                        },
+                                    }),
+                                )));
+                            }
+                            Expr::FieldVar(name) => {
+                                let field_index = constant_pool.add(Constant::FieldRef(FieldRef {
+                                    class: class_name.to_string(),
+                                    field: NameAndType {
+                                        name: name.clone(),
+                                        r#type: r#type.to_ir_string(),
+                                    },
+                                }));
+                                result.push(Instruction::getfield(field_index));
+                            }
                             _ => panic!("Expected this got {:?}", exprs),
                         },
                         _ => panic!("Expected typed stmt got {:?}", exprs),
@@ -1015,7 +1031,6 @@ fn generate_code_expr(
                     result.push(getfield(field_index));
                     // I'm thinking 2 here since we load the field here too and leave the class on the stack
                     stack.update(2);
-                    // TODO: Val check if thats correct pls
                 }
 
                 Binary(op, left, right) => {
