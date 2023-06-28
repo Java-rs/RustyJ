@@ -3,9 +3,9 @@
 #![allow(non_snake_case)]
 
 use crate::codegen::reljumps::convert_to_absolute_jumps;
+use crate::codegen::Instruction::getfield;
 use crate::types::Expr::Binary;
 use crate::types::*;
-use lib::codegen::Instruction::getfield;
 use std::fmt::Debug;
 use std::ops::Deref;
 
