@@ -44,6 +44,7 @@ Folgende Fehler werden vom Typechecker erkannt:
 
 ## Codegenerierung
 
+Geschrieben von: Marion Hinkel, Benedikt Brandmaier, Val Richter
 -   Wer hat welche Arbeit bei codegen gemacht?
 -   Was für Arbeit musste alles zusätzlich getan werden, weil wir nicht Java + ASM genutzt haben?
 
