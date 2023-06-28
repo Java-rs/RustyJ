@@ -254,7 +254,7 @@ impl Type {
             Type::Bool => "Z",
             Type::String => "Ljava/lang/String;",
             Type::Void => "V",
-            // TODO: Either the class has the formatting `L<class>;' or we have to add it here.
+            // FIXME: Either the class has the formatting `L<class>;' or we have to add it here.
             Type::Class(name) => name,
             _ => panic!("Invalid type: {}", self),
         }
