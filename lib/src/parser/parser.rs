@@ -40,7 +40,10 @@ fn parse_class(pair: Pair<Rule>) -> Class {
                     Rule::MethodDecl => {
                         methods.push(parse_method(fieldOrMethod));
                     }
-                    _ => unreachable!(),
+                    _ => {
+                        dbg!(pair.as_rule());
+                        unreachable!()
+                    }
                 };
             }
             Class {
@@ -139,10 +142,16 @@ fn parse_BlockStmt(pair: Pair<Rule>) -> Vec<Stmt> {
                         .collect()
                 }
                 Rule::Stmt => parse_Stmt(inner.next().unwrap()),
-                _ => unreachable!(),
+                _ => {
+                    dbg!(pair.as_rule());
+                    unreachable!()
+                }
             }
         }
-        _ => unreachable!(),
+        _ => {
+            dbg!(pair.as_rule());
+            unreachable!()
+        }
     }
 }
 fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
@@ -220,7 +229,10 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
                 Rule::InstVarExpr => {
                     todo!() // until further notice ignored
                 }
-                _ => unreachable!(),
+                _ => {
+                    dbg!(pair.as_rule());
+                    unreachable!()
+                }
             }
             let Expr = parse_expr(inners.next().unwrap());
 
@@ -254,7 +266,10 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
                     MethodExpr = *a;
                     String_name = b;
                 }
-                _ => unreachable!(),
+                _ => {
+                    dbg!(identifORinstVar.as_rule());
+                    unreachable!()
+                }
             }
             let paramList = inners.next().unwrap().into_inner();
             let mut exprList: Vec<Expr> = vec![];
@@ -264,7 +279,10 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
 
             StmtExpr::MethodCall(MethodExpr, String_name, exprList)
         }
-        _ => unreachable!(),
+        _ => {
+            dbg!(rule);
+            unreachable!()
+        }
     }
 }
 
@@ -278,7 +296,10 @@ fn parse_field(pair: Pair<Rule>) -> Vec<FieldDecl> {
             parse_field_var_decl_list(jtype, inners.next().unwrap())
         }
 
-        _ => unreachable!(),
+        _ => {
+            dbg!(pair.as_rule());
+            unreachable!()
+        }
     }
 }
 
@@ -330,7 +351,10 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
             let mut obj = match x.as_rule() {
                 Rule::Identifier => Expr::LocalOrFieldVar(x.as_str().trim().to_string()),
                 Rule::ThisExpr => Expr::This,
-                _ => unreachable!(),
+                _ => {
+                    dbg!(x.as_rule());
+                    unreachable!()
+                }
             };
             while let Some(p) = pairs.next() {
                 assert_eq!(p.as_rule(), Rule::Identifier);
@@ -350,7 +374,10 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
         Rule::StrLiteral => Expr::String(get_str_content(pair.as_str()).to_string()),
         Rule::StmtExpr => Expr::StmtExprExpr(Box::new(parse_StmtExpr(pair))),
         Rule::NonBinaryExpr => parse_expr(pair.into_inner().next().unwrap()),
-        _ => unreachable!(),
+        _ => {
+            dbg!(pair.as_rule());
+            unreachable!()
+        }
     }
 }
 
