@@ -471,6 +471,8 @@ pub(crate) enum Instruction {
     irem,             //Remainder int
     putfield(u16), //Sets a value for the field at the given index. The stack must have the reference to the object to which the field belongs and on top of that the value to set the field to
     getfield(u16), // Get field from object via an index into the constant pool
+    new(u16),      //Create new object
+    dup,           //Duplicate the top value on the stack
 }
 
 fn high_byte(short: u16) -> u8 {
@@ -511,6 +513,8 @@ impl Instruction {
             Instruction::irem => vec![112],
             Instruction::putfield(idx) => vec![181, high_byte(*idx), low_byte(*idx)],
             Instruction::getfield(idx) => vec![180, high_byte(*idx), low_byte(*idx)],
+            Instruction::new(idx) => vec![187, high_byte(*idx), low_byte(*idx)],
+            Instruction::dup => vec![89],
             // Instruction::relgoto() =>
             // Instruction::reljumpifeq(idx) =>
             // Instruction::reljumpifne(idx) =>
@@ -733,8 +737,8 @@ fn generate_code_stmt(
                     result.push(Instruction::reljumpifeq(-(body.len() as i16)));
                 }
                 Stmt::LocalVarDecl(types, name) => {
-                    // FIXME: Potentially update stack
                     local_var_pool.add(name.clone());
+                    stack.update(1);
                 }
                 Stmt::If(expr, stmt1, stmt2) => {
                     // Generate bytecode for if
@@ -847,19 +851,20 @@ fn generate_code_stmt_expr(
                 }
                 StmtExpr::New(types, exprs) => {
                     // Generate bytecode for new
-                    constant_pool.add(Constant::Class(types.to_ir_string().to_string()));
-                    exprs.iter().for_each(|expr| {
-                        result.append(&mut generate_code_expr(
-                            expr.clone(),
-                            stack,
-                            constant_pool,
-                            local_var_pool,
-                            class_name,
-                        ));
-                    });
-                    // FIXME: Add instruction for `new`
-                    // FIXME: Probably needs method call to <init> as well
-                    // FIXME: Don't forget to update stack as required
+                    let class_index =
+                        constant_pool.add(Constant::Class(types.to_ir_string().to_string()));
+                    let method_index = constant_pool.add(Constant::MethodRef(MethodRef {
+                        class: types.to_ir_string(),
+                        method: NameAndType {
+                            name: "<init>".to_string(),
+                            r#type: "()V".to_string(),
+                        },
+                    }));
+                    result.push(Instruction::new(class_index));
+                    result.push(Instruction::dup);
+                    result.push(Instruction::invokespecial(method_index));
+                    stack.update(1);
+                    stack.update(-1);
                 }
                 StmtExpr::MethodCall(_expr, name, args) => {
                     // FIXME: Needs to update stack + probably doesn't work yet anyways
@@ -913,6 +918,7 @@ fn generate_code_stmt_expr(
                         },
                     }));
                     result.push(Instruction::invokespecial(method_index));
+                    stack.update(1);
                 }
                 _ => panic!("StmtExpr typed: {:?}", new_stmt_expr),
             }
@@ -963,8 +969,10 @@ fn generate_code_expr(
                 Expr::InstVar(exprs, name) => {
                     result.push(Instruction::aload(0));
                     stack.update(1);
+
                     // FIXME: There should be more here, right?
                 }
+
                 Binary(op, left, right) => {
                     stack.update(-1);
                     match BinaryOp::from(&op as &str) {
