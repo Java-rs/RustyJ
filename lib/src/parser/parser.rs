@@ -165,7 +165,7 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
             let mut inners = pair.into_inner();
 
             let mut firstif = inners.next().unwrap().into_inner();
-            let Expr = parse_expr(firstif.next().unwrap().into_inner().next().unwrap());
+            let Expr = parse_expr(firstif.next().unwrap());
             let Stmt = parse_Stmt(firstif.next().unwrap()).get(0).unwrap().clone();
 
             let elsePart = parse_Stmt(inners.next().unwrap()).get(0).unwrap().clone();
@@ -174,7 +174,7 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
         Rule::IfStmt => {
             let mut inners = pair.into_inner();
 
-            let Expr = parse_expr(inners.next().unwrap().into_inner().next().unwrap());
+            let Expr = parse_expr(inners.next().unwrap());
             let Stmt = parse_Stmt(inners.next().unwrap()).get(0).unwrap().clone();
             vec![Stmt::If(Expr, Box::new(Stmt), None)]
         }
@@ -359,9 +359,7 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
         Rule::UnaryExpr => {
             todo!()
         }
-        Rule::ParanthesizedExpr => {
-            todo!()
-        }
+        Rule::ParanthesizedExpr => parse_expr(pair.into_inner().next().unwrap()),
         Rule::IntLiteral => Expr::Integer(pair.as_str().parse().unwrap()),
         Rule::BoolLiteral => Expr::Bool(pair.as_str().parse().unwrap()),
         Rule::CharLiteral => Expr::Char(get_str_content(pair.as_str()).parse().unwrap()),
