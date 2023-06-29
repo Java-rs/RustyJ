@@ -176,25 +176,44 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
             let mut inners = pair.into_inner();
 
             let Expr = parse_expr(inners.next().unwrap());
-            let Stmt = parse_Stmt(inners.next().unwrap()).get(0).unwrap().clone();
-            vec![Stmt::While(Expr, Box::new(Stmt))]
+            let Stmt = parse_Stmt(inners.next().unwrap());
+            if Stmt.len() > 1 {
+                vec![Stmt::While(Expr, Box::new(Stmt::Block(Stmt)))]
+            } else {
+                vec![Stmt::While(Expr, Box::new(Stmt.get(0).unwrap().clone()))]
+            }
         }
         Rule::IfElseStmt => {
             let mut inners = pair.into_inner();
 
             let mut firstif = inners.next().unwrap().into_inner();
             let Expr = parse_expr(firstif.next().unwrap());
-            let Stmt = parse_Stmt(firstif.next().unwrap()).get(0).unwrap().clone();
+            let Stmt = parse_Stmt(firstif.next().unwrap());
+            let elsePart = parse_Stmt(inners.next().unwrap());
 
-            let elsePart = parse_Stmt(inners.next().unwrap()).get(0).unwrap().clone();
+            let Stmt = if Stmt.len() > 1 {
+                Stmt::Block(Stmt)
+            } else {
+                Stmt.get(0).unwrap().clone()
+            };
+            let elsePart = if elsePart.len() > 1 {
+                Stmt::Block(elsePart)
+            } else {
+                elsePart.get(0).unwrap().clone()
+            };
+
             vec![Stmt::If(Expr, Box::new(Stmt), Some(Box::new(elsePart)))]
         }
         Rule::IfStmt => {
             let mut inners = pair.into_inner();
 
             let Expr = parse_expr(inners.next().unwrap());
-            let Stmt = parse_Stmt(inners.next().unwrap()).get(0).unwrap().clone();
-            vec![Stmt::If(Expr, Box::new(Stmt), None)]
+            let Stmt = parse_Stmt(inners.next().unwrap());
+            if Stmt.len() > 1 {
+                vec![Stmt::If(Expr, Box::new(Stmt::Block(Stmt)), None)]
+            } else {
+                vec![Stmt::If(Expr, Box::new(Stmt.get(0).unwrap().clone()), None)]
+            }
         }
         Rule::ReturnStmt => {
             let mut inners = pair.into_inner();
@@ -282,10 +301,12 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
                     unreachable!()
                 }
             }
-            let paramList = inners.next().unwrap().into_inner();
+
             let mut exprList: Vec<Expr> = vec![];
-            for param in paramList {
-                exprList.push(parse_expr(param));
+            if let Some(paramList) = inners.next() {
+                for param in paramList.into_inner() {
+                    exprList.push(parse_expr(param));
+                }
             }
 
             StmtExpr::MethodCall(MethodExpr, String_name, exprList)
@@ -381,7 +402,9 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
         Rule::BoolLiteral => Expr::Bool(pair.as_str().parse().unwrap()),
         Rule::CharLiteral => Expr::Char(get_str_content(pair.as_str()).parse().unwrap()),
         Rule::StrLiteral => Expr::String(get_str_content(pair.as_str()).to_string()),
-        Rule::StmtExpr => Expr::StmtExprExpr(Box::new(parse_StmtExpr(pair))),
+        Rule::StmtExpr => {
+            Expr::StmtExprExpr(Box::new(parse_StmtExpr(pair.into_inner().next().unwrap())))
+        }
         Rule::NonBinaryExpr => parse_expr(pair.into_inner().next().unwrap()),
         Rule::Prec3BinExpr | Rule::Prec2BinExpr | Rule::Prec1BinExpr | Rule::Prec0BinExpr => {
             let mut inners = pair.into_inner();
