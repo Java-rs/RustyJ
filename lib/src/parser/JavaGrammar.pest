@@ -62,7 +62,6 @@ NonBinaryExpr = { IntLiteral
                 | ParanthesizedExpr
 		        | StmtExpr
 		        | UnaryExpr
-				| MethodCallExpr
 		        | InstVarExpr
 				| ThisExpr
 		        | JNull
