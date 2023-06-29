@@ -30,14 +30,14 @@ BlockStmt = {"{" ~ Stmt* ~ "}"}
 
 Stmt = {  WhileStmt | IfElseStmt | IfStmt | ReturnStmt | LocalVarDeclStmt | StmtExpr ~ ";" | BlockStmt }
 
-ReturnStmt = {"return" ~ Expr ~ ";"}
+ReturnStmt = {"return" ~ (Prec3BinExpr|NonBinaryExpr) ~ ";"}
 
-WhileStmt = {"while" ~ "(" ~ Expr ~ ")" ~ Stmt}
+WhileStmt = {"while" ~ "(" ~ ConditionExpr ~ ")" ~ Stmt}
 
 // @Question: Is this a correct and easy-to-use definition?
 IfElseStmt = {IfStmt ~ "else" ~ Stmt}
 
-IfStmt = {"if" ~ "(" ~ Expr ~ ")" ~ Stmt}
+IfStmt = {"if" ~ "(" ~ ConditionExpr ~ ")" ~ Stmt}
 
 // @Cleanup: Can maybe be unified with FieldVarDecl and AssignExpr?
 LocalVarDeclStmt = {JType ~ Identifier ~ ("="~Expr)? ~ ";"}
@@ -52,16 +52,18 @@ MethodCallExpr = {(InstVarExpr | Identifier) ~ "(" ~ ParamList? ~ ")"}
 
 ParamList = {Expr ~ (","~Expr)*}
 
+ConditionExpr = {BoolLiteral|ParanthesizedExpr|Prec3BinExpr}
+
 // @Note we do not support `super` at the moment
 Expr = {NonBinaryExpr | Prec3BinExpr}
 
 NonBinaryExpr = { ParanthesizedExpr
-		        | UnaryExpr
-		        | InstVarExpr
 		        | IntLiteral
 		        | BoolLiteral
 		        | CharLiteral
 		        | StrLiteral
+		        | UnaryExpr
+		        | InstVarExpr
 				| ThisExpr
 		        | JNull
 		        | StmtExpr
@@ -70,7 +72,7 @@ NonBinaryExpr = { ParanthesizedExpr
 ThisExpr = {"this"}
 JNull    = {"null"}
 
-IntLiteral  = {NUMBER+}
+IntLiteral  = {"-"? ~ NUMBER+}
 BoolLiteral = {"true" | "false"}
 CharLiteral = { "'"  ~ (!("'"  | "\\") ~ ANY | EscapedChar) ~ "'"}
 StrLiteral  = { "\"" ~ (!("\"" | "\\") ~ ANY | EscapedChar)* ~ "\""}
@@ -81,9 +83,9 @@ EscapedChar = { "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
 // i.e. something like `someMethodCall().identifier`
 InstVarExpr = {(ThisExpr|Identifier) ~ "." ~ Identifier}
 
-ParanthesizedExpr = {"(" ~ Expr ~ ")"}
+ParanthesizedExpr = {"(" ~ (Prec3BinExpr|NonBinaryExpr) ~ ")"}
 
-UnaryExpr = {UnaryOp ~ (InstVarExpr|ParanthesizedExpr|Identifier)}
+UnaryExpr = {UnaryOp ~ NonBinaryExpr}
 UnaryOp = {"+" | "-" | "!"}
 
 Prec3BinExpr = {(Prec2BinExpr  ~ Prec3BinOp ~ Prec3BinExpr) | Prec2BinExpr}

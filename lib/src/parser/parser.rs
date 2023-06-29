@@ -165,7 +165,7 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
             let mut inners = pair.into_inner();
 
             let mut firstif = inners.next().unwrap().into_inner();
-            let Expr = parse_expr(firstif.next().unwrap());
+            let Expr = parse_expr(firstif.next().unwrap().into_inner().next().unwrap());
             let Stmt = parse_Stmt(firstif.next().unwrap()).get(0).unwrap().clone();
 
             let elsePart = parse_Stmt(inners.next().unwrap()).get(0).unwrap().clone();
@@ -174,7 +174,7 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
         Rule::IfStmt => {
             let mut inners = pair.into_inner();
 
-            let Expr = parse_expr(inners.next().unwrap());
+            let Expr = parse_expr(inners.next().unwrap().into_inner().next().unwrap());
             let Stmt = parse_Stmt(inners.next().unwrap()).get(0).unwrap().clone();
             vec![Stmt::If(Expr, Box::new(Stmt), None)]
         }
