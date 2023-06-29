@@ -1,3 +1,8 @@
+#![allow(non_camel_case_types)]
+#![allow(unused)]
+#![allow(non_snake_case)]
+#![allow(dead_code)]
+
 use crate::types::*;
 use std::any::type_name;
 use std::collections::HashMap;
@@ -78,23 +83,21 @@ impl TypeChecker {
             self.current_typed_class.methods.push(typed_method);
             self.current_local_vars.clear();
         }
-
         self.typed_classes
             .insert(class.name.clone(), self.current_typed_class.clone());
         Ok(())
     }
 
     fn check_field(&mut self, field: &FieldDecl) -> Result<(), String> {
-        if self
-            .check_field_type(&field.field_type, &field.val)
-            .is_err()
-        {
-            return Err(format!(
-                "Field value '{:?}' does not match type '{}'",
+        match self.check_field_type(&field.field_type, &field.val) {
+            Err(error) => Err(format!(
+                "Field value '{:?}' does not match type '{}'\n'{}'",
                 field.val.clone().unwrap(),
-                field.field_type
-            ));
-        }
+                field.field_type,
+                error
+            )),
+            _ => Ok(()),
+        };
 
         let names = self
             .fields
@@ -257,12 +260,25 @@ impl TypeChecker {
 
     fn check_stmt_expr(&self, stmt_expr: &StmtExpr) -> Result<(), String> {
         match stmt_expr {
-            StmtExpr::Assign(name, expr) => {
+            StmtExpr::Assign(var, expr) => {
                 let class = self.current_class.as_ref().ok_or("No current class")?;
-                if !class.fields.iter().any(|field| field.name == *name) {
-                    return Err(format!("Unknown variable: {}", name));
+                self.check_expr(var);
+                self.check_expr(expr);
+                let t1 = match var {
+                    Expr::TypedExpr(_, t) => t,
+                    _ => panic!("Expected typed stmt"),
+                };
+                let t2 = match expr {
+                    Expr::TypedExpr(_, t) => t,
+                    _ => panic!("Expected typed stmt"),
+                };
+                if t1 != t2 {
+                    Err(format!(
+                        "Value of type {t2} can't be assigned to a variable of type {t1}"
+                    ))
+                } else {
+                    Ok(())
                 }
-                self.check_expr(expr)
             }
             StmtExpr::New(_, exprs) => {
                 for expr in exprs {
@@ -281,7 +297,6 @@ impl TypeChecker {
                 panic!("TypedStmtExpr not expected here: {:?}", expr);
                 Ok(())
             }
-            _ => Ok(()),
         }
     }
 
@@ -440,13 +455,32 @@ impl TypeChecker {
                 }
                 panic!("Unknown variable: {}", name)
             }
-            Expr::InstVar(expr, name) => Expr::TypedExpr(
-                Box::new(Expr::InstVar(Box::new(self.type_expr(expr)), name.clone())),
-                match self.type_expr(expr) {
-                    Expr::TypedExpr(_, t) => t,
-                    _ => panic!("Expected typed expr"),
-                },
-            ),
+            Expr::InstVar(expr, name) => {
+                let field_decl = self
+                    .fields
+                    .get(self.current_class.as_ref().unwrap().name.as_str());
+                match field_decl {
+                    Some(field_decl) => {
+                        let decl = field_decl.iter().find(|field| field.name == *name);
+                        match decl {
+                            Some(decl) => {
+                                return Expr::TypedExpr(
+                                    Box::new(Expr::InstVar(
+                                        Box::new(self.type_expr(expr)),
+                                        name.clone(),
+                                    )),
+                                    decl.field_type.clone(),
+                                );
+                            }
+                            None => panic!("Unknown field: {}", name),
+                        }
+                    }
+                    None => panic!(
+                        "Unknown class: {}",
+                        self.current_class.as_ref().unwrap().name.as_str()
+                    ),
+                }
+            }
             Expr::Unary(s, expr) => {
                 let t = match self.type_expr(expr) {
                     Expr::TypedExpr(_, t) => t,
@@ -503,7 +537,9 @@ impl TypeChecker {
                 match op {
                     BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div => {
                         if t1 != t2 {
-                            panic!("Type mismatch");
+                            println!("{:#?}", expr1);
+                            println!("{:#?}", expr2);
+                            panic!("Type mismatch {:#?} and {:#?}", t1, t2);
                         }
                         return Expr::TypedExpr(
                             Box::new(Expr::Binary(
@@ -556,10 +592,17 @@ impl TypeChecker {
             Expr::Char(c) => Expr::TypedExpr(Box::new(Expr::Char(*c)), Type::Char),
             Expr::String(s) => Expr::TypedExpr(Box::new(Expr::String(s.clone())), Type::String),
             Expr::Jnull => Expr::TypedExpr(Box::new(Expr::Jnull), Type::Null),
-            Expr::StmtExprExpr(stmt_expr) => Expr::TypedExpr(
-                Box::new(Expr::StmtExprExpr(Box::new(self.type_stmt_expr(stmt_expr)))),
-                Type::Int,
-            ),
+            Expr::StmtExprExpr(stmt_expr) => {
+                let typed_expr = self.type_stmt_expr(stmt_expr);
+
+                Expr::TypedExpr(
+                    Box::new(Expr::StmtExprExpr(Box::new(typed_expr.clone()))),
+                    match typed_expr {
+                        StmtExpr::TypedStmtExpr(_, t) => t,
+                        _ => panic!("Expected typed stmt expr"),
+                    },
+                )
+            }
             Expr::TypedExpr(expr, t) => Expr::TypedExpr(Box::new(self.type_expr(expr)), t.clone()),
             Expr::LocalVar(name) => panic!("Expected LocalOrFieldVar, got LocalVar"),
             Expr::FieldVar(name) => panic!("Expected LocalOrFieldVar, got FieldVar"),
@@ -568,14 +611,18 @@ impl TypeChecker {
 
     fn type_stmt_expr(&self, stmt_expr: &StmtExpr) -> StmtExpr {
         match stmt_expr {
-            StmtExpr::Assign(name, expr) => {
-                let typed_stmt = match self.type_expr(expr) {
+            StmtExpr::Assign(var, expr) => {
+                let typed_expr = match self.type_expr(expr) {
                     Expr::TypedExpr(expr, t) => (Expr::TypedExpr(Box::new(*expr), t.clone()), t),
                     _ => panic!("Expected typed stmt"),
                 };
+                let typed_var = match self.type_expr(var) {
+                    Expr::TypedExpr(var, t) => (Expr::TypedExpr(Box::new(*var), t.clone()), t),
+                    _ => panic!("Expected typed stmt"),
+                };
                 StmtExpr::TypedStmtExpr(
-                    Box::new(StmtExpr::Assign(name.clone(), typed_stmt.0)),
-                    typed_stmt.1,
+                    Box::new(StmtExpr::Assign(typed_var.0, typed_expr.0)),
+                    typed_expr.1,
                 )
             }
             StmtExpr::TypedStmtExpr(stmt_expr, t) => panic!("Expected untyped stmt"),

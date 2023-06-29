@@ -40,12 +40,15 @@ fn while_class() -> Class {
                 Box::new(Block(vec![
                     TypedStmt(
                         Box::new(LocalVarDecl(Type::Int, "i".to_string())),
-                        Type::Void,
+                        Type::Int,
                     ),
                     TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
                             Box::new(Assign(
-                                "i".to_string(),
+                                Expr::TypedExpr(
+                                    Box::new(Expr::LocalVar("i".to_string())),
+                                    Type::Int,
+                                ),
                                 TypedExpr(Box::new(Integer(0)), Type::Int),
                             )),
                             Type::Int,
@@ -54,13 +57,16 @@ fn while_class() -> Class {
                     ),
                     TypedStmt(
                         Box::new(LocalVarDecl(Type::Int, "a".to_string())),
-                        Type::Void,
+                        Type::Int,
                     ),
                     TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
                             Box::new(Assign(
-                                "a".to_string(),
-                                TypedExpr(Box::new(LocalVar("n".to_string())), Type::Int),
+                                Expr::TypedExpr(
+                                    Box::new(Expr::LocalVar("a".to_string())),
+                                    Type::Int,
+                                ),
+                                TypedExpr(Box::new(FieldVar("n".to_string())), Type::Int),
                             )),
                             Type::Int,
                         ))),
@@ -72,11 +78,11 @@ fn while_class() -> Class {
                                 Box::new(Binary(
                                     "<".to_string(),
                                     Box::new(TypedExpr(
-                                        Box::new(FieldVar("i".to_string())),
+                                        Box::new(LocalVar("i".to_string())),
                                         Type::Int,
                                     )),
                                     Box::new(TypedExpr(
-                                        Box::new(FieldVar("x".to_string())),
+                                        Box::new(LocalVar("x".to_string())),
                                         Type::Int,
                                     )),
                                 )),
@@ -87,16 +93,19 @@ fn while_class() -> Class {
                                     TypedStmt(
                                         Box::new(StmtExprStmt(TypedStmtExpr(
                                             Box::new(Assign(
-                                                "a".to_string(),
+                                                Expr::TypedExpr(
+                                                    Box::new(Expr::LocalVar("a".to_string())),
+                                                    Type::Int,
+                                                ),
                                                 TypedExpr(
                                                     Box::new(Binary(
                                                         "+".to_string(),
                                                         Box::new(TypedExpr(
-                                                            Box::new(FieldVar("a".to_string())),
+                                                            Box::new(LocalVar("a".to_string())),
                                                             Type::Int,
                                                         )),
                                                         Box::new(TypedExpr(
-                                                            Box::new(FieldVar("a".to_string())),
+                                                            Box::new(LocalVar("a".to_string())),
                                                             Type::Int,
                                                         )),
                                                     )),
@@ -110,12 +119,15 @@ fn while_class() -> Class {
                                     TypedStmt(
                                         Box::new(StmtExprStmt(TypedStmtExpr(
                                             Box::new(Assign(
-                                                "i".to_string(),
+                                                Expr::TypedExpr(
+                                                    Box::new(Expr::LocalVar("i".to_string())),
+                                                    Type::Int,
+                                                ),
                                                 TypedExpr(
                                                     Box::new(Binary(
                                                         "+".to_string(),
                                                         Box::new(TypedExpr(
-                                                            Box::new(FieldVar("i".to_string())),
+                                                            Box::new(LocalVar("i".to_string())),
                                                             Type::Int,
                                                         )),
                                                         Box::new(TypedExpr(
@@ -131,14 +143,14 @@ fn while_class() -> Class {
                                         Type::Int,
                                     ),
                                 ])),
-                                Type::Int,
+                                Type::Void,
                             )),
                         )),
-                        Type::Int,
+                        Type::Void,
                     ),
                     TypedStmt(
                         Box::new(Return(TypedExpr(
-                            Box::new(FieldVar("a".to_string())),
+                            Box::new(LocalVar("a".to_string())),
                             Type::Int,
                         ))),
                         Type::Int,

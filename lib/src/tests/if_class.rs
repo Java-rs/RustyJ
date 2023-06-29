@@ -43,7 +43,7 @@ fn if_class() -> Class {
                                         Box::new(LocalVar("c".to_string())),
                                         Type::Char,
                                     )),
-                                    Box::new(Char('a')),
+                                    Box::new(TypedExpr(Box::new(Char('a')), Type::Char)),
                                 )),
                                 Type::Bool,
                             ),

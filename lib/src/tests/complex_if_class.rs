@@ -32,20 +32,8 @@ fn complex_if_class() -> Class {
             ret_type: Type::Bool,
             name: "f".to_string(),
             params: vec![(Type::Char, "c".to_string())],
-            body: Block(vec![If(
-                Binary(
-                    "==".to_string(),
-                    Box::new(TypedExpr(Box::new(LocalVar("c".to_string())), Type::Char)),
-                    Box::new(TypedExpr(Box::new(Expr::Char('a')), Type::Char)),
-                ),
-                Box::new(TypedStmt(
-                    Box::new(Block(vec![TypedStmt(
-                        Box::new(Return(TypedExpr(Box::new(Expr::Bool(true)), Type::Bool))),
-                        Type::Bool,
-                    )])),
-                    Type::Bool,
-                )),
-                Some(Box::new(TypedStmt(
+            body: TypedStmt(
+                Box::new(Block(vec![TypedStmt(
                     Box::new(If(
                         TypedExpr(
                             Box::new(Binary(
@@ -54,16 +42,13 @@ fn complex_if_class() -> Class {
                                     Box::new(LocalVar("c".to_string())),
                                     Type::Char,
                                 )),
-                                Box::new(TypedExpr(Box::new(Expr::Char('b')), Type::Char)),
+                                Box::new(TypedExpr(Box::new(Expr::Char('a')), Type::Char)),
                             )),
                             Type::Bool,
                         ),
                         Box::new(TypedStmt(
                             Box::new(Block(vec![TypedStmt(
-                                Box::new(Return(TypedExpr(
-                                    Box::new(Expr::Bool(false)),
-                                    Type::Bool,
-                                ))),
+                                Box::new(Return(TypedExpr(Box::new(Expr::Bool(true)), Type::Bool))),
                                 Type::Bool,
                             )])),
                             Type::Bool,
@@ -77,66 +62,49 @@ fn complex_if_class() -> Class {
                                             Box::new(LocalVar("c".to_string())),
                                             Type::Char,
                                         )),
-                                        Box::new(TypedExpr(Box::new(Expr::Char('c')), Type::Char)),
+                                        Box::new(TypedExpr(Box::new(Expr::Char('b')), Type::Char)),
                                     )),
                                     Type::Bool,
                                 ),
                                 Box::new(TypedStmt(
-                                    Box::new(Return(TypedExpr(
-                                        Box::new(Expr::Bool(true)),
+                                    Box::new(Block(vec![TypedStmt(
+                                        Box::new(Return(TypedExpr(
+                                            Box::new(Expr::Bool(false)),
+                                            Type::Bool,
+                                        ))),
                                         Type::Bool,
-                                    ))),
+                                    )])),
                                     Type::Bool,
                                 )),
                                 Some(Box::new(TypedStmt(
-                                    Box::new(Block(vec![TypedStmt(
-                                        Box::new(If(
-                                            TypedExpr(
-                                                Box::new(Binary(
-                                                    "||".to_string(),
-                                                    Box::new(TypedExpr(
-                                                        Box::new(Binary(
-                                                            "==".to_string(),
-                                                            Box::new(TypedExpr(
-                                                                Box::new(LocalVar("c".to_string())),
-                                                                Type::Char,
-                                                            )),
-                                                            Box::new(TypedExpr(
-                                                                Box::new(Expr::Char('d')),
-                                                                Type::Char,
-                                                            )),
-                                                        )),
-                                                        Type::Bool,
-                                                    )),
-                                                    Box::new(TypedExpr(
-                                                        Box::new(Binary(
-                                                            "==".to_string(),
-                                                            Box::new(TypedExpr(
-                                                                Box::new(LocalVar("c".to_string())),
-                                                                Type::Char,
-                                                            )),
-                                                            Box::new(TypedExpr(
-                                                                Box::new(Expr::Char('e')),
-                                                                Type::Char,
-                                                            )),
-                                                        )),
-                                                        Type::Bool,
-                                                    )),
+                                    Box::new(If(
+                                        TypedExpr(
+                                            Box::new(Binary(
+                                                "==".to_string(),
+                                                Box::new(TypedExpr(
+                                                    Box::new(LocalVar("c".to_string())),
+                                                    Type::Char,
                                                 )),
-                                                Type::Bool,
-                                            ),
-                                            Box::new(TypedStmt(
-                                                Box::new(Return(TypedExpr(
-                                                    Box::new(Expr::Bool(false)),
-                                                    Type::Bool,
-                                                ))),
-                                                Type::Bool,
+                                                Box::new(TypedExpr(
+                                                    Box::new(Expr::Char('c')),
+                                                    Type::Char,
+                                                )),
                                             )),
-                                            Some(Box::new(TypedStmt(
+                                            Type::Bool,
+                                        ),
+                                        Box::new(TypedStmt(
+                                            Box::new(Return(TypedExpr(
+                                                Box::new(Expr::Bool(true)),
+                                                Type::Bool,
+                                            ))),
+                                            Type::Bool,
+                                        )),
+                                        Some(Box::new(TypedStmt(
+                                            Box::new(Block(vec![TypedStmt(
                                                 Box::new(If(
                                                     TypedExpr(
                                                         Box::new(Binary(
-                                                            "&&".to_string(),
+                                                            "||".to_string(),
                                                             Box::new(TypedExpr(
                                                                 Box::new(Binary(
                                                                     "==".to_string(),
@@ -147,7 +115,7 @@ fn complex_if_class() -> Class {
                                                                         Type::Char,
                                                                     )),
                                                                     Box::new(TypedExpr(
-                                                                        Box::new(Expr::Char('f')),
+                                                                        Box::new(Expr::Char('d')),
                                                                         Type::Char,
                                                                     )),
                                                                 )),
@@ -163,7 +131,7 @@ fn complex_if_class() -> Class {
                                                                         Type::Char,
                                                                     )),
                                                                     Box::new(TypedExpr(
-                                                                        Box::new(Expr::Char('g')),
+                                                                        Box::new(Expr::Char('e')),
                                                                         Type::Char,
                                                                     )),
                                                                 )),
@@ -174,27 +142,81 @@ fn complex_if_class() -> Class {
                                                     ),
                                                     Box::new(TypedStmt(
                                                         Box::new(Return(TypedExpr(
-                                                            Box::new(Expr::Bool(true)),
+                                                            Box::new(Expr::Bool(false)),
                                                             Type::Bool,
                                                         ))),
                                                         Type::Bool,
                                                     )),
                                                     Some(Box::new(TypedStmt(
-                                                        Box::new(Block(vec![TypedStmt(
-                                                            Box::new(Return(TypedExpr(
-                                                                Box::new(Expr::Bool(false)),
+                                                        Box::new(If(
+                                                            TypedExpr(
+                                                                Box::new(Binary(
+                                                                    "&&".to_string(),
+                                                                    Box::new(TypedExpr(
+                                                                        Box::new(Binary(
+                                                                            "==".to_string(),
+                                                                            Box::new(TypedExpr(
+                                                                                Box::new(LocalVar(
+                                                                                    "c".to_string(),
+                                                                                )),
+                                                                                Type::Char,
+                                                                            )),
+                                                                            Box::new(TypedExpr(
+                                                                                Box::new(
+                                                                                    Expr::Char('f'),
+                                                                                ),
+                                                                                Type::Char,
+                                                                            )),
+                                                                        )),
+                                                                        Type::Bool,
+                                                                    )),
+                                                                    Box::new(TypedExpr(
+                                                                        Box::new(Binary(
+                                                                            "==".to_string(),
+                                                                            Box::new(TypedExpr(
+                                                                                Box::new(LocalVar(
+                                                                                    "c".to_string(),
+                                                                                )),
+                                                                                Type::Char,
+                                                                            )),
+                                                                            Box::new(TypedExpr(
+                                                                                Box::new(
+                                                                                    Expr::Char('g'),
+                                                                                ),
+                                                                                Type::Char,
+                                                                            )),
+                                                                        )),
+                                                                        Type::Bool,
+                                                                    )),
+                                                                )),
+                                                                Type::Bool,
+                                                            ),
+                                                            Box::new(TypedStmt(
+                                                                Box::new(Return(TypedExpr(
+                                                                    Box::new(Expr::Bool(true)),
+                                                                    Type::Bool,
+                                                                ))),
+                                                                Type::Bool,
+                                                            )),
+                                                            Some(Box::new(TypedStmt(
+                                                                Box::new(Block(vec![TypedStmt(
+                                                                    Box::new(Return(TypedExpr(
+                                                                        Box::new(Expr::Bool(false)),
+                                                                        Type::Bool,
+                                                                    ))),
+                                                                    Type::Bool,
+                                                                )])),
                                                                 Type::Bool,
                                                             ))),
-                                                            Type::Bool,
-                                                        )])),
+                                                        )),
                                                         Type::Bool,
                                                     ))),
                                                 )),
                                                 Type::Bool,
-                                            ))),
-                                        )),
-                                        Type::Bool,
-                                    )])),
+                                            )])),
+                                            Type::Bool,
+                                        ))),
+                                    )),
                                     Type::Bool,
                                 ))),
                             )),
@@ -202,8 +224,9 @@ fn complex_if_class() -> Class {
                         ))),
                     )),
                     Type::Bool,
-                ))),
-            )]),
+                )])),
+                Type::Bool,
+            ),
         }],
     }
 }
