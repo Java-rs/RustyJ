@@ -58,7 +58,7 @@ MethodCallExpr = {(Identifier|InstVarExpr) ~ "(" ~ ParamList? ~ ")"}
 ParamList = {Expr ~ (","~Expr)*}
 
 // @Note we do not support `super` at the moment
-Expr = {Prec3BinExpr | NonBinaryExpr}
+Expr = {NonBinaryExpr| Prec3BinExpr }
 
 NonBinaryExpr = { ThisExpr
 		        | JNull
