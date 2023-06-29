@@ -45,7 +45,10 @@ fn while_class() -> Class {
                     TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
                             Box::new(Assign(
-                                "i".to_string(),
+                                Expr::TypedExpr(
+                                    Box::new(Expr::LocalVar("i".to_string())),
+                                    Type::Int,
+                                ),
                                 TypedExpr(Box::new(Integer(0)), Type::Int),
                             )),
                             Type::Int,
@@ -59,7 +62,10 @@ fn while_class() -> Class {
                     TypedStmt(
                         Box::new(StmtExprStmt(TypedStmtExpr(
                             Box::new(Assign(
-                                "a".to_string(),
+                                Expr::TypedExpr(
+                                    Box::new(Expr::LocalVar("a".to_string())),
+                                    Type::Int,
+                                ),
                                 TypedExpr(Box::new(FieldVar("n".to_string())), Type::Int),
                             )),
                             Type::Int,
@@ -87,7 +93,10 @@ fn while_class() -> Class {
                                     TypedStmt(
                                         Box::new(StmtExprStmt(TypedStmtExpr(
                                             Box::new(Assign(
-                                                "a".to_string(),
+                                                Expr::TypedExpr(
+                                                    Box::new(Expr::LocalVar("a".to_string())),
+                                                    Type::Int,
+                                                ),
                                                 TypedExpr(
                                                     Box::new(Binary(
                                                         "+".to_string(),
@@ -110,7 +119,10 @@ fn while_class() -> Class {
                                     TypedStmt(
                                         Box::new(StmtExprStmt(TypedStmtExpr(
                                             Box::new(Assign(
-                                                "i".to_string(),
+                                                Expr::TypedExpr(
+                                                    Box::new(Expr::LocalVar("i".to_string())),
+                                                    Type::Int,
+                                                ),
                                                 TypedExpr(
                                                     Box::new(Binary(
                                                         "+".to_string(),
