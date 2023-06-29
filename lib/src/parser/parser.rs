@@ -8,6 +8,7 @@ extern crate pest_derive;
 use crate::types::{Class, Expr, FieldDecl, MethodDecl, Stmt, StmtExpr, Type};
 use pest::error::Error;
 use pest::iterators::{Pair, Pairs};
+use pest::unicode::RUNIC;
 use pest::Parser;
 use pest_derive::Parser;
 
@@ -26,7 +27,8 @@ pub fn parse_programm(file: &str) -> Result<Vec<Class>, Error<Rule>> {
 }
 
 fn parse_class(pair: Pair<Rule>) -> Class {
-    match pair.as_rule() {
+    let rule = pair.as_rule();
+    match rule {
         Rule::ClassDecl => {
             let mut inners = pair.into_inner();
             let other_name = next_id(&mut inners);
@@ -51,7 +53,7 @@ fn parse_class(pair: Pair<Rule>) -> Class {
                 methods,
             }
         }
-        _ => todo!(),
+        _ => unreachable!(),
     }
 }
 fn next_id(inners: &mut Pairs<Rule>) -> String {
@@ -360,17 +362,26 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
             obj
         }
         Rule::UnaryExpr => {
-            todo!()
+            let mut inners = pair.into_inner();
+            let unaryOp = inners.next().unwrap().as_str().trim().to_string();
+            let second = inners.next().unwrap();
+            let result = if second.as_rule() == Rule::Identifier {
+                Expr::LocalOrFieldVar(second.as_str().trim().to_string()) //@Notice: duno if this is corect
+            } else {
+                parse_expr(second)
+            };
+            Expr::Unary(unaryOp, Box::new(result))
         }
-        Rule::ParanthesizedExpr => {
-            todo!()
-        }
+        Rule::ParanthesizedExpr => parse_expr(pair.into_inner().next().unwrap()),
         Rule::IntLiteral => Expr::Integer(pair.as_str().parse().unwrap()),
         Rule::BoolLiteral => Expr::Bool(pair.as_str().parse().unwrap()),
         Rule::CharLiteral => Expr::Char(get_str_content(pair.as_str()).parse().unwrap()),
         Rule::StrLiteral => Expr::String(get_str_content(pair.as_str()).to_string()),
         Rule::StmtExpr => Expr::StmtExprExpr(Box::new(parse_StmtExpr(pair))),
         Rule::NonBinaryExpr => parse_expr(pair.into_inner().next().unwrap()),
+        Rule::Prec3BinExpr => {
+            todo!()
+        }
         _ => {
             dbg!(pair.as_rule());
             unreachable!()

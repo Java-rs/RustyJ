@@ -6,9 +6,9 @@
 -   Wer hat welche Arbeit am Parser gemacht?
 -   Wie wurde Pest fürs Parsing eingesetzt? (sehr ähnlich zu ANTLR)
 
-## Typchecker
+## Typechecker
 
-Geschrieben von: Maximilian Floto, Philipp Wolf
+Geschrieben von: Maximilian Floto und Philipp Wolf im Pair Programming
 
 Der Typechecker akzeptiert einen Abstract Syntax Tree (AST) und gibt einen getypten AST (TAST) zurück.
 Er führt eine umfassende Analyse durch, um die Typen aller Variablen und Ausdrücke im Code zu bestimmen.
@@ -44,9 +44,11 @@ Folgende Fehler werden vom Typechecker erkannt:
 
 ## Codegenerierung
 
-Geschrieben von: Marion Hinkel, Benedikt Brandmaier, Val Richter
--   Wer hat welche Arbeit bei codegen gemacht?
--   Was für Arbeit musste alles zusätzlich getan werden, weil wir nicht Java + ASM genutzt haben?
+ByteCode-Umwandlung, Bugfixes, StackSize und Improvements: Val Richter
+
+Definition DIR(Intermediate Representation), ConstantPool, LocalVarPool, Methoden zur Instruction-generierung, BugFixes, etwas ByteCode-Umwandlung und Umwandlung relativer in absolute Jumps: Marion Hinkel und Benedikt Brandmaier im Pair Programming
+- Wer hat welche Arbeit bei codegen gemacht?
+- Was für Arbeit musste alles zusätzlich getan werden, weil wir nicht Java + ASM genutzt haben?
 
 ## Testing
 
