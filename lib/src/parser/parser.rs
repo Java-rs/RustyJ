@@ -202,7 +202,9 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
             }
         }
         Rule::StmtExpr => {
-            vec![Stmt::StmtExprStmt(parse_StmtExpr(pair))]
+            vec![Stmt::StmtExprStmt(parse_StmtExpr(
+                pair.into_inner().next().unwrap(),
+            ))]
         }
         Rule::BlockStmt => parse_BlockStmt(pair),
         _ => {
@@ -219,18 +221,13 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
             let mut inners = pair.into_inner();
 
             let mut name = inners.next().unwrap();
-            let var;
-            match name.as_rule() {
-                Rule::Identifier => {
-                    var = Expr::LocalOrFieldVar(name.as_str().trim().to_string());
-                }
-                Rule::InstVarExpr => {
-                    todo!() // until further notice ignored
-                }
+            let var = match name.as_rule() {
+                Rule::Identifier => Expr::LocalOrFieldVar(name.as_str().trim().to_string()),
+                Rule::InstVarExpr => parse_expr(name),
                 _ => {
                     unreachable!()
                 }
-            }
+            };
             let Expr = parse_expr(inners.next().unwrap());
 
             StmtExpr::Assign(var, Expr)
@@ -277,7 +274,7 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
             StmtExpr::MethodCall(MethodExpr, String_name, exprList)
         }
         _ => {
-            dbg!(rule);
+            dbg!(pair);
             unreachable!()
         }
     }
@@ -371,8 +368,9 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
         Rule::StrLiteral => Expr::String(get_str_content(pair.as_str()).to_string()),
         Rule::StmtExpr => Expr::StmtExprExpr(Box::new(parse_StmtExpr(pair))),
         Rule::NonBinaryExpr => parse_expr(pair.into_inner().next().unwrap()),
+        Rule::Identifier => Expr::LocalOrFieldVar(pair.as_str().trim().to_string()),
         _ => {
-            dbg!(pair.as_rule());
+            dbg!(pair);
             unreachable!()
         }
     }

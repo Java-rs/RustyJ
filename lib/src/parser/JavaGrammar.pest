@@ -55,15 +55,15 @@ ParamList = {Expr ~ (","~Expr)*}
 // @Note we do not support `super` at the moment
 Expr = {NonBinaryExpr | Prec3BinExpr}
 
-NonBinaryExpr = { ThisExpr
-		        | JNull
-		        | ParanthesizedExpr
+NonBinaryExpr = { ParanthesizedExpr
 		        | UnaryExpr
 		        | InstVarExpr
 		        | IntLiteral
 		        | BoolLiteral
 		        | CharLiteral
 		        | StrLiteral
+				| ThisExpr
+		        | JNull
 		        | StmtExpr
 				| Identifier }
 
