@@ -367,7 +367,7 @@ impl CompiledMethod {
                         .iter()
                         .map(|p| p.0.to_ir_string())
                         .collect::<Vec<String>>()
-                        .join(", "),
+                        .join(""),
                     self.return_type.to_ir_string()
                 )))
                 .to_be_bytes(),
@@ -584,7 +584,7 @@ fn generate_method(
         return_type: method.ret_type.clone(),
         params: method.params.clone(),
         max_stack: stack.max,
-        max_locals: local_var_pool.0.len() as u16,
+        max_locals: 1 + local_var_pool.0.len() as u16,
         code,
     }
 }
