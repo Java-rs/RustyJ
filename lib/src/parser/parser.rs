@@ -107,11 +107,11 @@ fn parse_method(pair: Pair<Rule>) -> MethodDecl {
 }
 
 fn parse_BlockStmt(pair: Pair<Rule>) -> Vec<Stmt> {
-    println!(
+    /*println!(
         "parse_BlockStmt: rule = {:?}, str = {}",
         pair.as_rule(),
         pair.as_str()
-    );
+    );*/
     let rule = pair.as_rule().clone();
     let mut inner = pair.into_inner();
     match rule {
@@ -175,11 +175,11 @@ fn parse_BlockStmt(pair: Pair<Rule>) -> Vec<Stmt> {
     }
 }
 fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
-    println!(
+    /* println!(
         "parse_Stmt: rule = {:?}, str = {}",
         pair.as_rule(),
         pair.as_str()
-    );
+    );*/
     match pair.as_rule() {
         Rule::Stmt => parse_Stmt(pair.into_inner().next().unwrap()), //@Notice this may be very wrong !!
         Rule::WhileStmt => {
@@ -214,11 +214,7 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
 
             let Expr = parse_expr(inners.next().unwrap());
             let Stmt = parse_Stmt(inners.next().unwrap());
-            if Stmt.len() > 1 {
-                vec![Stmt::If(Expr, Box::new(Stmt::Block(Stmt)), None)]
-            } else {
-                vec![Stmt::If(Expr, Box::new(Stmt.get(0).unwrap().clone()), None)]
-            }
+            vec![Stmt::If(Expr, Box::new(Stmt::Block(Stmt)), None)]
         }
         Rule::ReturnStmt => {
             let mut inners = pair.into_inner();
@@ -257,11 +253,11 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
 }
 
 fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
-    println!(
+    /*println!(
         "parse_StmtExpr: rule = {:?}, str = {}",
         pair.as_rule(),
         pair.as_str()
-    );
+    );*/
     let rule = pair.as_rule().clone();
     match rule {
         Rule::AssignExpr => {
@@ -384,11 +380,11 @@ fn parse_Type(pair: Pair<Rule>) -> Type {
 
 fn parse_expr(pair: Pair<Rule>) -> Expr {
     let rule = pair.as_rule();
-    println!(
+    /* println!(
         "parse_expr: rule = {:?}, str = {}",
         pair.as_rule(),
         pair.as_str()
-    );
+    );*/
     match rule {
         Rule::Expr => parse_expr(pair.into_inner().next().unwrap()),
         Rule::ThisExpr => Expr::This,
@@ -411,7 +407,10 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
             obj
         }
         Rule::UnaryExpr => {
-            todo!()
+            let mut inners = pair.into_inner();
+            let unaryOP = next_id(&mut inners);
+            let noBinExpr = parse_expr(inners.next().unwrap());
+            Expr::Unary(unaryOP, Box::new(noBinExpr))
         }
         Rule::ParanthesizedExpr => parse_expr(pair.into_inner().next().unwrap()),
         Rule::IntLiteral => Expr::Integer(pair.as_str().parse().unwrap()),
