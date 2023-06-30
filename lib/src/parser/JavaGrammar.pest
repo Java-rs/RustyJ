@@ -40,7 +40,7 @@ IfElseStmt = {IfStmt ~ "else" ~ Stmt}
 IfStmt = {"if" ~ "(" ~ Expr ~ ")" ~ Stmt}
 
 // @Cleanup: Can maybe be unified with FieldVarDecl and AssignExpr?
-LocalVarDeclStmt = {JType ~ Identifier ~ ("="~Expr)? ~ ";"}
+LocalVarDeclStmt = {JType ~ Identifier ~ ("="~Expr)? ~ ("," ~ Identifier ~ ("="~Expr)?)* ~ ";"}
 
 StmtExpr = {AssignExpr | NewExpr | MethodCallExpr}
 
@@ -53,24 +53,24 @@ MethodCallExpr = {(InstVarExpr | Identifier) ~ "(" ~ ParamList? ~ ")"}
 ParamList = {Expr ~ (","~Expr)*}
 
 // @Note we do not support `super` at the moment
-Expr = {NonBinaryExpr | Prec3BinExpr}
+Expr = {Prec4BinExpr | NonBinaryExpr}
 
-NonBinaryExpr = { ThisExpr
-		        | JNull
-		        | ParanthesizedExpr
-		        | UnaryExpr
-		        | InstVarExpr
-		        | IntLiteral
+NonBinaryExpr = { IntLiteral
 		        | BoolLiteral
 		        | CharLiteral
 		        | StrLiteral
+                | ParanthesizedExpr
 		        | StmtExpr
-				| Identifier }
+		        | UnaryExpr
+		        | InstVarExpr
+				| ThisExpr
+		        | JNull
+			    | Identifier }
 
 ThisExpr = {"this"}
 JNull    = {"null"}
 
-IntLiteral  = {NUMBER+}
+IntLiteral  = {"-"? ~ NUMBER+}
 BoolLiteral = {"true" | "false"}
 CharLiteral = { "'"  ~ (!("'"  | "\\") ~ ANY | EscapedChar) ~ "'"}
 StrLiteral  = { "\"" ~ (!("\"" | "\\") ~ ANY | EscapedChar)* ~ "\""}
@@ -83,14 +83,19 @@ InstVarExpr = {(ThisExpr|Identifier) ~ "." ~ Identifier}
 
 ParanthesizedExpr = {"(" ~ Expr ~ ")"}
 
-UnaryExpr = {UnaryOp ~ (InstVarExpr|ParanthesizedExpr|Identifier)}
+UnaryExpr = {UnaryOp ~ NonBinaryExpr}
 UnaryOp = {"+" | "-" | "!"}
 
+// @Note: All operators are assumed to be right-associative here
+// This assumption is of course wrong, but this is fixed in parser.rs
+// by restructuring the tree.
+Prec4BinExpr = {(Prec3BinExpr  ~ Prec4BinOp ~ Prec4BinExpr) | Prec3BinExpr}
 Prec3BinExpr = {(Prec2BinExpr  ~ Prec3BinOp ~ Prec3BinExpr) | Prec2BinExpr}
 Prec2BinExpr = {(Prec1BinExpr  ~ Prec2BinOp ~ Prec2BinExpr) | Prec1BinExpr}
 Prec1BinExpr = {(Prec0BinExpr  ~ Prec1BinOp ~ Prec1BinExpr) | Prec0BinExpr}
-Prec0BinExpr = {(NonBinaryExpr ~ Prec0BinOp ~ Prec0BinExpr) | NonBinaryExpr}
-Prec3BinOp = {"==" | "!=" | "&&" | "||"}
+Prec0BinExpr = {(NonBinaryExpr ~ Prec0BinOp ~ Prec0BinExpr) | NonBinaryExpr }
+Prec4BinOp = {"&&" | "||"}
+Prec3BinOp = {"==" | "!="}
 Prec2BinOp = {"<=" | ">=" | "<" | ">"}
 Prec1BinOp = {"+" | "-"}
 Prec0BinOp = {"*" | "/" | "%"}

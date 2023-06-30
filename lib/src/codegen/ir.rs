@@ -48,16 +48,12 @@ impl DIR {
             .map(|f| f.as_bytes(&current_class.name, &mut self.constant_pool))
             .flatten()
             .collect();
-        let mut method_infos = make_default_constructor(&current_class, &mut self.constant_pool)
-            .as_bytes(&mut self.constant_pool);
-        method_infos.append(
-            &mut current_class
-                .methods
-                .iter()
-                .map(|m| m.as_bytes(&mut self.constant_pool))
-                .flatten()
-                .collect(),
-        );
+        let mut method_infos = current_class
+            .methods
+            .iter()
+            .map(|m| m.as_bytes(&mut self.constant_pool))
+            .flatten()
+            .collect();
 
         // Constant Pool
         result.extend_from_slice(&self.constant_pool.count().to_be_bytes());
@@ -73,8 +69,7 @@ impl DIR {
         result.append(&mut field_infos);
 
         // Methods
-        // @Cleanup +1 because of the default constructor
-        result.extend_from_slice(&(current_class.methods.len() as u16 + 1).to_be_bytes());
+        result.extend_from_slice(&(current_class.methods.len() as u16).to_be_bytes());
         result.append(&mut method_infos);
 
         result.extend_from_slice(&[0, 0]);
@@ -84,6 +79,8 @@ impl DIR {
 }
 
 fn make_default_constructor(class: &IRClass, constant_pool: &mut ConstantPool) -> CompiledMethod {
+    let mut local_var_pool = LocalVarPool(vec![]);
+    let mut stack = StackSize::new();
     let mut code = vec![
         Instruction::aload_0,
         Instruction::invokespecial(
@@ -98,11 +95,12 @@ fn make_default_constructor(class: &IRClass, constant_pool: &mut ConstantPool) -
                 .unwrap(),
         ),
     ];
-    let mut local_var_pool = LocalVarPool(vec![]);
-    let mut stack = StackSize::new();
+    stack.inc(1); // aload_0
+    stack.dec(1); // invokespecial
     for field in class.fields.iter() {
         if let Some(x) = &field.val {
             code.push(Instruction::aload_0);
+            stack.inc(1);
             code.append(&mut generate_code_expr(
                 Expr::TypedExpr(Box::new(x.clone()), field.field_type.clone()),
                 &mut stack,
@@ -118,7 +116,8 @@ fn make_default_constructor(class: &IRClass, constant_pool: &mut ConstantPool) -
                         r#type: field.field_type.to_ir_string(),
                     },
                 }),
-            )))
+            )));
+            stack.dec(2);
         }
     }
     code.push(Instruction::r#return);
@@ -329,7 +328,9 @@ impl LocalVarPool {
         self.0.len() as u8
     }
     pub fn get_index(&self, name: &str) -> u8 {
-        self.0
+        // +1 because the 0th local variable is `this`, which isn't captured in this structure
+        1 + self
+            .0
             .iter()
             .position(|n| n == name)
             .map(|i| i as u8)
@@ -367,7 +368,7 @@ impl CompiledMethod {
                         .iter()
                         .map(|p| p.0.to_ir_string())
                         .collect::<Vec<String>>()
-                        .join(", "),
+                        .join(""),
                     self.return_type.to_ir_string()
                 )))
                 .to_be_bytes(),
@@ -385,6 +386,7 @@ impl CompiledMethod {
         );
         // Expand the relative jumps in the code to absolute jumps
         let expanded_code = convert_to_absolute_jumps(self.code.clone());
+        let expanded_code = dbg!(expanded_code);
         // attr = attribute after attribute_length
         let mut attr = vec![];
         attr.extend_from_slice(&self.max_stack.to_be_bytes());
@@ -524,24 +526,24 @@ pub fn generate_dir(ast: &Prg) -> DIR {
         classes: vec![],
     };
     for class in ast {
-        dir.classes.push(generate_class(class, &dir));
+        let ir_class = generate_class(class, &mut dir);
+        dir.classes.push(ir_class);
     }
     dir
 }
 
-fn generate_class(class: &Class, dir: &DIR) -> IRClass {
-    let mut constant_pool = ConstantPool::new(&class.name);
+fn generate_class(class: &Class, dir: &mut DIR) -> IRClass {
     let mut ir_class = IRClass::new(class.name.clone(), vec![], vec![]);
     for field in &class.fields {
         ir_class.fields.push(field.clone());
     }
+    ir_class
+        .methods
+        .push(make_default_constructor(&ir_class, &mut dir.constant_pool));
     for method in &class.methods {
-        ir_class.methods.push(generate_method(
-            method,
-            dir,
-            &mut constant_pool,
-            &class.name,
-        ));
+        ir_class
+            .methods
+            .push(generate_method(method, &mut dir.constant_pool, &class.name));
     }
     ir_class
 }
@@ -559,7 +561,6 @@ fn generate_field(field: &FieldDecl, constant_pool: &mut ConstantPool) -> IRFiel
 /// Generates a Vector of instructions for a given method
 fn generate_method(
     method: &MethodDecl,
-    dir: &DIR,
     constant_pool: &mut ConstantPool,
     class_name: &str,
 ) -> CompiledMethod {
@@ -573,7 +574,6 @@ fn generate_method(
     let mut stack = StackSize::new();
     let code = generate_code_stmt(
         method.body.clone(),
-        dir,
         &mut stack,
         constant_pool,
         &mut local_var_pool,
@@ -584,7 +584,7 @@ fn generate_method(
         return_type: method.ret_type.clone(),
         params: method.params.clone(),
         max_stack: stack.max,
-        max_locals: local_var_pool.0.len() as u16,
+        max_locals: 1 + local_var_pool.0.len() as u16,
         code,
     }
 }
@@ -600,11 +600,15 @@ impl StackSize {
         StackSize { current: 0, max: 0 }
     }
 
-    pub fn update(&mut self, step: i16) {
-        self.current = (self.current as i16 + step) as u16;
+    pub fn inc(&mut self, step: u16) {
+        self.current += step;
         if self.current > self.max {
             self.max = self.current;
         }
+    }
+
+    pub fn dec(&mut self, step: u16) {
+        self.current -= step;
     }
 
     pub fn set(&mut self, val: u16) {
@@ -617,7 +621,6 @@ impl StackSize {
 
 fn generate_code_stmt(
     stmt: Stmt,
-    dir: &DIR,
     stack: &mut StackSize,
     constant_pool: &mut ConstantPool,
     local_var_pool: &mut LocalVarPool,
@@ -633,7 +636,6 @@ fn generate_code_stmt(
                     for stmt in stmts {
                         result.append(&mut generate_code_stmt(
                             stmt.clone(),
-                            dir,
                             stack,
                             constant_pool,
                             local_var_pool,
@@ -717,23 +719,17 @@ fn generate_code_stmt(
                         class_name,
                     ));
                     // Checking the condition removes one element from stack
-                    stack.update(-1);
+                    stack.dec(1);
                     // Generate bytecode for our body
-                    let mut body = generate_code_stmt(
-                        *stmt,
-                        dir,
-                        stack,
-                        constant_pool,
-                        local_var_pool,
-                        class_name,
-                    );
+                    let mut body =
+                        generate_code_stmt(*stmt, stack, constant_pool, local_var_pool, class_name);
                     result.push(Instruction::reljumpifeq(body.len() as i16));
                     result.append(&mut body);
                     result.push(Instruction::reljumpifeq(-(body.len() as i16)));
                 }
                 Stmt::LocalVarDecl(types, name) => {
                     local_var_pool.add(name.clone());
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 Stmt::If(expr, stmt1, stmt2) => {
                     // Generate bytecode for if
@@ -745,12 +741,10 @@ fn generate_code_stmt(
                         local_var_pool,
                         class_name,
                     ));
-                    // Checking the condition removes an element from the stack
-                    stack.update(-1);
+                    stack.dec(1);
                     // We set a label to jump to if the expression is false
                     let mut if_body = generate_code_stmt(
                         *stmt1,
-                        dir,
                         stack,
                         constant_pool,
                         local_var_pool,
@@ -764,7 +758,6 @@ fn generate_code_stmt(
                     if let Some(stmt) = stmt2 {
                         let mut else_body = generate_code_stmt(
                             *stmt,
-                            dir,
                             stack,
                             constant_pool,
                             local_var_pool,
@@ -823,7 +816,7 @@ fn generate_code_stmt_expr(
                                 } else {
                                     result.push(Instruction::istore(idx));
                                 }
-                                stack.update(-1);
+                                stack.dec(1);
                             }
                             Expr::FieldVar(name) => {
                                 let idx = constant_pool.add(Constant::FieldRef(FieldRef {
@@ -834,10 +827,10 @@ fn generate_code_stmt_expr(
                                     },
                                 }));
                                 result.push(Instruction::aload_0);
-                                stack.update(1);
+                                stack.inc(1);
                                 result.append(&mut expr_code);
                                 result.push(Instruction::putfield(idx));
-                                stack.update(-2);
+                                stack.dec(2);
                             }
                             Expr::InstVar(expr, name) => {
                                 let idx = constant_pool.add(Constant::FieldRef(FieldRef {
@@ -856,7 +849,7 @@ fn generate_code_stmt_expr(
                                 ));
                                 result.append(&mut expr_code);
                                 result.push(Instruction::putfield(idx));
-                                stack.update(-2);
+                                stack.dec(2);
                             }
                             _ => panic!("Unexpected variable type for assignment: {:?}", var),
                         },
@@ -876,9 +869,9 @@ fn generate_code_stmt_expr(
                     }));
                     result.push(Instruction::new(class_index));
                     result.push(Instruction::dup);
+                    stack.inc(1);
                     result.push(Instruction::invokespecial(method_index));
-                    stack.update(1);
-                    stack.update(-1);
+                    stack.dec(1);
                 }
                 StmtExpr::MethodCall(_expr, name, args) => {
                     // Generate bytecode for method call
@@ -931,7 +924,7 @@ fn generate_code_stmt_expr(
                         },
                     }));
                     result.push(Instruction::invokespecial(method_index));
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 _ => panic!("StmtExpr typed: {:?}", new_stmt_expr),
             }
@@ -955,29 +948,29 @@ fn generate_code_expr(
             match expr {
                 Expr::Integer(i) => {
                     result.push(Instruction::bipush(i as u8));
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 Expr::Bool(b) => {
                     result.push(Instruction::bipush(b as u8));
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 Expr::Char(c) => {
                     result.push(Instruction::bipush(c as u8));
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 Expr::String(s) => {
                     let ind = constant_pool.add(Constant::Utf8(s.to_string()));
                     let index = constant_pool.add(Constant::String(ind));
                     result.push(Instruction::ldc(index));
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 Expr::Jnull => {
                     result.push(Instruction::aconst_null);
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 Expr::This => {
                     result.push(Instruction::aload(0));
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 Expr::InstVar(exprs, name) => {
                     match exprs.deref() {
@@ -1030,11 +1023,9 @@ fn generate_code_expr(
                     }));
                     result.push(getfield(field_index));
                     // I'm thinking 2 here since we load the field here too and leave the class on the stack
-                    stack.update(2);
+                    stack.inc(2);
                 }
-
                 Binary(op, left, right) => {
-                    stack.update(-1);
                     match BinaryOp::from(&op as &str) {
                         BinaryOp::Add => {
                             result.append(&mut generate_code_expr(
@@ -1122,48 +1113,52 @@ fn generate_code_expr(
                             result.push(Instruction::irem);
                         }
                         BinaryOp::And => {
-                            result.append(&mut generate_code_expr(
+                            let mut left_code = generate_code_expr(
                                 *left,
                                 stack,
                                 constant_pool,
                                 local_var_pool,
                                 class_name,
-                            ));
-                            result.push(Instruction::reljumpifeq(3));
-                            result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
-                            result.push(Instruction::bipush(0));
-                            result.append(&mut generate_code_expr(
+                            );
+                            let mut right_code = generate_code_expr(
                                 *right,
                                 stack,
                                 constant_pool,
                                 local_var_pool,
                                 class_name,
-                            ));
+                            );
+                            // If left operand is false (== 0), return false immediately
+                            result.append(&mut left_code);
+                            result.push(Instruction::reljumpifeq(2));
+                            result.push(Instruction::relgoto(4 + right_code.len() as i16));
+                            // If right operand is false (== 0), return false
+                            result.append(&mut right_code);
                             result.push(Instruction::reljumpifeq(3));
                             result.push(Instruction::bipush(1));
                             result.push(Instruction::relgoto(2));
                             result.push(Instruction::bipush(0));
                         }
                         BinaryOp::Or => {
-                            result.append(&mut generate_code_expr(
+                            let mut left_code = generate_code_expr(
                                 *left,
                                 stack,
                                 constant_pool,
                                 local_var_pool,
                                 class_name,
-                            ));
-                            result.push(Instruction::reljumpifne(3));
-                            result.push(Instruction::bipush(0));
-                            result.push(Instruction::relgoto(2));
-                            result.push(Instruction::bipush(1));
-                            result.append(&mut generate_code_expr(
+                            );
+                            let mut right_code = generate_code_expr(
                                 *right,
                                 stack,
                                 constant_pool,
                                 local_var_pool,
                                 class_name,
-                            ));
+                            );
+                            result.append(&mut left_code);
+                            // If left operand is true (!= 0), return true immediately
+                            result.push(Instruction::reljumpifeq(2));
+                            result.push(Instruction::relgoto(4 + right_code.len() as i16));
+                            // If right operand is true (!= 0) return true
+                            result.append(&mut right_code);
                             result.push(Instruction::reljumpifne(3));
                             result.push(Instruction::bipush(0));
                             result.push(Instruction::relgoto(2));
@@ -1290,6 +1285,7 @@ fn generate_code_expr(
                             result.push(Instruction::bipush(0))
                         }
                     }
+                    stack.dec(1);
                 }
                 Expr::Unary(op, expr) => {
                     result.append(&mut generate_code_expr(
@@ -1313,7 +1309,7 @@ fn generate_code_expr(
                     }
                 }
                 Expr::LocalVar(name) => {
-                    stack.update(1);
+                    stack.inc(1);
                     let index = local_var_pool.get_index(&name);
                     match r#type {
                         Type::Int => {
@@ -1352,7 +1348,7 @@ fn generate_code_expr(
                     // We only do getfield here because we don't know what operation we're doing
                     // with the field
                     result.push(Instruction::getfield(index));
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 p => panic!(
                     "Unexpected expression where untyped expression was expected: {:?}",

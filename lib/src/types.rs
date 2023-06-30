@@ -218,6 +218,27 @@ impl From<&str> for BinaryOp {
     }
 }
 
+impl BinaryOp {
+    pub fn prec(op: &str) -> u8 {
+        match op {
+            "*" => 0,
+            "/" => 0,
+            "%" => 0,
+            "+" => 1,
+            "-" => 1,
+            "<=" => 2,
+            ">=" => 2,
+            "<" => 2,
+            ">" => 2,
+            "==" => 3,
+            "!=" => 3,
+            "&&" => 4,
+            "||" => 4,
+            _ => panic!("Invalid binary operator: {}", op),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Hash, Eq)]
 pub enum Type {
     Int,

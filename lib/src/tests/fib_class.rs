@@ -48,10 +48,12 @@ fn fib_class() -> Class {
                                 Type::Bool,
                             ),
                             Box::new(TypedStmt(
-                                Box::new(Return(TypedExpr(
+                                Box::new(Block(vec![
+                                    TypedStmt(Box::new(Return(TypedExpr(
                                     Box::new(LocalVar("n".to_string())),
                                     Type::Int,
-                                ))),
+                                ))), Type::Int)
+                                ])),
                                 Type::Int,
                             )),
                             Some(Box::new(TypedStmt(
@@ -150,10 +152,12 @@ fn fib_class() -> Class {
                                     Type::Bool,
                                 ),
                                 Box::new(TypedStmt(
-                                    Box::new(Return(TypedExpr(
+                                    Box::new(Block(vec![
+                                        TypedStmt(Box::new(Return(TypedExpr(
                                         Box::new(LocalVar("n".to_string())),
                                         Type::Int,
-                                    ))),
+                                    ))), Type::Int)
+                                    ])),
                                     Type::Int,
                                 )),
                                 None,
