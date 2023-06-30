@@ -189,6 +189,7 @@ impl ConstantPool {
             Constant::String(str) => {
                 self.add(Constant::Utf8(str));
             }
+            Constant::Integer(int) => {}
             Constant::Utf8(name) => {}
         };
         self.0.push(constant);
@@ -272,6 +273,10 @@ impl ConstantPool {
                             .unwrap()
                             .to_be_bytes(),
                     );
+                }
+                Constant::Integer(int) => {
+                    result.push(3);
+                    result.extend_from_slice(&int.to_be_bytes());
                 }
             }
         }
@@ -419,6 +424,7 @@ pub enum Constant {
     NameAndType(NameAndType),
     String(String),
     Utf8(String),
+    Integer(i32), // Used only for when the integer is too big to fit into a i16
 }
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub struct FieldRef {
@@ -450,7 +456,8 @@ pub(crate) enum Instruction {
     ireturn,          //return int, char, boolean
     r#return,         //return void
     areturn,          //return object(string, integer, null)
-    bipush(u8),       //Push byte onto stack
+    bipush(i8),       //Push signed byte onto stack
+    sipush(i16),      //Push signed short onto stack
     istore(u8),       //Store int into local variable
     astore(u8),       //Store reference into local variable
     reljumpifeq(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
@@ -495,7 +502,10 @@ impl Instruction {
             Instruction::ireturn => vec![172],
             Instruction::r#return => vec![177],
             Instruction::areturn => vec![176],
-            Instruction::bipush(byte) => vec![16, *byte],
+            Instruction::bipush(byte) => vec![16, *byte as u8],
+            Instruction::sipush(short) => {
+                vec![17, high_byte(*short as u16), low_byte(*short as u16)]
+            }
             Instruction::istore(idx) => vec![54, *idx],
             Instruction::astore(idx) => vec![58, *idx],
             Instruction::aconst_null => vec![1],
@@ -951,15 +961,23 @@ fn generate_code_expr(
             let expr = expr.deref().clone();
             match expr {
                 Expr::Integer(i) => {
-                    result.push(Instruction::bipush(i as u8));
+                    if i < i8::MAX as i32 && i > i8::MIN as i32 {
+                        result.push(Instruction::bipush(i as i8));
+                    } else if i < i16::MAX as i32 && i > i16::MIN as i32 {
+                        result.push(Instruction::sipush(i as i16));
+                    } else {
+                        result.push(Instruction::ldc(
+                            constant_pool.add(Constant::Integer(i)) as u8
+                        ));
+                    }
                     stack.inc(1);
                 }
                 Expr::Bool(b) => {
-                    result.push(Instruction::bipush(b as u8));
+                    result.push(Instruction::bipush(b as i8));
                     stack.inc(1);
                 }
                 Expr::Char(c) => {
-                    result.push(Instruction::bipush(c as u8));
+                    result.push(Instruction::bipush(c as i8));
                     stack.inc(1);
                 }
                 Expr::String(s) => {
@@ -1011,6 +1029,7 @@ fn generate_code_expr(
                                         r#type: r#type.to_ir_string(),
                                     },
                                 }));
+                                result.push(Instruction::aload_0);
                                 result.push(Instruction::getfield(field_index));
                             }
                             _ => panic!("Expected this got {:?}", exprs),
@@ -1345,13 +1364,14 @@ fn generate_code_expr(
                         class: class_name.to_string(),
                         field: NameAndType {
                             name: name.clone(),
-                            r#type: r#type.to_string(),
+                            r#type: r#type.to_ir_string(),
                         },
                     }));
                     // We only do getfield here because we don't know what operation we're doing
                     // with the field
+                    result.push(Instruction::aload_0);
                     result.push(Instruction::getfield(index));
-                    stack.inc(1);
+                    stack.inc(2);
                 }
                 p => panic!(
                     "Unexpected expression where untyped expression was expected: {:?}",
