@@ -608,7 +608,7 @@ impl StackSize {
     }
 
     pub fn dec(&mut self, step: u16) {
-        self.current -= step;
+        self.current.saturating_sub(step);
     }
 
     pub fn set(&mut self, val: u16) {
@@ -750,14 +750,27 @@ fn generate_code_stmt(
                         local_var_pool,
                         class_name,
                     );
+                    if stmt2.is_some() {
+                        // If there is an else block we need to jump over it at the end of
+                        // the if block since the stack could be changed
+                        // TODO: This clone is fairly stupid
+                        let else_body = generate_code_stmt(
+                            *stmt2.clone().unwrap(),
+                            stack,
+                            constant_pool,
+                            local_var_pool,
+                            class_name,
+                        );
+                        if_body.push(Instruction::relgoto(else_body.len() as i16));
+                    }
                     // If the expression is false, jump to the else block
-                    result.push(Instruction::reljumpifeq(if_body.len() as i16));
-                    // If the expression is true, execute the if block
+                    // FIXME: Does not work
+                    result.push(Instruction::reljumpifne(if_body.len() as i16));
                     result.append(&mut if_body);
-                    // If there is an else block, execute it
-                    if let Some(stmt) = stmt2 {
+                    // If there is an else block, append it
+                    if stmt2.is_some() {
                         let mut else_body = generate_code_stmt(
-                            *stmt,
+                            *stmt2.unwrap(),
                             stack,
                             constant_pool,
                             local_var_pool,
@@ -1259,6 +1272,7 @@ fn generate_code_expr(
                                 local_var_pool,
                                 class_name,
                             ));
+                            result.push(Instruction::isub);
                             result.push(Instruction::reljumpifne(3));
                             result.push(Instruction::bipush(1));
                             result.push(Instruction::relgoto(2));
