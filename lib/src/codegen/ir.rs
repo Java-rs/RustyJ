@@ -186,7 +186,9 @@ impl ConstantPool {
                 self.add(Constant::NameAndType(method_ref.method));
             }
             // Do nothing in these cases
-            Constant::String(str_idx) => {}
+            Constant::String(str) => {
+                self.add(Constant::Utf8(str));
+            }
             Constant::Utf8(name) => {}
         };
         self.0.push(constant);
@@ -266,7 +268,7 @@ impl ConstantPool {
                     result.push(8);
                     result.extend_from_slice(
                         &self
-                            .index_of(&Constant::String(val.clone()))
+                            .index_of(&Constant::Utf8(val.clone()))
                             .unwrap()
                             .to_be_bytes(),
                     );
@@ -415,7 +417,7 @@ pub enum Constant {
     /// This has to be of format `class_index.method_name_index`. If it is later found to be beneficial however we could split this into two Strings
     MethodRef(MethodRef),
     NameAndType(NameAndType),
-    String(u16),
+    String(String),
     Utf8(String),
 }
 #[derive(PartialEq, Eq, Debug, Clone)]
@@ -453,11 +455,11 @@ pub(crate) enum Instruction {
     astore(u8),       //Store reference into local variable
     reljumpifeq(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
     aconst_null,      //Push null onto stack
-    ldc(u16),         //Push item from constant pool onto stack
-    ineg,             //Negate int
-    goto(u16),        //Jump to instruction
-    relgoto(i16),     //Jump to instruction relative to current instruction
-    ifne(u16),        //Branch if int is not 0
+    ldc(u8), //Push item from constant pool onto stack - For some reason only one byte for index into constant pool :shrug:
+    ineg,    //Negate int
+    goto(u16), //Jump to instruction
+    relgoto(i16), //Jump to instruction relative to current instruction
+    ifne(u16), //Branch if int is not 0
     reljumpifne(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
     reljumpiflt(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
     reljumpifge(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
@@ -497,7 +499,7 @@ impl Instruction {
             Instruction::istore(idx) => vec![54, *idx],
             Instruction::astore(idx) => vec![58, *idx],
             Instruction::aconst_null => vec![1],
-            Instruction::ldc(idx) => vec![18, high_byte(*idx), low_byte(*idx)],
+            Instruction::ldc(idx) => vec![18, *idx],
             Instruction::ineg => vec![116],
             Instruction::goto(jmp) => vec![167, high_byte(*jmp), low_byte(*jmp)],
             Instruction::ifne(jmp) => vec![154, high_byte(*jmp), low_byte(*jmp)],
@@ -547,6 +549,8 @@ fn generate_class(class: &Class, dir: &mut DIR) -> IRClass {
     }
     ir_class
 }
+
+// @Cleanup this function is never used
 /// If this method is used the caller has to still set a NameAndType constant and a FieldRef
 /// constant, which is technically optional if the field is not used but we're lazy
 fn generate_field(field: &FieldDecl, constant_pool: &mut ConstantPool) -> IRFieldDecl {
@@ -959,9 +963,8 @@ fn generate_code_expr(
                     stack.inc(1);
                 }
                 Expr::String(s) => {
-                    let ind = constant_pool.add(Constant::Utf8(s.to_string()));
-                    let index = constant_pool.add(Constant::String(ind));
-                    result.push(Instruction::ldc(index));
+                    let index = constant_pool.add(Constant::String(s.to_string()));
+                    result.push(Instruction::ldc(index as u8));
                     stack.inc(1);
                 }
                 Expr::Jnull => {

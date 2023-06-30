@@ -213,7 +213,7 @@ pub fn class_test(ast: &Class, tast: Option<&Class>, name: &str) {
 
 fn run_java(name: &str) -> std::process::Output {
     Command::new("java")
-        .arg("-noverify")
+        // .arg("-noverify")
         .arg(name)
         .current_dir("lib/testcases/")
         .output()
