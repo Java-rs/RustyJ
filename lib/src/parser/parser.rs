@@ -184,14 +184,9 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
         Rule::Stmt => parse_Stmt(pair.into_inner().next().unwrap()), //@Notice this may be very wrong !!
         Rule::WhileStmt => {
             let mut inners = pair.into_inner();
-
             let Expr = parse_expr(inners.next().unwrap());
             let Stmt = parse_Stmt(inners.next().unwrap());
-            if Stmt.len() > 1 {
-                vec![Stmt::While(Expr, Box::new(Stmt::Block(Stmt)))]
-            } else {
-                vec![Stmt::While(Expr, Box::new(Stmt.get(0).unwrap().clone()))]
-            }
+            vec![Stmt::While(Expr, Box::new(Stmt::Block(Stmt)))]
         }
         Rule::IfElseStmt => {
             let mut inners = pair.into_inner();
