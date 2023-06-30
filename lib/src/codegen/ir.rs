@@ -69,8 +69,7 @@ impl DIR {
         result.append(&mut field_infos);
 
         // Methods
-        // @Cleanup +1 because of the default constructor
-        result.extend_from_slice(&(current_class.methods.len() as u16 + 1).to_be_bytes());
+        result.extend_from_slice(&(current_class.methods.len() as u16).to_be_bytes());
         result.append(&mut method_infos);
 
         result.extend_from_slice(&[0, 0]);
