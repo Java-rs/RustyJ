@@ -107,6 +107,11 @@ fn parse_method(pair: Pair<Rule>) -> MethodDecl {
 }
 
 fn parse_BlockStmt(pair: Pair<Rule>) -> Vec<Stmt> {
+    println!(
+        "parse_BlockStmt: rule = {:?}, str = {}",
+        pair.as_rule(),
+        pair.as_str()
+    );
     let rule = pair.as_rule().clone();
     let mut inner = pair.into_inner();
     match rule {
@@ -170,6 +175,11 @@ fn parse_BlockStmt(pair: Pair<Rule>) -> Vec<Stmt> {
     }
 }
 fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
+    println!(
+        "parse_Stmt: rule = {:?}, str = {}",
+        pair.as_rule(),
+        pair.as_str()
+    );
     match pair.as_rule() {
         Rule::Stmt => parse_Stmt(pair.into_inner().next().unwrap()), //@Notice this may be very wrong !!
         Rule::WhileStmt => {
@@ -252,6 +262,11 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
 }
 
 fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
+    println!(
+        "parse_StmtExpr: rule = {:?}, str = {}",
+        pair.as_rule(),
+        pair.as_str()
+    );
     let rule = pair.as_rule().clone();
     match rule {
         Rule::AssignExpr => {
@@ -282,7 +297,7 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
             StmtExpr::New(id_name, exprList)
         }
         Rule::MethodCallExpr => {
-            let mut inners = pair.clone().into_inner(); //i fogot how to do this withouth cone
+            let mut inners = pair.into_inner();
             let mut identifORinstVar = inners.next().unwrap();
             let String_name;
             let MethodExpr;
@@ -292,7 +307,7 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
                     MethodExpr = Expr::This;
                 }
                 Rule::InstVarExpr => {
-                    let Expr::InstVar(a, b) = parse_expr(pair) else { unreachable!() };
+                    let Expr::InstVar(a, b) = parse_expr(identifORinstVar) else { unreachable!() };
                     MethodExpr = *a;
                     String_name = b;
                 }
@@ -374,6 +389,11 @@ fn parse_Type(pair: Pair<Rule>) -> Type {
 
 fn parse_expr(pair: Pair<Rule>) -> Expr {
     let rule = pair.as_rule();
+    println!(
+        "parse_expr: rule = {:?}, str = {}",
+        pair.as_rule(),
+        pair.as_str()
+    );
     match rule {
         Rule::Expr => parse_expr(pair.into_inner().next().unwrap()),
         Rule::ThisExpr => Expr::This,
