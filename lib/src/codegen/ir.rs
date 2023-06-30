@@ -48,16 +48,12 @@ impl DIR {
             .map(|f| f.as_bytes(&current_class.name, &mut self.constant_pool))
             .flatten()
             .collect();
-        let mut method_infos = make_default_constructor(&current_class, &mut self.constant_pool)
-            .as_bytes(&mut self.constant_pool);
-        method_infos.append(
-            &mut current_class
-                .methods
-                .iter()
-                .map(|m| m.as_bytes(&mut self.constant_pool))
-                .flatten()
-                .collect(),
-        );
+        let mut method_infos = current_class
+            .methods
+            .iter()
+            .map(|m| m.as_bytes(&mut self.constant_pool))
+            .flatten()
+            .collect();
 
         // Constant Pool
         result.extend_from_slice(&self.constant_pool.count().to_be_bytes());
@@ -524,24 +520,24 @@ pub fn generate_dir(ast: &Prg) -> DIR {
         classes: vec![],
     };
     for class in ast {
-        dir.classes.push(generate_class(class, &dir));
+        let ir_class = generate_class(class, &mut dir);
+        dir.classes.push(ir_class);
     }
     dir
 }
 
-fn generate_class(class: &Class, dir: &DIR) -> IRClass {
-    let mut constant_pool = ConstantPool::new(&class.name);
+fn generate_class(class: &Class, dir: &mut DIR) -> IRClass {
     let mut ir_class = IRClass::new(class.name.clone(), vec![], vec![]);
     for field in &class.fields {
         ir_class.fields.push(field.clone());
     }
+    ir_class
+        .methods
+        .push(make_default_constructor(&ir_class, &mut dir.constant_pool));
     for method in &class.methods {
-        ir_class.methods.push(generate_method(
-            method,
-            dir,
-            &mut constant_pool,
-            &class.name,
-        ));
+        ir_class
+            .methods
+            .push(generate_method(method, &mut dir.constant_pool, &class.name));
     }
     ir_class
 }
@@ -559,7 +555,6 @@ fn generate_field(field: &FieldDecl, constant_pool: &mut ConstantPool) -> IRFiel
 /// Generates a Vector of instructions for a given method
 fn generate_method(
     method: &MethodDecl,
-    dir: &DIR,
     constant_pool: &mut ConstantPool,
     class_name: &str,
 ) -> CompiledMethod {
@@ -573,7 +568,6 @@ fn generate_method(
     let mut stack = StackSize::new();
     let code = generate_code_stmt(
         method.body.clone(),
-        dir,
         &mut stack,
         constant_pool,
         &mut local_var_pool,
@@ -617,7 +611,6 @@ impl StackSize {
 
 fn generate_code_stmt(
     stmt: Stmt,
-    dir: &DIR,
     stack: &mut StackSize,
     constant_pool: &mut ConstantPool,
     local_var_pool: &mut LocalVarPool,
@@ -633,7 +626,6 @@ fn generate_code_stmt(
                     for stmt in stmts {
                         result.append(&mut generate_code_stmt(
                             stmt.clone(),
-                            dir,
                             stack,
                             constant_pool,
                             local_var_pool,
@@ -719,14 +711,8 @@ fn generate_code_stmt(
                     // Checking the condition removes one element from stack
                     stack.update(-1);
                     // Generate bytecode for our body
-                    let mut body = generate_code_stmt(
-                        *stmt,
-                        dir,
-                        stack,
-                        constant_pool,
-                        local_var_pool,
-                        class_name,
-                    );
+                    let mut body =
+                        generate_code_stmt(*stmt, stack, constant_pool, local_var_pool, class_name);
                     result.push(Instruction::reljumpifeq(body.len() as i16));
                     result.append(&mut body);
                     result.push(Instruction::reljumpifeq(-(body.len() as i16)));
@@ -750,7 +736,6 @@ fn generate_code_stmt(
                     // We set a label to jump to if the expression is false
                     let mut if_body = generate_code_stmt(
                         *stmt1,
-                        dir,
                         stack,
                         constant_pool,
                         local_var_pool,
@@ -764,7 +749,6 @@ fn generate_code_stmt(
                     if let Some(stmt) = stmt2 {
                         let mut else_body = generate_code_stmt(
                             *stmt,
-                            dir,
                             stack,
                             constant_pool,
                             local_var_pool,
