@@ -406,7 +406,7 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
             Expr::Unary(unaryOP, Box::new(noBinExpr))
         }
         Rule::ParanthesizedExpr => parse_expr(pair.into_inner().next().unwrap()),
-        Rule::IntLiteral => Expr::Integer(pair.as_str().parse().unwrap()),
+        Rule::IntLiteral => Expr::Integer(pair.as_str().trim().parse().unwrap()),
         Rule::BoolLiteral => Expr::Bool(pair.as_str().parse().unwrap()),
         Rule::CharLiteral => Expr::Char(get_str_content(pair.as_str()).parse().unwrap()),
         Rule::StrLiteral => Expr::String(get_str_content(pair.as_str()).to_string()),
