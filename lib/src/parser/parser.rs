@@ -373,7 +373,8 @@ fn parse_Type(pair: Pair<Rule>) -> Type {
 }
 
 fn parse_expr(pair: Pair<Rule>) -> Expr {
-    match pair.as_rule() {
+    let rule = pair.as_rule();
+    match rule {
         Rule::Expr => parse_expr(pair.into_inner().next().unwrap()),
         Rule::ThisExpr => Expr::This,
         Rule::JNull => Expr::Jnull,
@@ -408,14 +409,27 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
         Rule::NonBinaryExpr => parse_expr(pair.into_inner().next().unwrap()),
         Rule::Prec3BinExpr | Rule::Prec2BinExpr | Rule::Prec1BinExpr | Rule::Prec0BinExpr => {
             let mut inners = pair.into_inner();
-            let Prec2BinExpr = inners.next().unwrap();
-            let result = parse_expr(Prec2BinExpr);
+            let left = inners.next().unwrap();
+            let left = parse_expr(left);
             match inners.next() {
-                None => result,
+                None => left,
                 Some(Op) => {
                     let opString = Op.as_str().trim().to_string();
-                    let next = parse_expr(inners.next().unwrap());
-                    Expr::Binary(opString, Box::new(result), Box::new(next))
+                    let right = inners.next().unwrap();
+                    let rightRule = right.as_rule();
+                    let right = parse_expr(right);
+                    if rule == rightRule {
+                        match right {
+                            Expr::Binary(op, rl, rr) => Expr::Binary(
+                                op,
+                                Box::new(Expr::Binary(opString, Box::new(left), rl)),
+                                rr,
+                            ),
+                            _ => Expr::Binary(opString, Box::new(left), Box::new(right)),
+                        }
+                    } else {
+                        Expr::Binary(opString, Box::new(left), Box::new(right))
+                    }
                 }
             }
         }

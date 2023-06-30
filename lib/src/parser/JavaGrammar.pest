@@ -86,6 +86,9 @@ ParanthesizedExpr = {"(" ~ Expr ~ ")"}
 UnaryExpr = {UnaryOp ~ NonBinaryExpr}
 UnaryOp = {"+" | "-" | "!"}
 
+// @Note: All operators are assumed to be right-associative here
+// This assumption is of course wrong, but this is fixed in parser.rs
+// by restructuring the tree.
 Prec3BinExpr = {(Prec2BinExpr  ~ Prec3BinOp ~ Prec3BinExpr) | Prec2BinExpr}
 Prec2BinExpr = {(Prec1BinExpr  ~ Prec2BinOp ~ Prec2BinExpr) | Prec1BinExpr}
 Prec1BinExpr = {(Prec0BinExpr  ~ Prec1BinOp ~ Prec1BinExpr) | Prec0BinExpr}
