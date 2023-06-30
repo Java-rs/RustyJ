@@ -81,7 +81,10 @@ fn setter_getter_class() -> Class {
                             Box::new(Assign(
                                 Expr::TypedExpr(
                                     Box::new(Expr::InstVar(
-                                        Box::new(TypedExpr(Box::new(Expr::This), Type::Int)),
+                                        Box::new(TypedExpr(
+                                            Box::new(Expr::This),
+                                            Type::Class("SetterGetter".to_string()),
+                                        )),
                                         "x".to_string(),
                                     )),
                                     Type::Int,
@@ -126,10 +129,13 @@ fn setter_getter_class() -> Class {
                             Box::new(Assign(
                                 Expr::TypedExpr(
                                     Box::new(Expr::InstVar(
-                                        Box::new(TypedExpr(Box::new(Expr::This), Type::Int)),
+                                        Box::new(TypedExpr(
+                                            Box::new(Expr::This),
+                                            Type::Class("SetterGetter".to_string()),
+                                        )),
                                         "b".to_string(),
                                     )),
-                                    Type::Int,
+                                    Type::Bool,
                                 ),
                                 TypedExpr(Box::new(LocalVar("b".to_string())), Type::Bool),
                             )),
@@ -171,10 +177,13 @@ fn setter_getter_class() -> Class {
                             Box::new(Assign(
                                 Expr::TypedExpr(
                                     Box::new(Expr::InstVar(
-                                        Box::new(TypedExpr(Box::new(Expr::This), Type::Int)),
+                                        Box::new(TypedExpr(
+                                            Box::new(Expr::This),
+                                            Type::Class("SetterGetter".to_string()),
+                                        )),
                                         "c".to_string(),
                                     )),
-                                    Type::Int,
+                                    Type::Char,
                                 ),
                                 TypedExpr(Box::new(LocalVar("c".to_string())), Type::Char),
                             )),
@@ -216,10 +225,13 @@ fn setter_getter_class() -> Class {
                             Box::new(Assign(
                                 Expr::TypedExpr(
                                     Box::new(Expr::InstVar(
-                                        Box::new(TypedExpr(Box::new(Expr::This), Type::Int)),
+                                        Box::new(TypedExpr(
+                                            Box::new(Expr::This),
+                                            Type::Class("SetterGetter".to_string()),
+                                        )),
                                         "s".to_string(),
                                     )),
-                                    Type::Int,
+                                    Type::String,
                                 ),
                                 TypedExpr(Box::new(LocalVar("s".to_string())), Type::String),
                             )),

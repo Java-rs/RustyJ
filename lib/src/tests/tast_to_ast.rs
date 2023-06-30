@@ -21,7 +21,7 @@ pub fn stmt_tast_to_ast(stmt: &Stmt) -> Stmt {
 
 pub fn stmt_expr_tast_to_ast(stmt_expr: &StmtExpr) -> StmtExpr {
     match stmt_expr {
-        StmtExpr::Assign(var, val) => Assign(var.clone(), expr_tast_to_ast(val)),
+        StmtExpr::Assign(var, val) => Assign(expr_tast_to_ast(var), expr_tast_to_ast(val)),
         StmtExpr::New(typ, params) => New(
             typ.clone(),
             params.iter().map(|x| expr_tast_to_ast(x)).collect(),
