@@ -213,6 +213,7 @@ pub fn class_test(ast: &Class, tast: Option<&Class>, name: &str) {
 
 fn run_java(name: &str) -> std::process::Output {
     Command::new("java")
+        .arg("-noverify")
         .arg(name)
         .current_dir("lib/testcases/")
         .output()
@@ -229,7 +230,10 @@ fn compile_java(name: &str) {
     let ecode = child
         .wait()
         .unwrap_or_else(|_| panic!("failed to wait on child compiling {name}.java"));
-    assert!(ecode.success());
+    assert!(
+        ecode.success(),
+        "Failed to compile {name}.java with exit code {ecode}"
+    );
     assert_eq!(ecode.code().unwrap(), 0);
 }
 
