@@ -79,6 +79,8 @@ impl DIR {
 }
 
 fn make_default_constructor(class: &IRClass, constant_pool: &mut ConstantPool) -> CompiledMethod {
+    let mut local_var_pool = LocalVarPool(vec![]);
+    let mut stack = StackSize::new();
     let mut code = vec![
         Instruction::aload_0,
         Instruction::invokespecial(
@@ -93,11 +95,12 @@ fn make_default_constructor(class: &IRClass, constant_pool: &mut ConstantPool) -
                 .unwrap(),
         ),
     ];
-    let mut local_var_pool = LocalVarPool(vec![]);
-    let mut stack = StackSize::new();
+    stack.inc(1); // aload_0
+    stack.dec(1); // invokespecial
     for field in class.fields.iter() {
         if let Some(x) = &field.val {
             code.push(Instruction::aload_0);
+            stack.inc(1);
             code.append(&mut generate_code_expr(
                 Expr::TypedExpr(Box::new(x.clone()), field.field_type.clone()),
                 &mut stack,
@@ -113,7 +116,8 @@ fn make_default_constructor(class: &IRClass, constant_pool: &mut ConstantPool) -
                         r#type: field.field_type.to_ir_string(),
                     },
                 }),
-            )))
+            )));
+            stack.dec(2);
         }
     }
     code.push(Instruction::r#return);
@@ -324,7 +328,9 @@ impl LocalVarPool {
         self.0.len() as u8
     }
     pub fn get_index(&self, name: &str) -> u8 {
-        self.0
+        // +1 because the 0th local variable is `this`, which isn't captured in this structure
+        1 + self
+            .0
             .iter()
             .position(|n| n == name)
             .map(|i| i as u8)
@@ -380,6 +386,7 @@ impl CompiledMethod {
         );
         // Expand the relative jumps in the code to absolute jumps
         let expanded_code = convert_to_absolute_jumps(self.code.clone());
+        let expanded_code = dbg!(expanded_code);
         // attr = attribute after attribute_length
         let mut attr = vec![];
         attr.extend_from_slice(&self.max_stack.to_be_bytes());
@@ -593,11 +600,15 @@ impl StackSize {
         StackSize { current: 0, max: 0 }
     }
 
-    pub fn update(&mut self, step: i16) {
-        self.current = (self.current as i16 + step) as u16;
+    pub fn inc(&mut self, step: u16) {
+        self.current += step;
         if self.current > self.max {
             self.max = self.current;
         }
+    }
+
+    pub fn dec(&mut self, step: u16) {
+        self.current -= step;
     }
 
     pub fn set(&mut self, val: u16) {
@@ -708,7 +719,7 @@ fn generate_code_stmt(
                         class_name,
                     ));
                     // Checking the condition removes one element from stack
-                    stack.update(-1);
+                    stack.dec(1);
                     // Generate bytecode for our body
                     let mut body =
                         generate_code_stmt(*stmt, stack, constant_pool, local_var_pool, class_name);
@@ -718,7 +729,7 @@ fn generate_code_stmt(
                 }
                 Stmt::LocalVarDecl(types, name) => {
                     local_var_pool.add(name.clone());
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 Stmt::If(expr, stmt1, stmt2) => {
                     // Generate bytecode for if
@@ -730,8 +741,7 @@ fn generate_code_stmt(
                         local_var_pool,
                         class_name,
                     ));
-                    // Checking the condition removes an element from the stack
-                    stack.update(-1);
+                    stack.dec(1);
                     // We set a label to jump to if the expression is false
                     let mut if_body = generate_code_stmt(
                         *stmt1,
@@ -806,7 +816,7 @@ fn generate_code_stmt_expr(
                                 } else {
                                     result.push(Instruction::istore(idx));
                                 }
-                                stack.update(-1);
+                                stack.dec(1);
                             }
                             Expr::FieldVar(name) => {
                                 let idx = constant_pool.add(Constant::FieldRef(FieldRef {
@@ -817,10 +827,10 @@ fn generate_code_stmt_expr(
                                     },
                                 }));
                                 result.push(Instruction::aload_0);
-                                stack.update(1);
+                                stack.inc(1);
                                 result.append(&mut expr_code);
                                 result.push(Instruction::putfield(idx));
-                                stack.update(-2);
+                                stack.dec(2);
                             }
                             Expr::InstVar(expr, name) => {
                                 let idx = constant_pool.add(Constant::FieldRef(FieldRef {
@@ -839,7 +849,7 @@ fn generate_code_stmt_expr(
                                 ));
                                 result.append(&mut expr_code);
                                 result.push(Instruction::putfield(idx));
-                                stack.update(-2);
+                                stack.dec(2);
                             }
                             _ => panic!("Unexpected variable type for assignment: {:?}", var),
                         },
@@ -859,9 +869,9 @@ fn generate_code_stmt_expr(
                     }));
                     result.push(Instruction::new(class_index));
                     result.push(Instruction::dup);
+                    stack.inc(1);
                     result.push(Instruction::invokespecial(method_index));
-                    stack.update(1);
-                    stack.update(-1);
+                    stack.dec(1);
                 }
                 StmtExpr::MethodCall(_expr, name, args) => {
                     // Generate bytecode for method call
@@ -914,7 +924,7 @@ fn generate_code_stmt_expr(
                         },
                     }));
                     result.push(Instruction::invokespecial(method_index));
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 _ => panic!("StmtExpr typed: {:?}", new_stmt_expr),
             }
@@ -938,29 +948,29 @@ fn generate_code_expr(
             match expr {
                 Expr::Integer(i) => {
                     result.push(Instruction::bipush(i as u8));
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 Expr::Bool(b) => {
                     result.push(Instruction::bipush(b as u8));
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 Expr::Char(c) => {
                     result.push(Instruction::bipush(c as u8));
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 Expr::String(s) => {
                     let ind = constant_pool.add(Constant::Utf8(s.to_string()));
                     let index = constant_pool.add(Constant::String(ind));
                     result.push(Instruction::ldc(index));
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 Expr::Jnull => {
                     result.push(Instruction::aconst_null);
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 Expr::This => {
                     result.push(Instruction::aload(0));
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 Expr::InstVar(exprs, name) => {
                     match exprs.deref() {
@@ -1013,11 +1023,9 @@ fn generate_code_expr(
                     }));
                     result.push(getfield(field_index));
                     // I'm thinking 2 here since we load the field here too and leave the class on the stack
-                    stack.update(2);
+                    stack.inc(2);
                 }
-
                 Binary(op, left, right) => {
-                    stack.update(-1);
                     match BinaryOp::from(&op as &str) {
                         BinaryOp::Add => {
                             result.append(&mut generate_code_expr(
@@ -1105,48 +1113,52 @@ fn generate_code_expr(
                             result.push(Instruction::irem);
                         }
                         BinaryOp::And => {
-                            result.append(&mut generate_code_expr(
+                            let mut left_code = generate_code_expr(
                                 *left,
                                 stack,
                                 constant_pool,
                                 local_var_pool,
                                 class_name,
-                            ));
-                            result.push(Instruction::reljumpifeq(3));
-                            result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
-                            result.push(Instruction::bipush(0));
-                            result.append(&mut generate_code_expr(
+                            );
+                            let mut right_code = generate_code_expr(
                                 *right,
                                 stack,
                                 constant_pool,
                                 local_var_pool,
                                 class_name,
-                            ));
+                            );
+                            // If left operand is false (== 0), return false immediately
+                            result.append(&mut left_code);
+                            result.push(Instruction::reljumpifeq(2));
+                            result.push(Instruction::relgoto(4 + right_code.len() as i16));
+                            // If right operand is false (== 0), return false
+                            result.append(&mut right_code);
                             result.push(Instruction::reljumpifeq(3));
                             result.push(Instruction::bipush(1));
                             result.push(Instruction::relgoto(2));
                             result.push(Instruction::bipush(0));
                         }
                         BinaryOp::Or => {
-                            result.append(&mut generate_code_expr(
+                            let mut left_code = generate_code_expr(
                                 *left,
                                 stack,
                                 constant_pool,
                                 local_var_pool,
                                 class_name,
-                            ));
-                            result.push(Instruction::reljumpifne(3));
-                            result.push(Instruction::bipush(0));
-                            result.push(Instruction::relgoto(2));
-                            result.push(Instruction::bipush(1));
-                            result.append(&mut generate_code_expr(
+                            );
+                            let mut right_code = generate_code_expr(
                                 *right,
                                 stack,
                                 constant_pool,
                                 local_var_pool,
                                 class_name,
-                            ));
+                            );
+                            result.append(&mut left_code);
+                            // If left operand is true (!= 0), return true immediately
+                            result.push(Instruction::reljumpifeq(2));
+                            result.push(Instruction::relgoto(4 + right_code.len() as i16));
+                            // If right operand is true (!= 0) return true
+                            result.append(&mut right_code);
                             result.push(Instruction::reljumpifne(3));
                             result.push(Instruction::bipush(0));
                             result.push(Instruction::relgoto(2));
@@ -1273,6 +1285,7 @@ fn generate_code_expr(
                             result.push(Instruction::bipush(0))
                         }
                     }
+                    stack.dec(1);
                 }
                 Expr::Unary(op, expr) => {
                     result.append(&mut generate_code_expr(
@@ -1296,7 +1309,7 @@ fn generate_code_expr(
                     }
                 }
                 Expr::LocalVar(name) => {
-                    stack.update(1);
+                    stack.inc(1);
                     let index = local_var_pool.get_index(&name);
                     match r#type {
                         Type::Int => {
@@ -1335,7 +1348,7 @@ fn generate_code_expr(
                     // We only do getfield here because we don't know what operation we're doing
                     // with the field
                     result.push(Instruction::getfield(index));
-                    stack.update(1);
+                    stack.inc(1);
                 }
                 p => panic!(
                     "Unexpected expression where untyped expression was expected: {:?}",

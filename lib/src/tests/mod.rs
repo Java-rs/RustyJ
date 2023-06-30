@@ -31,7 +31,6 @@ use crate::types::Expr::*;
 use crate::types::Stmt::*;
 use crate::types::StmtExpr::*;
 use crate::types::*;
-use rand::thread_rng;
 use std::fs::read;
 use std::fs::File;
 use std::io::read_to_string;
@@ -164,7 +163,6 @@ pub fn codegen_test(tast: &Class, name: &str) {
     let codegen_out = run_java(&format!("{name}Test"));
 
     let (codegen_out, expected_out) = dbg!(codegen_out, expected_out);
-    assert!(false);
     assert_eq!(codegen_out.status.code().unwrap(), 0);
     assert_eq!(codegen_out.status, expected_out.status);
     assert_eq!(codegen_out.stderr, expected_out.stderr);
