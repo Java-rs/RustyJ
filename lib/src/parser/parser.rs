@@ -5,7 +5,7 @@
 extern crate pest;
 extern crate pest_derive;
 
-use crate::types::{Class, Expr, FieldDecl, MethodDecl, Stmt, StmtExpr, Type};
+use crate::types::{BinaryOp, Class, Expr, FieldDecl, MethodDecl, Stmt, StmtExpr, Type};
 use pest::error::Error;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
@@ -414,28 +414,39 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
             Expr::StmtExprExpr(Box::new(parse_StmtExpr(pair.into_inner().next().unwrap())))
         }
         Rule::NonBinaryExpr => parse_expr(pair.into_inner().next().unwrap()),
-        Rule::Prec3BinExpr | Rule::Prec2BinExpr | Rule::Prec1BinExpr | Rule::Prec0BinExpr => {
+        Rule::Prec4BinExpr
+        | Rule::Prec3BinExpr
+        | Rule::Prec2BinExpr
+        | Rule::Prec1BinExpr
+        | Rule::Prec0BinExpr => {
+            let pc = pair.clone();
             let mut inners = pair.into_inner();
             let left = inners.next().unwrap();
             let left = parse_expr(left);
             match inners.next() {
                 None => left,
                 Some(Op) => {
-                    let opString = Op.as_str().trim().to_string();
+                    let opStr = Op.as_str().trim().to_string();
                     let right = inners.next().unwrap();
-                    let rightRule = right.as_rule();
                     let right = parse_expr(right);
-                    if rule == rightRule {
-                        match right {
-                            Expr::Binary(op, rl, rr) => Expr::Binary(
-                                op,
-                                Box::new(Expr::Binary(opString, Box::new(left), rl)),
-                                rr,
-                            ),
-                            _ => Expr::Binary(opString, Box::new(left), Box::new(right)),
+
+                    match right {
+                        Expr::Binary(op, rl, rr) => {
+                            if BinaryOp::prec(&op) == BinaryOp::prec(&opStr) {
+                                Expr::Binary(
+                                    op,
+                                    Box::new(Expr::Binary(opStr, Box::new(left), rl)),
+                                    rr,
+                                )
+                            } else {
+                                Expr::Binary(
+                                    opStr,
+                                    Box::new(left),
+                                    Box::new(Expr::Binary(op, rl, rr)),
+                                )
+                            }
                         }
-                    } else {
-                        Expr::Binary(opString, Box::new(left), Box::new(right))
+                        _ => Expr::Binary(opStr, Box::new(left), Box::new(right)),
                     }
                 }
             }

@@ -53,7 +53,7 @@ MethodCallExpr = {(InstVarExpr | Identifier) ~ "(" ~ ParamList? ~ ")"}
 ParamList = {Expr ~ (","~Expr)*}
 
 // @Note we do not support `super` at the moment
-Expr = {Prec3BinExpr | NonBinaryExpr}
+Expr = {Prec4BinExpr | NonBinaryExpr}
 
 NonBinaryExpr = { IntLiteral
 		        | BoolLiteral
@@ -89,11 +89,13 @@ UnaryOp = {"+" | "-" | "!"}
 // @Note: All operators are assumed to be right-associative here
 // This assumption is of course wrong, but this is fixed in parser.rs
 // by restructuring the tree.
+Prec4BinExpr = {(Prec3BinExpr  ~ Prec4BinOp ~ Prec4BinExpr) | Prec3BinExpr}
 Prec3BinExpr = {(Prec2BinExpr  ~ Prec3BinOp ~ Prec3BinExpr) | Prec2BinExpr}
 Prec2BinExpr = {(Prec1BinExpr  ~ Prec2BinOp ~ Prec2BinExpr) | Prec1BinExpr}
 Prec1BinExpr = {(Prec0BinExpr  ~ Prec1BinOp ~ Prec1BinExpr) | Prec0BinExpr}
 Prec0BinExpr = {(NonBinaryExpr ~ Prec0BinOp ~ Prec0BinExpr) | NonBinaryExpr }
-Prec3BinOp = {"==" | "!=" | "&&" | "||"}
+Prec4BinOp = {"&&" | "||"}
+Prec3BinOp = {"==" | "!="}
 Prec2BinOp = {"<=" | ">=" | "<" | ">"}
 Prec1BinOp = {"+" | "-"}
 Prec0BinOp = {"*" | "/" | "%"}
