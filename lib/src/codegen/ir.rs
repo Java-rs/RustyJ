@@ -1276,6 +1276,7 @@ fn generate_code_expr(
                                 local_var_pool,
                                 class_name,
                             ));
+                            result.push(Instruction::isub);
                             result.push(Instruction::reljumpiflt(3));
                             result.push(Instruction::bipush(1));
                             result.push(Instruction::relgoto(2));
