@@ -62,10 +62,20 @@ fn calculate_absolute_addr(
     instructions: &[Instruction],
 ) -> u16 {
     let modifier: i32 = if target < 0 { -1 } else { 1 };
-    let min = min(j, j.saturating_add_signed(target as isize));
-    let max = max(j, j.saturating_add_signed(target as isize));
-    (get_instructions_length(&instructions[min..max]) as i32 * modifier + current_offset as i32)
-        as u16
+    // Too dumb to figure out the formula for this so here is an ugly if statement
+    if modifier > 0 {
+        let min = min(j + 1, j.saturating_add_signed(target as isize));
+        let max = max(j + 1, j.saturating_add_signed(target as isize));
+        let instructions_to_jump_over = &instructions[min..max];
+        let offset = get_instructions_length(instructions_to_jump_over);
+        (offset as i32 * modifier + current_offset as i32) as u16
+    } else {
+        let min = min(j + 1, j.saturating_add_signed(target as isize));
+        let max = max(j + 1, j.saturating_add_signed(target as isize)) - 1;
+        let instructions_to_jump_over = &instructions[min..max];
+        let offset = get_instructions_length(instructions_to_jump_over);
+        (offset as i32 * modifier + current_offset as i32) as u16
+    }
 }
 
 #[cfg(test)]
@@ -119,5 +129,10 @@ mod tests {
             Instruction::ireturn,
         ];
         assert_eq!(convert_to_absolute_jumps(instructions), expected);
+    }
+    #[test]
+    fn test_calculate_instruction_size() {
+        let instructions = vec![Instruction::reljumpifge(1), Instruction::relgoto(2)];
+        assert_eq!(get_instructions_length(&instructions), 6);
     }
 }
