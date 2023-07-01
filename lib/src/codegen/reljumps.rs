@@ -29,7 +29,8 @@ pub(crate) fn convert_to_absolute_jumps(instructions: Vec<Instruction>) -> Vec<I
                         &instructions[j..j.saturating_add_signed(*target as isize)],
                     ) as i32
                         * modifier
-                        + j as i32) as u16,
+                        + j as i32
+                        - 1) as u16,
                 ))
             }
             Instruction::reljumpifge(target) => {
@@ -39,7 +40,8 @@ pub(crate) fn convert_to_absolute_jumps(instructions: Vec<Instruction>) -> Vec<I
                         &instructions[j..j.saturating_add_signed(*target as isize)],
                     ) as i32
                         * modifier
-                        + j as i32) as u16,
+                        + j as i32
+                        - 1) as u16,
                 ))
             }
             Instruction::relgoto(target) => {
@@ -49,7 +51,8 @@ pub(crate) fn convert_to_absolute_jumps(instructions: Vec<Instruction>) -> Vec<I
                         &instructions[j..j.saturating_add_signed(*target as isize)],
                     ) as i32
                         * modifier
-                        + j as i32) as u16,
+                        + j as i32
+                        - 1) as u16,
                 ))
             }
             Instruction::reljumpiflt(target) => {
@@ -59,7 +62,8 @@ pub(crate) fn convert_to_absolute_jumps(instructions: Vec<Instruction>) -> Vec<I
                         &instructions[j..j.saturating_add_signed(*target as isize)],
                     ) as i32
                         * modifier
-                        + j as i32) as u16,
+                        + j as i32
+                        - 1) as u16,
                 ))
             }
             Instruction::reljumpifne(target) => {
@@ -69,11 +73,66 @@ pub(crate) fn convert_to_absolute_jumps(instructions: Vec<Instruction>) -> Vec<I
                         &instructions[j..j.saturating_add_signed(*target as isize)],
                     ) as i32
                         * modifier
-                        + j as i32) as u16,
+                        + j as i32
+                        - 1) as u16,
                 ))
             }
             _ => result.push(*istr),
         }
     }
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_if_expansion() {
+        let instructions = vec![
+            Instruction::iload(1),
+            Instruction::iload(2),
+            Instruction::isub,
+            Instruction::reljumpifne(3),
+            Instruction::bipush(1),
+            Instruction::ireturn,
+            Instruction::bipush(0),
+            Instruction::ireturn,
+        ];
+        let mut expected = vec![
+            Instruction::iload(1),
+            Instruction::iload(2),
+            Instruction::isub,
+        ];
+        let if_block = vec![Instruction::bipush(1), Instruction::ireturn];
+        let if_block_size = get_instructions_length(&if_block);
+        let expected_size = get_instructions_length(&expected);
+        expected.push(Instruction::ifne(if_block_size + expected_size));
+        expected.extend(if_block);
+        expected.extend_from_slice(&[Instruction::bipush(0), Instruction::ireturn]);
+        assert_eq!(convert_to_absolute_jumps(instructions), expected);
+    }
+    #[test]
+    fn test_negative_expansion() {
+        let instructions = vec![
+            Instruction::iload(1),
+            Instruction::iload(2),
+            Instruction::isub,
+            Instruction::reljumpifne(-3),
+            Instruction::bipush(1),
+            Instruction::ireturn,
+            Instruction::bipush(0),
+            Instruction::ireturn,
+        ];
+        let expected = vec![
+            Instruction::iload(1),
+            Instruction::iload(2),
+            Instruction::isub,
+            Instruction::ifne(0),
+            Instruction::bipush(1),
+            Instruction::ireturn,
+            Instruction::bipush(0),
+            Instruction::ireturn,
+        ];
+        assert_eq!(convert_to_absolute_jumps(instructions), expected);
+    }
 }
