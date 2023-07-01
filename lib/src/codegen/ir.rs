@@ -733,12 +733,12 @@ fn generate_code_stmt(
                     let mut body =
                         generate_code_stmt(*stmt, stack, constant_pool, local_var_pool, class_name);
                     result.push(Instruction::ifeq(
-                        2 + get_instructions_length(&body) as i16,
+                        3 + get_instructions_length(&body) as i16,
                         body.len() as i16,
                     ));
                     result.append(&mut body);
                     result.push(Instruction::ifeq(
-                        -2 - (get_instructions_length(&body) as i16),
+                        -3 - (get_instructions_length(&body) as i16),
                         -(body.len() as i16),
                     ));
                 }
@@ -777,14 +777,13 @@ fn generate_code_stmt(
                             class_name,
                         );
                         if_body.push(Instruction::goto(
-                            2 + get_instructions_length(&else_body) as i16,
+                            3 + get_instructions_length(&else_body) as i16,
                             else_body.len() as i16,
                         ));
                     }
                     // If the expression is false, jump to the else block
-                    dbg!(get_instructions_length(&if_body) as i16);
                     result.push(Instruction::ifne(
-                        2 + get_instructions_length(&if_body) as i16,
+                        3 + get_instructions_length(&if_body) as i16,
                         if_body.len() as i16,
                     ));
                     result.append(&mut if_body);
@@ -1163,7 +1162,7 @@ fn generate_code_expr(
                             // If left operand is false (== 0), return false immediately
                             result.append(&mut left_code);
                             result.push(Instruction::ifeq(
-                                11 + get_instructions_length(&right_code) as i16,
+                                12 + get_instructions_length(&right_code) as i16,
                                 4 + right_code.len() as i16,
                             ));
                             // If right operand is false (== 0), return false
@@ -1191,7 +1190,7 @@ fn generate_code_expr(
                             result.append(&mut left_code);
                             // If left operand is true (!= 0), return true immediately
                             result.push(Instruction::ifne(
-                                11 + get_instructions_length(&right_code) as i16,
+                                12 + get_instructions_length(&right_code) as i16,
                                 4 + right_code.len() as i16,
                             ));
                             // If right operand is true (!= 0) return true

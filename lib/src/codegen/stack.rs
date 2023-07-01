@@ -74,15 +74,17 @@ pub(crate) struct StackMapTable {
 impl StackMapTable {
     fn create_stacks_for_branch(
         code: &[Instruction],
-        mut current_loc: usize,
+        mut instruction_idx: usize,
+        mut bytes_idx: usize,
         current_stack: &mut VerificationStack,
         stacks: &mut Vec<VerificationStack>,
         constant_pool: &ConstantPool,
     ) {
-        while current_loc < code.len() {
+        while instruction_idx < code.len() {
             // FIXME: When are locals added and how can we detect that from the instructions alone?
-            match code.get(current_loc).unwrap() {
+            match code.get(instruction_idx).unwrap() {
                 Instruction::invokespecial(idx) => {
+                    bytes_idx += 3;
                     if let Some(Constant::MethodRef(m)) = constant_pool.get(*idx) {
                         // FIXME: Somehow figure out how many parameters are popped when calling the given function
                         let pop_amount = 1;
@@ -92,50 +94,74 @@ impl StackMapTable {
                         unreachable!();
                     }
                 }
-                Instruction::ldc(idx) => match constant_pool.get(*idx as u16).unwrap() {
-                    Constant::String(_) => current_stack
-                        .operands
-                        .push(VerificationType::OBJECT(todo!())),
-                    Constant::Integer(_) => current_stack.operands.push(VerificationType::INTEGER),
-                    Constant::FieldRef(f) => {
-                        current_stack.operands.push(match f.field.r#type.as_str() {
-                            "I" | "Z" | "C" => VerificationType::INTEGER,
-                            _ => VerificationType::OBJECT(todo!()),
-                        })
+                Instruction::ldc(idx) => {
+                    bytes_idx += 2;
+                    match constant_pool.get(*idx as u16).unwrap() {
+                        Constant::String(_) => current_stack
+                            .operands
+                            .push(VerificationType::OBJECT(todo!())),
+                        Constant::Integer(_) => {
+                            current_stack.operands.push(VerificationType::INTEGER)
+                        }
+                        Constant::FieldRef(f) => {
+                            current_stack.operands.push(match f.field.r#type.as_str() {
+                                "I" | "Z" | "C" => VerificationType::INTEGER,
+                                _ => VerificationType::OBJECT(todo!()),
+                            })
+                        }
+                        _ => unreachable!(),
                     }
-                    _ => unreachable!(),
-                },
-                Instruction::aconst_null => current_stack.operands.push(VerificationType::NULL),
+                }
+                Instruction::aconst_null => {
+                    bytes_idx += 1;
+                    current_stack.operands.push(VerificationType::NULL)
+                }
                 Instruction::new(_) => todo!(), // requires special treatment, I think, see documentation VerificationType::UNINITIALIZED
-                Instruction::aload_0 => current_stack.operands.push(VerificationType::OBJECT(
-                    constant_pool.index_of_this_class(),
-                )),
-                Instruction::aload(idx) => current_stack
-                    .operands
-                    .push(VerificationType::OBJECT(*idx as u16)),
+                Instruction::aload_0 => {
+                    bytes_idx += 1;
+                    current_stack.operands.push(VerificationType::OBJECT(
+                        constant_pool.index_of_this_class(),
+                    ))
+                }
+                Instruction::aload(idx) => {
+                    bytes_idx += 2;
+                    current_stack
+                        .operands
+                        .push(VerificationType::OBJECT(*idx as u16))
+                }
                 Instruction::iload(_) | Instruction::bipush(_) => {
+                    bytes_idx += 2;
                     current_stack.operands.push(VerificationType::INTEGER)
                 }
-                Instruction::sipush(_) => current_stack
-                    .operands
-                    .extend_from_slice(&[VerificationType::INTEGER, VerificationType::INTEGER]),
+                Instruction::sipush(_) => {
+                    bytes_idx += 3;
+                    current_stack
+                        .operands
+                        .extend_from_slice(&[VerificationType::INTEGER, VerificationType::INTEGER])
+                }
                 Instruction::ireturn | Instruction::r#return | Instruction::areturn => {
+                    bytes_idx += 1;
                     current_stack.operands.clear()
                 }
                 Instruction::putfield(_) => {
+                    bytes_idx += 3;
                     current_stack.operands.pop();
                     current_stack.operands.pop();
                 }
                 Instruction::ineg => {
+                    bytes_idx += 1;
                     // No changes in stack
                 }
-                Instruction::istore(_)
-                | Instruction::astore(_)
-                | Instruction::iadd
+                Instruction::istore(_) | Instruction::astore(_) => {
+                    bytes_idx += 2;
+                    current_stack.operands.pop();
+                }
+                Instruction::iadd
                 | Instruction::isub
                 | Instruction::imul
                 | Instruction::idiv
                 | Instruction::irem => {
+                    bytes_idx += 1;
                     current_stack.operands.pop();
                 }
                 Instruction::getfield(idx) => {
@@ -144,37 +170,42 @@ impl StackMapTable {
                     todo!()
                 }
                 Instruction::dup => {
+                    bytes_idx += 1;
                     let last = current_stack.operands.last().unwrap();
                     current_stack.operands.push(last.clone());
                 }
                 ////// JUMPS
                 ////// Here it gets interesting
-                // @Note: loc is location in bytes-vector, reljmp is relative offset instructions-vector
-                Instruction::ifeq(loc, reljmp)
-                | Instruction::iflt(loc, reljmp)
-                | Instruction::ifge(loc, reljmp)
-                | Instruction::ifne(loc, reljmp) => {
-                    println!("ifne: loc={loc}, reljmp={reljmp}");
+                // @Note: byte_offset is offset in bytes-vector, instruction_offset is relative offset instructions-vector
+                Instruction::ifeq(byte_offset, instruction_offset)
+                | Instruction::iflt(byte_offset, instruction_offset)
+                | Instruction::ifge(byte_offset, instruction_offset)
+                | Instruction::ifne(byte_offset, instruction_offset) => {
+                    println!(
+                        "ifne: byte_offset={byte_offset}, instruction_offset={instruction_offset}"
+                    );
                     current_stack.operands.pop();
                     let mut new_stack = current_stack.clone();
-                    new_stack.location = (new_stack.location as i16 + *loc) as u16;
+                    new_stack.location = (bytes_idx as i16 + *byte_offset) as u16;
                     stacks.push(new_stack.clone());
                     Self::create_stacks_for_branch(
                         code,
-                        (new_stack.location as i16 + *reljmp) as usize,
+                        (instruction_idx as i16 + *instruction_offset) as usize,
+                        new_stack.location as usize,
                         &mut new_stack,
                         stacks,
                         constant_pool,
                     );
+                    bytes_idx += 3;
                 }
-                Instruction::goto(loc, reljmp) => {
+                Instruction::goto(byte_offset, instruction_offset) => {
                     // -1 because +1 is added at the end of the loop again
-                    current_loc = (current_loc as i16 + reljmp) as usize;
-                    current_stack.location = (current_stack.location as i16 + *loc) as u16;
+                    instruction_idx = (instruction_idx as i16 + instruction_offset) as usize;
+                    current_stack.location = (current_stack.location as i16 + *byte_offset) as u16;
                     stacks.push(current_stack.clone());
                 }
             }
-            current_loc += 1;
+            instruction_idx += 1;
         }
     }
 
@@ -210,7 +241,7 @@ impl StackMapTable {
             locals: initial_locals.clone(),
             operands: vec![],
         };
-        Self::create_stacks_for_branch(code, 0, &mut current_stack, &mut stacks, constant_pool);
+        Self::create_stacks_for_branch(code, 0, 0, &mut current_stack, &mut stacks, constant_pool);
         sort_unique(
             &mut stacks,
             |a, b| a.location == b.location,
