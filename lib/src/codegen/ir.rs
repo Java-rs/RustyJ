@@ -45,14 +45,12 @@ impl DIR {
         let mut field_infos = current_class
             .fields
             .iter()
-            .map(|f| f.as_bytes(&current_class.name, &mut self.constant_pool))
-            .flatten()
+            .flat_map(|f| f.as_bytes(&current_class.name, &mut self.constant_pool))
             .collect();
         let mut method_infos = current_class
             .methods
             .iter()
-            .map(|m| m.as_bytes(&mut self.constant_pool))
-            .flatten()
+            .flat_map(|m| m.as_bytes(&mut self.constant_pool))
             .collect();
         println!("Constant pool: {:?}", self.constant_pool);
         // Constant Pool
@@ -199,7 +197,7 @@ impl ConstantPool {
         self.0
             .iter()
             .position(|c| *c == *constant)
-            .and_then(|x| Some(x as u16 + 1)) // +1 because the constant pool is 1-indexed
+            .map(|x| x as u16 + 1) // +1 because the constant pool is 1-indexed
     }
     /// Returns the constant at the given index. Note that this is 1-indexed since the constant
     /// pool of the JVM is 1-indexed
@@ -444,7 +442,7 @@ pub struct NameAndType {
 
 /// The instructions for the JVM
 /// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.areturn
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub(crate) enum Instruction {
     invokespecial(u16), //Calling a method from the super class (probably only used in constructor)
     aload_0,
@@ -586,13 +584,18 @@ fn generate_method(
             .collect(),
     );
     let mut stack = StackSize::new();
-    let code = generate_code_stmt(
+    let mut code = generate_code_stmt(
         method.body.clone(),
         &mut stack,
         constant_pool,
         &mut local_var_pool,
         class_name,
     );
+    if code.last().unwrap_or(&Instruction::bipush(0)) != &Instruction::r#return
+        && method.ret_type == Type::Void
+    {
+        code.push(Instruction::r#return);
+    }
     CompiledMethod {
         name: method.name.clone(),
         return_type: method.ret_type.clone(),
