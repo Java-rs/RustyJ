@@ -78,6 +78,7 @@ impl StackMapTable {
         mut bytes_idx: usize,
         current_stack: &mut VerificationStack,
         stacks: &mut Vec<VerificationStack>,
+        taken_branches_idxs: &mut Vec<usize>, // indexes are for instructon vector
         constant_pool: &ConstantPool,
     ) {
         while instruction_idx < code.len() {
@@ -176,7 +177,11 @@ impl StackMapTable {
                 Instruction::getfield(idx) => {
                     // Use idx to figure out what type the field has
                     // pops once and pushes type of field then
+                    if taken_branches_idxs.iter().any(|x| *x == instruction_idx) {
+                        return;
+                    }
                     bytes_idx += 3;
+                    taken_branches_idxs.push(instruction_idx);
                     if let Constant::FieldRef(f) = constant_pool.get(*idx).unwrap() {
                         match f.field.r#type.as_str() {
                             "Z" | "C" | "I" => {
@@ -223,6 +228,7 @@ impl StackMapTable {
                         new_stack.location as usize,
                         &mut new_stack,
                         stacks,
+                        &mut vec![],
                         constant_pool,
                     );
                     bytes_idx += 3;
@@ -270,7 +276,15 @@ impl StackMapTable {
             locals: initial_locals.clone(),
             operands: vec![],
         };
-        Self::create_stacks_for_branch(code, 0, 0, &mut current_stack, &mut stacks, constant_pool);
+        Self::create_stacks_for_branch(
+            code,
+            0,
+            0,
+            &mut current_stack,
+            &mut stacks,
+            &mut vec![],
+            constant_pool,
+        );
         sort_unique(
             &mut stacks,
             |a, b| a.location == b.location,
