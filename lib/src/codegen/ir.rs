@@ -120,7 +120,7 @@ fn make_default_constructor(class: &IRClass, constant_pool: &mut ConstantPool) -
     }
     code.push(Instruction::r#return);
 
-    let stack_map_table = StackMapTable::new(&code, &[], &constant_pool);
+    let stack_map_table = StackMapTable::new(&code, &[], constant_pool);
     CompiledMethod {
         name: "<init>".to_string(),
         return_type: Type::Void,
@@ -615,7 +615,7 @@ fn generate_method(
     {
         code.push(Instruction::r#return);
     }
-    let stack_map_table = StackMapTable::new(&code, &method.params, &constant_pool);
+    let stack_map_table = StackMapTable::new(&code, &method.params, constant_pool);
     CompiledMethod {
         name: method.name.clone(),
         return_type: method.ret_type.clone(),
@@ -734,12 +734,12 @@ fn generate_code_stmt(
                         generate_code_stmt(*stmt, stack, constant_pool, local_var_pool, class_name);
                     result.push(Instruction::ifeq(
                         3 + get_instructions_length(&body) as i16,
-                        body.len() as i16,
+                        body.len() as i16 + 1,
                     ));
                     result.append(&mut body);
                     result.push(Instruction::ifeq(
                         -3 - (get_instructions_length(&body) as i16),
-                        -(body.len() as i16),
+                        -(body.len() as i16) - 1,
                     ));
                 }
                 Stmt::LocalVarDecl(types, name) => {
