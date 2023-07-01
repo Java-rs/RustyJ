@@ -1,4 +1,5 @@
 use crate::codegen::Instruction;
+use std::cmp::{max, min};
 
 fn get_instruction_length(istr: &Instruction) -> u16 {
     match istr {
@@ -21,66 +22,50 @@ fn get_instructions_length(instructions: &[Instruction]) -> u16 {
 pub(crate) fn convert_to_absolute_jumps(instructions: Vec<Instruction>) -> Vec<Instruction> {
     let mut result = vec![];
     for (j, istr) in instructions.iter().enumerate() {
+        let current_offset = get_instructions_length(&instructions[..j]);
         match istr {
+            Instruction::relgoto(target) => {
+                let absolute_addr =
+                    calculate_absolute_addr(*target, current_offset, j, &instructions);
+                result.push(Instruction::goto(absolute_addr));
+            }
             Instruction::reljumpifeq(target) => {
-                let modifier: i32 = if *target < 0 { -1 } else { 1 };
-                result.push(Instruction::ifeq(
-                    (get_instructions_length(
-                        &instructions[j..j.saturating_add_signed(*target as isize)],
-                    ) as i32
-                        * modifier
-                        + j as i32
-                        - 1) as u16,
-                ))
+                let absolute_addr =
+                    calculate_absolute_addr(*target, current_offset, j, &instructions);
+                result.push(Instruction::ifeq(absolute_addr));
             }
             Instruction::reljumpifge(target) => {
-                let modifier: i32 = if *target < 0 { -1 } else { 1 };
-                result.push(Instruction::ifge(
-                    (get_instructions_length(
-                        &instructions[j..j.saturating_add_signed(*target as isize)],
-                    ) as i32
-                        * modifier
-                        + j as i32
-                        - 1) as u16,
-                ))
-            }
-            Instruction::relgoto(target) => {
-                let modifier: i32 = if *target < 0 { -1 } else { 1 };
-                result.push(Instruction::goto(
-                    (get_instructions_length(
-                        &instructions[j..j.saturating_add_signed(*target as isize)],
-                    ) as i32
-                        * modifier
-                        + j as i32
-                        - 1) as u16,
-                ))
+                let absolute_addr =
+                    calculate_absolute_addr(*target, current_offset, j, &instructions);
+                result.push(Instruction::ifge(absolute_addr));
             }
             Instruction::reljumpiflt(target) => {
-                let modifier: i32 = if *target < 0 { -1 } else { 1 };
-                result.push(Instruction::iflt(
-                    (get_instructions_length(
-                        &instructions[j..j.saturating_add_signed(*target as isize)],
-                    ) as i32
-                        * modifier
-                        + j as i32
-                        - 1) as u16,
-                ))
+                let absolute_addr =
+                    calculate_absolute_addr(*target, current_offset, j, &instructions);
+                result.push(Instruction::iflt(absolute_addr));
             }
             Instruction::reljumpifne(target) => {
-                let modifier: i32 = if *target < 0 { -1 } else { 1 };
-                result.push(Instruction::ifne(
-                    (get_instructions_length(
-                        &instructions[j..j.saturating_add_signed(*target as isize)],
-                    ) as i32
-                        * modifier
-                        + j as i32
-                        - 1) as u16,
-                ))
+                let absolute_addr =
+                    calculate_absolute_addr(*target, current_offset, j, &instructions);
+                result.push(Instruction::ifne(absolute_addr));
             }
             _ => result.push(*istr),
         }
     }
     result
+}
+
+fn calculate_absolute_addr(
+    target: i16,
+    current_offset: u16,
+    j: usize,
+    instructions: &[Instruction],
+) -> u16 {
+    let modifier: i32 = if target < 0 { -1 } else { 1 };
+    let min = min(j, j.saturating_add_signed(target as isize));
+    let max = max(j, j.saturating_add_signed(target as isize));
+    (get_instructions_length(&instructions[min..max]) as i32 * modifier + current_offset as i32)
+        as u16
 }
 
 #[cfg(test)]
