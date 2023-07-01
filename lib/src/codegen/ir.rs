@@ -52,7 +52,7 @@ impl DIR {
             .iter()
             .flat_map(|m| m.as_bytes(&mut self.constant_pool))
             .collect();
-
+        println!("Constant pool: {:?}", self.constant_pool);
         // Constant Pool
         result.extend_from_slice(&self.constant_pool.count().to_be_bytes());
         result.append(&mut self.constant_pool.as_bytes());
@@ -1009,15 +1009,6 @@ fn generate_code_expr(
                         Expr::TypedExpr(expr, r#type) => match expr.deref() {
                             Expr::This => {
                                 result.push(Instruction::aload(0));
-                                result.push(Instruction::getfield(constant_pool.add(
-                                    Constant::FieldRef(FieldRef {
-                                        class: class_name.to_string(),
-                                        field: NameAndType {
-                                            name: name.clone(),
-                                            r#type: r#type.to_ir_string(),
-                                        },
-                                    }),
-                                )));
                             }
                             Expr::LocalVar(name) => {
                                 let idx = local_var_pool.get_index(name);
