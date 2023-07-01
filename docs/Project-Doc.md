@@ -52,9 +52,12 @@ Zur Bytecode-generierung wird der Typed Abstract Syntax Tree(TAST) in Java Bytec
 umgewandelt. Dafür wird eine Intermediate Representation (IR) genutzt, die eine Class-ähnliche Struktur(mit Konstantenpool, LocalVarpool, Methoden mit Code als Instruktionen, etc.)
 besitzt. Diese IR wird dann komplett manuell in Java Bytecode übersetzt. Dies hat dem Code-gen Team sehr viel
 Zeit gekostet, da z.B. die Stack-Size, der Konstantenpool, LocalVarpool und die Jumps manuell berechnet werden mussten.
+
 Zudem hatten wir zeitweise eigene Relative Instructions implementiert, da wir dachten, dass die JVM keine relativen Jumps
 unterstützt, hatten dann allerdings mit Try-and-Error herausgefunden, dass javap sich die absoluten Addressen ausrechnet
-und für die JVM normale jumps als relative Jumps behandelt.
+und für die JVM normale jumps als relative Jumps behandelt. Auch die relativen Jumps waren aber sehr fehleranfällig und
+hatten häufig off-by-one Errors.
+
 Zudem musste eine StackMapTable implementiert werden, da die JVM sonst unsere Klassen nicht lädt.
 Das Troubleshooten von Testfehlern war auch sehr aufwending da oft javap gar nicht erst den Fehler im Klassencode ausgab
 und wir mit einem Hex-Editor die Klassen von Hand analysieren mussten, da es auch kein anderes Tool gab, um solche Fehler 
