@@ -2,11 +2,11 @@ use crate::codegen::Instruction;
 
 fn get_instruction_length(istr: &Instruction) -> u16 {
     match istr {
-        Instruction::reljumpifeq(_) => 3,
-        Instruction::reljumpifge(_) => 3,
-        Instruction::relgoto(_) => 3,
-        Instruction::reljumpiflt(_) => 3,
-        Instruction::reljumpifne(_) => 3,
+        Instruction::reljumpifeq(_)
+        | Instruction::reljumpifge(_)
+        | Instruction::relgoto(_)
+        | Instruction::reljumpiflt(_)
+        | Instruction::reljumpifne(_) => 3,
         i => i.as_bytes().len() as u16,
     }
 }
@@ -31,6 +31,7 @@ pub(crate) fn convert_to_absolute_jumps(instructions: Vec<Instruction>) -> Vec<I
                         * modifier
                         + j as i32
                         - 1) as u16,
+                    *target,
                 ))
             }
             Instruction::reljumpifge(target) => {
@@ -42,6 +43,7 @@ pub(crate) fn convert_to_absolute_jumps(instructions: Vec<Instruction>) -> Vec<I
                         * modifier
                         + j as i32
                         - 1) as u16,
+                    *target,
                 ))
             }
             Instruction::relgoto(target) => {
@@ -53,6 +55,7 @@ pub(crate) fn convert_to_absolute_jumps(instructions: Vec<Instruction>) -> Vec<I
                         * modifier
                         + j as i32
                         - 1) as u16,
+                    *target,
                 ))
             }
             Instruction::reljumpiflt(target) => {
@@ -64,6 +67,7 @@ pub(crate) fn convert_to_absolute_jumps(instructions: Vec<Instruction>) -> Vec<I
                         * modifier
                         + j as i32
                         - 1) as u16,
+                    *target,
                 ))
             }
             Instruction::reljumpifne(target) => {
@@ -75,6 +79,7 @@ pub(crate) fn convert_to_absolute_jumps(instructions: Vec<Instruction>) -> Vec<I
                         * modifier
                         + j as i32
                         - 1) as u16,
+                    *target,
                 ))
             }
             _ => result.push(*istr),
@@ -106,7 +111,7 @@ mod tests {
         let if_block = vec![Instruction::bipush(1), Instruction::ireturn];
         let if_block_size = get_instructions_length(&if_block);
         let expected_size = get_instructions_length(&expected);
-        expected.push(Instruction::ifne(if_block_size + expected_size));
+        expected.push(Instruction::ifne(if_block_size + expected_size, 3));
         expected.extend(if_block);
         expected.extend_from_slice(&[Instruction::bipush(0), Instruction::ireturn]);
         assert_eq!(convert_to_absolute_jumps(instructions), expected);
@@ -127,7 +132,7 @@ mod tests {
             Instruction::iload(1),
             Instruction::iload(2),
             Instruction::isub,
-            Instruction::ifne(0),
+            Instruction::ifne(0, -3),
             Instruction::bipush(1),
             Instruction::ireturn,
             Instruction::bipush(0),

@@ -2,7 +2,7 @@
 #![allow(unused)]
 #![allow(non_snake_case)]
 
-use super::ir::*;
+use super::*;
 use crate::types::*;
 use std::fmt::Debug;
 
@@ -37,20 +37,21 @@ impl StackSize {
 }
 
 // Sorts the vector and removes any duplicate elements
-pub fn sort_unique<T>(a: &mut Vec<T>)
+pub fn sort_unique<T, F1, F2>(a: &mut Vec<T>, mut eq: F1, mut le: F2)
 where
-    T: PartialOrd,
+    F1: FnMut(&T, &T) -> bool,
+    F2: FnMut(&T, &T) -> bool,
 {
     let mut i = 0;
     while i < a.len() {
         let mut min = i;
         for j in i + 1..a.len() {
-            if a[j] < a[min] {
+            if le(&a[j], &a[min]) {
                 min = j;
             }
         }
 
-        if i != 0 && a[i - 1] == a[min] {
+        if i != 0 && eq(&a[i - 1], &a[min]) {
             a.swap_remove(min);
         } else {
             if min != i {
@@ -71,6 +72,116 @@ pub(crate) struct StackMapTable {
 }
 
 impl StackMapTable {
+    fn create_stacks_for_branch(
+        code: &[Instruction],
+        mut current_loc: usize,
+        current_stack: &mut VerificationStack,
+        stacks: &mut Vec<VerificationStack>,
+        constant_pool: &ConstantPool,
+    ) {
+        while current_loc < code.len() {
+            // FIXME: When are locals added and how can we detect that from the instructions alone?
+            match code.get(current_loc).unwrap() {
+                Instruction::invokespecial(idx) => {
+                    if let Some(Constant::MethodRef(m)) = constant_pool.get(*idx) {
+                        // FIXME: Somehow figure out how many parameters are popped when calling the given function
+                        let pop_amount = 1;
+                        let l = current_stack.operands.len();
+                        current_stack.operands.splice(l - pop_amount..l, []);
+                    } else {
+                        unreachable!();
+                    }
+                }
+                Instruction::ldc(idx) => match constant_pool.get(*idx as u16).unwrap() {
+                    Constant::String(_) => current_stack
+                        .operands
+                        .push(VerificationType::OBJECT(todo!())),
+                    Constant::Integer(_) => current_stack.operands.push(VerificationType::INTEGER),
+                    Constant::FieldRef(f) => {
+                        current_stack.operands.push(match f.field.r#type.as_str() {
+                            "I" | "Z" | "C" => VerificationType::INTEGER,
+                            _ => VerificationType::OBJECT(todo!()),
+                        })
+                    }
+                    _ => unreachable!(),
+                },
+                Instruction::aconst_null => current_stack.operands.push(VerificationType::NULL),
+                Instruction::new(_) => todo!(), // requires special treatment, I think, see documentation VerificationType::UNINITIALIZED
+                Instruction::aload_0 => current_stack.operands.push(VerificationType::OBJECT(
+                    constant_pool.index_of_this_class(),
+                )),
+                Instruction::aload(idx) => current_stack
+                    .operands
+                    .push(VerificationType::OBJECT(*idx as u16)),
+                Instruction::iload(_) | Instruction::bipush(_) => {
+                    current_stack.operands.push(VerificationType::INTEGER)
+                }
+                Instruction::sipush(_) => current_stack
+                    .operands
+                    .extend_from_slice(&[VerificationType::INTEGER, VerificationType::INTEGER]),
+                Instruction::ireturn | Instruction::r#return | Instruction::areturn => {
+                    current_stack.operands.clear()
+                }
+                Instruction::putfield(_) => {
+                    current_stack.operands.pop();
+                    current_stack.operands.pop();
+                }
+                Instruction::ineg => {
+                    // No changes in stack
+                }
+                Instruction::istore(_)
+                | Instruction::astore(_)
+                | Instruction::iadd
+                | Instruction::isub
+                | Instruction::imul
+                | Instruction::idiv
+                | Instruction::irem => {
+                    current_stack.operands.pop();
+                }
+                Instruction::getfield(idx) => {
+                    // Use idx to figure out what type the field has
+                    // pops once and pushes type of field then
+                    todo!()
+                }
+                Instruction::dup => {
+                    let last = current_stack.operands.last().unwrap();
+                    current_stack.operands.push(last.clone());
+                }
+                ////// JUMPS
+                ////// Here it gets interesting
+                // @Note: loc is location in bytes-vector, reljmp is relative offset instructions-vector
+                Instruction::ifeq(loc, reljmp)
+                | Instruction::iflt(loc, reljmp)
+                | Instruction::ifge(loc, reljmp)
+                | Instruction::ifne(loc, reljmp) => {
+                    current_stack.operands.pop();
+                    let mut new_stack = current_stack.clone();
+                    new_stack.location = (new_stack.location as i16 + *reljmp) as u16;
+                    stacks.push(new_stack.clone());
+                    Self::create_stacks_for_branch(
+                        code,
+                        *loc as usize,
+                        &mut new_stack,
+                        stacks,
+                        constant_pool,
+                    );
+                }
+                Instruction::goto(loc, reljmp) => {
+                    // -1 because +1 is added at the end of the loop again
+                    current_loc = (current_loc as i16 + reljmp) as usize;
+                    current_stack.location = *loc;
+                    stacks.push(current_stack.clone());
+                }
+                Instruction::relgoto(_)
+                | Instruction::reljumpifeq(_)
+                | Instruction::reljumpifne(_)
+                | Instruction::reljumpiflt(_)
+                | Instruction::reljumpifge(_) => unreachable!(),
+            }
+            current_loc += 1;
+        }
+    }
+
     // @Note: Expects the code to already be expanded
     pub(crate) fn new(
         code: &[Instruction],
@@ -79,51 +190,97 @@ impl StackMapTable {
     ) -> Self {
         // We calculate the actual frames here
         // We do this via 2 passes
-        // First, we find all locations, that are targets of jumps
-        // Second, we create a Frame for each of those locations
-        let mut locations = vec![];
+        // First, we create the stacks for all different branches
+        // storing the snapshot of the stack for every location that we jump to
+        // Second, we create a Frame from each of those stacks
         let mut frames = vec![];
+        let mut stacks = vec![];
+        let initial_locals: Vec<VerificationType> = params
+            .iter()
+            .map(|(t, _)| match t {
+                Type::Bool | Type::Char | Type::Int => VerificationType::INTEGER,
+                Type::Null => VerificationType::NULL,
+                Type::String => VerificationType::OBJECT(todo!()),
+                Type::Class(name) => VerificationType::OBJECT(
+                    constant_pool
+                        .index_of(&Constant::Class(name.to_string()))
+                        .unwrap(),
+                ),
+                Type::Void => unreachable!(),
+            })
+            .collect();
+        let mut current_stack = VerificationStack {
+            location: 0,
+            locals: initial_locals.clone(),
+            operands: vec![],
+        };
+        Self::create_stacks_for_branch(code, 0, &mut current_stack, &mut stacks, constant_pool);
+        sort_unique(
+            &mut stacks,
+            |a, b| a.location == b.location,
+            |a, b| a.location < b.location,
+        );
 
-        for inst in code {
-            match inst {
-                Instruction::ifeq(loc)
-                | Instruction::iflt(loc)
-                | Instruction::ifge(loc)
-                | Instruction::ifne(loc)
-                | Instruction::goto(loc) => locations.push(*loc),
-                _ => {}
-            }
-        }
-        sort_unique(&mut locations);
-
-        if !locations.is_empty() {
-            let mut loc_idx = 0;
-            let mut last_frame_loc = 0;
-            let mut last_stack = VerificationStack {
-                locals: params
-                    .iter()
-                    .map(|(t, _)| match t {
-                        Type::Bool => VerificationType::INTEGER,
-                        _ => todo!(),
-                    })
-                    .collect(),
-                operands: vec![],
-            };
-            let mut current_stack = last_stack.clone();
-
-            for i in 0..code.len() {
-                current_stack.update(code.get(i).unwrap(), constant_pool);
-                if i as u16 == *locations.get(loc_idx).unwrap() {
-                    frames.push(current_stack.to_frame(&last_stack, (i - last_frame_loc) as u16));
-                    last_stack = current_stack.clone();
-                    last_frame_loc = i;
-
-                    loc_idx += 1;
-                    if loc_idx == locations.len() {
-                        break;
-                    }
+        // First stack/frame are implicit
+        let mut last_stack = VerificationStack {
+            location: 0,
+            locals: initial_locals,
+            operands: vec![],
+        };
+        let mut is_first = true;
+        for stack in stacks {
+            let offset_delta = stack.location - last_stack.location - if !is_first { 1 } else { 0 };
+            let frame = if stack == last_stack {
+                if offset_delta < 64 {
+                    StackMapFrame::SAME(offset_delta as u8)
+                } else {
+                    StackMapFrame::SAME_EXTENDED(offset_delta)
                 }
-            }
+            } else if stack.locals == last_stack.locals
+                && !stack.operands.is_empty()
+                && stack.operands[0..stack.operands.len() - 1] == last_stack.operands
+            {
+                if offset_delta < 64 {
+                    StackMapFrame::SAME_LOCALS_1(
+                        64 + offset_delta as u8,
+                        stack.operands.last().unwrap().clone(),
+                    )
+                } else {
+                    StackMapFrame::SAME_LOCALS_1_EXTENDED(
+                        offset_delta,
+                        stack.operands.last().unwrap().clone(),
+                    )
+                }
+            } else if stack.operands.is_empty()
+                && stack.locals.len() > last_stack.locals.len()
+                && stack.locals.len() - last_stack.locals.len() < 4
+                && stack.locals[0..last_stack.locals.len()] == last_stack.locals
+            {
+                StackMapFrame::APPEND(
+                    (stack.locals.len() - last_stack.locals.len()) as u8 + 251,
+                    offset_delta,
+                    stack.locals[last_stack.locals.len()..].to_owned(),
+                )
+            } else if stack.operands.is_empty()
+                && stack.locals.len() < last_stack.locals.len()
+                && last_stack.locals.len() - stack.locals.len() < 4
+                && stack.locals == last_stack.locals[0..stack.locals.len()]
+            {
+                StackMapFrame::CHOP(
+                    251 - (last_stack.locals.len() - stack.locals.len()) as u8,
+                    offset_delta,
+                )
+            } else {
+                StackMapFrame::FULL(
+                    offset_delta,
+                    stack.locals.len() as u16,
+                    stack.locals.to_owned(),
+                    stack.operands.len() as u16,
+                    stack.operands.to_owned(),
+                )
+            };
+            frames.push(frame);
+            last_stack = stack;
         }
 
         StackMapTable { frames }
@@ -159,17 +316,61 @@ impl StackMapTable {
 #[derive(Debug)]
 pub(crate) enum StackMapFrame {
     SAME(u8),                                                          // u8 in [0, 63]
-    SAME_LOCALS_1(u8, VerificationType),                               // u8 in [64, 127]
+    SAME_EXTENDED(u16),                  // tag == 251, u16 is offset_delta
+    SAME_LOCALS_1(u8, VerificationType), // u8 in [64, 127]
     SAME_LOCALS_1_EXTENDED(u16, VerificationType), // tag == 247, u16 is offset_delta
-    CHOP(u8, u16),                                 // u8 in [248, 250], u16 is offset_delta
-    SAME_EXTENDED(u16),                            // tag == 251, u16 is offset_delta
+    CHOP(u8, u16),                       // u8 in [248, 250], u16 is offset_delta
     APPEND(u8, u16, Vec<VerificationType>), // u8 in [252, 254], u16 is offset_delta, size of VerificationTypeInfos is [u8 - 251]
     FULL(u16, u16, Vec<VerificationType>, u16, Vec<VerificationType>), // tag == 255, offset_delta, number_of_locals, [_; number_of_locals], number_of_stack_items, [_; number_of_stack_items]
 }
 
 impl StackMapFrame {
     pub(crate) fn as_bytes(&self) -> Vec<u8> {
-        todo!()
+        match self {
+            StackMapFrame::SAME(offset_delta) => vec![*offset_delta],
+            StackMapFrame::SAME_EXTENDED(offset_delta) => {
+                vec![251, high_byte(*offset_delta), low_byte(*offset_delta)]
+            }
+            StackMapFrame::SAME_LOCALS_1(offset_delta, r#type) => {
+                let mut v = Vec::with_capacity(8);
+                v.push(*offset_delta + 64);
+                v.extend_from_slice(&r#type.as_bytes());
+                v
+            }
+            StackMapFrame::SAME_LOCALS_1_EXTENDED(offset_delta, r#type) => {
+                let mut v = Vec::with_capacity(8);
+                v.extend_from_slice(&offset_delta.to_be_bytes());
+                v.extend_from_slice(&r#type.as_bytes());
+                v
+            }
+            StackMapFrame::CHOP(chopped_amount, offset_delta) => {
+                todo!()
+            }
+            StackMapFrame::APPEND(appended_amount, offset_delta, types) => {
+                todo!()
+            }
+            StackMapFrame::FULL(
+                offset_delta,
+                number_of_locals,
+                local_types,
+                number_of_operands,
+                operand_types,
+            ) => {
+                let mut v = Vec::with_capacity(32);
+                v.extend_from_slice(&offset_delta.to_be_bytes());
+                v.extend_from_slice(&number_of_locals.to_be_bytes());
+                v.append(&mut local_types.iter().map(|t| t.as_bytes()).flatten().collect());
+                v.extend_from_slice(&number_of_operands.to_be_bytes());
+                v.append(
+                    &mut operand_types
+                        .iter()
+                        .map(|t| t.as_bytes())
+                        .flatten()
+                        .collect(),
+                );
+                v
+            }
+        }
     }
 }
 
@@ -179,12 +380,31 @@ pub(crate) enum VerificationType {
     INTEGER,
     NULL,
     UNINITIALIZED_THIS,
-    OBJECT,
-    UNINITIALIZED,
+    OBJECT(u16),        // index in constant pool
+    UNINITIALIZED(u16), // offset (see docs for specific infos)
+}
+
+impl VerificationType {
+    pub(crate) fn as_bytes(&self) -> Vec<u8> {
+        match self {
+            VerificationType::TOP => vec![0],
+            VerificationType::INTEGER => vec![1],
+            VerificationType::NULL => vec![5],
+            VerificationType::UNINITIALIZED_THIS => vec![6],
+            VerificationType::OBJECT(cp_idx) => {
+                let mut v = Vec::with_capacity(4);
+                v.push(7);
+                v.extend_from_slice(&cp_idx.to_be_bytes());
+                v
+            }
+            VerificationType::UNINITIALIZED(offset) => todo!(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
 pub(crate) struct VerificationStack {
+    location: u16,
     locals: Vec<VerificationType>,
     operands: Vec<VerificationType>,
 }
@@ -205,101 +425,5 @@ impl PartialEq for VerificationStack {
             }
         }
         true
-    }
-}
-
-impl VerificationStack {
-    pub(crate) fn update(&mut self, inst: &Instruction, constant_pool: &ConstantPool) {
-        match inst {
-            Instruction::invokespecial(idx) => {
-                if let Some(Constant::MethodRef(m)) = constant_pool.get(*idx) {
-                    // TODO: Somehow figure out how many parameters are popped when calling the given function
-                    todo!();
-                    let pop_amount = 1;
-                    let l = self.operands.len();
-                    self.operands.splice(l - pop_amount..l, []);
-                } else {
-                    unreachable!();
-                }
-            }
-            Instruction::ldc(idx) => match constant_pool.get(*idx as u16).unwrap() {
-                Constant::String(_) => self.operands.push(VerificationType::OBJECT),
-                Constant::Integer(_) => self.operands.push(VerificationType::INTEGER),
-                Constant::FieldRef(f) => self.operands.push(match f.field.r#type.as_str() {
-                    "I" | "Z" | "C" => VerificationType::INTEGER,
-                    _ => VerificationType::OBJECT,
-                }),
-                _ => unreachable!(),
-            },
-            Instruction::aconst_null => self.operands.push(VerificationType::NULL),
-            Instruction::aload_0 | Instruction::aload(_) | Instruction::new(_) => {
-                self.operands.push(VerificationType::OBJECT)
-            }
-            Instruction::iload(_) | Instruction::bipush(_) => {
-                self.operands.push(VerificationType::INTEGER)
-            }
-            Instruction::sipush(_) => self
-                .operands
-                .extend_from_slice(&[VerificationType::INTEGER, VerificationType::INTEGER]),
-            Instruction::ireturn | Instruction::r#return | Instruction::areturn => {
-                self.operands.clear()
-            }
-            Instruction::putfield(_) => {
-                self.operands.pop();
-                self.operands.pop();
-            }
-            Instruction::goto(_) | Instruction::ineg => {
-                // No changes in stack
-            }
-            Instruction::istore(_)
-            | Instruction::astore(_)
-            | Instruction::ifeq(_)
-            | Instruction::iflt(_)
-            | Instruction::ifge(_)
-            | Instruction::ifne(_)
-            | Instruction::iadd
-            | Instruction::isub
-            | Instruction::imul
-            | Instruction::idiv
-            | Instruction::irem => {
-                self.operands.pop();
-            }
-            Instruction::getfield(idx) => {
-                // Use idx to figure out what type the field has
-                // pops once and pushes type of field then
-                todo!()
-            }
-            Instruction::dup => {
-                let last = self.operands.last().unwrap();
-                self.operands.push(last.clone());
-            }
-            Instruction::relgoto(_)
-            | Instruction::reljumpifeq(_)
-            | Instruction::reljumpifne(_)
-            | Instruction::reljumpiflt(_)
-            | Instruction::reljumpifge(_) => unreachable!(),
-        }
-    }
-
-    pub(crate) fn to_frame(
-        &self,
-        last_stack: &VerificationStack,
-        delta_offset: u16,
-    ) -> StackMapFrame {
-        // @Nocheckin check whether `==` on vectors is a deep-equality
-        if self == last_stack {
-            if delta_offset < 64 {
-                StackMapFrame::SAME(delta_offset as u8)
-            } else {
-                StackMapFrame::SAME_EXTENDED(delta_offset)
-            }
-        } else if self.locals == last_stack.locals
-            && self.operands[0..self.operands.len() - 1] == last_stack.operands
-        {
-            todo!()
-        } else {
-            dbg!(self.clone(), last_stack.clone());
-            todo!()
-        }
     }
 }

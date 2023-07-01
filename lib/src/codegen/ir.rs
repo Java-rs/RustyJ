@@ -5,6 +5,7 @@
 use super::reljumps::convert_to_absolute_jumps;
 use super::stack::*;
 use super::Instruction::getfield;
+use super::*;
 use crate::types::*;
 use std::fmt::Debug;
 use std::ops::Deref;
@@ -134,33 +135,36 @@ fn make_default_constructor(class: &IRClass, constant_pool: &mut ConstantPool) -
 }
 
 #[derive(Debug)]
-pub struct ConstantPool(Vec<Constant>);
+pub struct ConstantPool(Vec<Constant>, String);
 impl ConstantPool {
-    pub fn new(name: &str) -> Self {
+    pub fn new(name: String) -> Self {
         // This is the same boilerplate constantpool for all files
         // so we can just hardcode it here.
         // This would only ever change, if we allowed the user
         // to create their own constructors, which we don't
-        Self(vec![
-            Constant::MethodRef(MethodRef {
-                class: JAVA_LANG_OBJECT.to_string(),
-                method: NameAndType {
+        Self(
+            vec![
+                Constant::MethodRef(MethodRef {
+                    class: JAVA_LANG_OBJECT.to_string(),
+                    method: NameAndType {
+                        name: OBJECT_INIT_METHOD.to_string(),
+                        r#type: OBJECT_INIT_RET.to_string(),
+                    },
+                }),
+                Constant::Class(JAVA_LANG_OBJECT.to_string()),
+                Constant::NameAndType(NameAndType {
                     name: OBJECT_INIT_METHOD.to_string(),
                     r#type: OBJECT_INIT_RET.to_string(),
-                },
-            }),
-            Constant::Class(JAVA_LANG_OBJECT.to_string()),
-            Constant::NameAndType(NameAndType {
-                name: OBJECT_INIT_METHOD.to_string(),
-                r#type: OBJECT_INIT_RET.to_string(),
-            }),
-            Constant::Utf8(JAVA_LANG_OBJECT.to_string()),
-            Constant::Utf8(OBJECT_INIT_METHOD.to_string()),
-            Constant::Utf8(OBJECT_INIT_RET.to_string()),
-            Constant::Class(name.to_string()),
-            Constant::Utf8(name.to_string()),
-            Constant::Utf8("Code".to_string()),
-        ])
+                }),
+                Constant::Utf8(JAVA_LANG_OBJECT.to_string()),
+                Constant::Utf8(OBJECT_INIT_METHOD.to_string()),
+                Constant::Utf8(OBJECT_INIT_RET.to_string()),
+                Constant::Class(name.clone()),
+                Constant::Utf8(name.clone()),
+                Constant::Utf8("Code".to_string()),
+            ],
+            name,
+        )
     }
     // For some unknown reason, this is 1-indexed and we have to add 1 to the count
     pub fn count(&self) -> u16 {
@@ -202,6 +206,9 @@ impl ConstantPool {
             .iter()
             .position(|c| *c == *constant)
             .map(|x| x as u16 + 1) // +1 because the constant pool is 1-indexed
+    }
+    pub fn index_of_this_class(&self) -> u16 {
+        self.index_of(&Constant::Class(self.1.clone())).unwrap()
     }
     /// Returns the constant at the given index. Note that this is 1-indexed since the constant
     /// pool of the JVM is 1-indexed
@@ -468,12 +475,13 @@ pub(crate) enum Instruction {
     aconst_null,      //Push null onto stack
     ldc(u8), //Push item from constant pool onto stack - For some reason only one byte for index into constant pool :shrug:
     ineg,    //Negate int
-    ifeq(u16), //Branch if int is 0
-    iflt(u16), //Branch if int is < 0
-    ifge(u16), //Branch if int is >= 0
-    ifne(u16), //Branch if int is not 0
-    goto(u16), //Jump to instruction
-    relgoto(i16), //Jump to instruction relative to current instruction
+    // @Note: All absolute jumps store first the adress in the list of bytes and then the relative jump in instructions
+    ifeq(u16, i16),   //Branch if int is 0
+    iflt(u16, i16),   //Branch if int is < 0
+    ifge(u16, i16),   //Branch if int is >= 0
+    ifne(u16, i16),   //Branch if int is not 0
+    goto(u16, i16),   //Jump to instruction
+    relgoto(i16),     //Jump to instruction relative to current instruction
     reljumpifne(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
     reljumpiflt(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
     reljumpifge(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
@@ -488,14 +496,6 @@ pub(crate) enum Instruction {
     dup,           //Duplicate the top value on the stack
 }
 
-fn high_byte(short: u16) -> u8 {
-    (short >> 8) as u8
-}
-
-fn low_byte(short: u16) -> u8 {
-    short as u8
-}
-
 impl Instruction {
     pub(crate) fn as_bytes(&self) -> Vec<u8> {
         match self {
@@ -505,7 +505,6 @@ impl Instruction {
             Instruction::aload_0 => vec![42],
             Instruction::aload(idx) => vec![25, *idx],
             Instruction::iload(idx) => vec![21, *idx],
-            Instruction::ifeq(jmp) => vec![153, high_byte(*jmp), low_byte(*jmp)],
             Instruction::ireturn => vec![172],
             Instruction::r#return => vec![177],
             Instruction::areturn => vec![176],
@@ -518,10 +517,21 @@ impl Instruction {
             Instruction::aconst_null => vec![1],
             Instruction::ldc(idx) => vec![18, *idx],
             Instruction::ineg => vec![116],
-            Instruction::goto(jmp) => vec![167, high_byte(*jmp), low_byte(*jmp)],
-            Instruction::ifne(jmp) => vec![154, high_byte(*jmp), low_byte(*jmp)],
-            Instruction::ifge(jmp) => vec![156, high_byte(*jmp), low_byte(*jmp)],
-            Instruction::iflt(jmp) => vec![155, high_byte(*jmp), low_byte(*jmp)],
+            Instruction::ifeq(jmp_in_bytes, _jmp_in_inst) => {
+                vec![153, high_byte(*jmp_in_bytes), low_byte(*jmp_in_bytes)]
+            }
+            Instruction::ifne(jmp_in_bytes, _jmp_in_inst) => {
+                vec![154, high_byte(*jmp_in_bytes), low_byte(*jmp_in_bytes)]
+            }
+            Instruction::ifge(jmp_in_bytes, _jmp_in_inst) => {
+                vec![156, high_byte(*jmp_in_bytes), low_byte(*jmp_in_bytes)]
+            }
+            Instruction::iflt(jmp_in_bytes, _jmp_in_inst) => {
+                vec![155, high_byte(*jmp_in_bytes), low_byte(*jmp_in_bytes)]
+            }
+            Instruction::goto(jmp_in_bytes, _jmp_in_inst) => {
+                vec![167, high_byte(*jmp_in_bytes), low_byte(*jmp_in_bytes)]
+            }
             Instruction::iadd => vec![96],
             Instruction::isub => vec![100],
             Instruction::imul => vec![104],
@@ -541,7 +551,7 @@ impl Instruction {
 
 pub fn generate_dir(ast: &Prg) -> DIR {
     let mut dir = DIR {
-        constant_pool: ConstantPool::new(&ast.get(0).unwrap().name),
+        constant_pool: ConstantPool::new(ast.get(0).unwrap().name.clone()),
         classes: vec![],
     };
     for class in ast {
