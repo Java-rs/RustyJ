@@ -283,7 +283,9 @@ impl StackMapTable {
                 .map(|(t, _)| match t {
                     Type::Bool | Type::Char | Type::Int => VerificationType::INTEGER,
                     Type::Null => VerificationType::NULL,
-                    Type::String => VerificationType::OBJECT(todo!()),
+                    Type::String => VerificationType::OBJECT(
+                        constant_pool.add(Constant::Utf8("Ljava/lang/String".to_string())),
+                    ),
                     Type::Class(name) => VerificationType::OBJECT(
                         constant_pool
                             .index_of(&Constant::Class(name.to_string()))
