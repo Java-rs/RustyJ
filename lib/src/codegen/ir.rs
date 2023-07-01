@@ -740,7 +740,10 @@ fn generate_code_stmt(
                         is_last_instr,
                     );
                     let body_len = get_instructions_length(&body) as i16;
-                    result.push(Instruction::ifeq(3 + body_len, body.len() as i16 + 1));
+                    result.push(Instruction::ifeq(
+                        2 + 1 + 3 + body_len,
+                        body.len() as i16 + 2,
+                    ));
                     result.append(&mut body);
                     result.push(Instruction::goto(
                         -3 - body_len - cond_len,

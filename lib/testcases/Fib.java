@@ -14,8 +14,9 @@ class Fib {
 		int x = 0;
 		int y = 1;
 		int i = 1;
+		int next = 0;
 		while (i < n) {
-			int next = y + x;
+			next = y + x;
 			x = y;
 			y = next;
 			i = i + 1;
