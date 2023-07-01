@@ -162,9 +162,18 @@ impl StackMapTable {
                     bytes_idx += 1;
                     // No changes in stack
                 }
-                Instruction::istore(_) | Instruction::astore(_) => {
+                Instruction::istore(x) => {
                     bytes_idx += 2;
                     current_stack.operands.pop();
+                    if *x as usize >= current_stack.locals.len() {
+                        current_stack.locals.push(VerificationType::INTEGER)
+                    }
+                }
+                Instruction::astore(x) => {
+                    let a = current_stack.operands.pop().unwrap();
+                    if *x as usize >= current_stack.locals.len() {
+                        current_stack.locals.push(a);
+                    }
                 }
                 Instruction::iadd
                 | Instruction::isub
@@ -177,11 +186,7 @@ impl StackMapTable {
                 Instruction::getfield(idx) => {
                     // Use idx to figure out what type the field has
                     // pops once and pushes type of field then
-                    if taken_branches_idxs.iter().any(|x| *x == instruction_idx) {
-                        return;
-                    }
                     bytes_idx += 3;
-                    taken_branches_idxs.push(instruction_idx);
                     if let Constant::FieldRef(f) = constant_pool.get(*idx).unwrap() {
                         match f.field.r#type.as_str() {
                             "Z" | "C" | "I" => {
@@ -217,7 +222,11 @@ impl StackMapTable {
                     println!(
                         "ifne: byte_offset={byte_offset}, instruction_offset={instruction_offset}"
                     );
-                    assert!(*instruction_offset != 0);
+                    if taken_branches_idxs.iter().any(|x| *x == instruction_idx) {
+                        return;
+                    }
+                    taken_branches_idxs.push(instruction_idx);
+                    // assert!(*instruction_offset != 0);
                     current_stack.operands.pop();
                     let mut new_stack = current_stack.clone();
                     new_stack.location = (bytes_idx as i16 + *byte_offset) as u16;
@@ -228,7 +237,7 @@ impl StackMapTable {
                         new_stack.location as usize,
                         &mut new_stack,
                         stacks,
-                        &mut vec![],
+                        taken_branches_idxs,
                         constant_pool,
                     );
                     bytes_idx += 3;
