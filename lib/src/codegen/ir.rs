@@ -1050,6 +1050,7 @@ fn generate_code_expr(
                     stack.inc(2);
                 }
                 Binary(op, left, right) => {
+                    // TODO: We have to look over some of them again. Eq works but i am not sure about the others
                     match BinaryOp::from(&op as &str) {
                         BinaryOp::Add => {
                             result.append(&mut generate_code_expr(
@@ -1203,6 +1204,7 @@ fn generate_code_expr(
                                 local_var_pool,
                                 class_name,
                             ));
+                            result.push(Instruction::isub);
                             result.push(Instruction::reljumpiflt(3));
                             result.push(Instruction::bipush(1));
                             result.push(Instruction::relgoto(2));
@@ -1223,6 +1225,7 @@ fn generate_code_expr(
                                 local_var_pool,
                                 class_name,
                             ));
+                            result.push(Instruction::isub);
                             result.push(Instruction::reljumpifge(3));
                             result.push(Instruction::bipush(1));
                             result.push(Instruction::relgoto(2));
@@ -1243,6 +1246,7 @@ fn generate_code_expr(
                                 local_var_pool,
                                 class_name,
                             ));
+                            result.push(Instruction::isub);
                             result.push(Instruction::reljumpifge(3));
                             result.push(Instruction::bipush(1));
                             result.push(Instruction::relgoto(2));
@@ -1263,6 +1267,7 @@ fn generate_code_expr(
                                 local_var_pool,
                                 class_name,
                             ));
+                            result.push(Instruction::isub);
                             result.push(Instruction::reljumpiflt(3));
                             result.push(Instruction::bipush(1));
                             result.push(Instruction::relgoto(2));
@@ -1284,10 +1289,6 @@ fn generate_code_expr(
                                 class_name,
                             ));
                             result.push(Instruction::isub);
-                            result.push(Instruction::reljumpifne(3));
-                            result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
-                            result.push(Instruction::bipush(0));
                         }
                         BinaryOp::Ne => {
                             result.append(&mut generate_code_expr(
