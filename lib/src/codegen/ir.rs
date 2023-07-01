@@ -1294,7 +1294,7 @@ fn generate_code_expr(
                             // a - b >= 0
                             // a - b + 1 > 0
                             result.push(Instruction::isub);
-                            result.push(Instruction::iload(1));
+                            result.push(Instruction::bipush(1));
                             result.push(Instruction::iadd);
                             result.push(Instruction::ifge(8, 3));
                             result.push(Instruction::bipush(0));
