@@ -44,16 +44,40 @@ Folgende Fehler werden vom Typechecker erkannt:
 
 ## Codegenerierung
 
-ByteCode-Umwandlung, Bugfixes, StackSize und Improvements: Val Richter
+ByteCode-Umwandlung, Bugfixes, StackSize und viele Improvements: Val Richter
 
-Definition DIR(Intermediate Representation), ConstantPool, LocalVarPool, Methoden zur Instruction-generierung, BugFixes, etwas ByteCode-Umwandlung und Umwandlung relativer in absolute Jumps: Marion Hinkel und Benedikt Brandmaier im Pair Programming
-- Wer hat welche Arbeit bei codegen gemacht?
-- Was für Arbeit musste alles zusätzlich getan werden, weil wir nicht Java + ASM genutzt haben?
+Definition DIR(Duck Intermediate Representation), ConstantPool, LocalVarPool, Methoden zur Instruction-generierung, BugFixes, etwas ByteCode-Umwandlung und Umwandlung relativer in absolute Jumps: Marion Hinkel und Benedikt Brandmaier im Pair Programming
+
+Zur Bytecode-generierung wird der Typed Abstract Syntax Tree(TAST) in Java Bytecode komplett selber
+umgewandelt. Dafür wird eine Intermediate Representation (IR) genutzt, die eine Class-ähnliche Struktur(mit Konstantenpool, LocalVarpool, Methoden mit Code als Instruktionen, etc.)
+besitzt. Diese IR wird dann komplett manuell in Java Bytecode übersetzt. Dies hat dem Code-gen Team sehr viel
+Zeit gekostet, da z.B. die Stack-Size, der Konstantenpool, LocalVarpool und die Jumps manuell berechnet werden mussten.
+Zudem hatten wir zeitweise eigene Relative Instructions implementiert, da wir dachten dass die JVM keine relativen Jumps
+unterstützt, hatten dann allerdings mit Try-and-Error herausgefunden, dass javap sich die absoluten Addressen ausrechnet
+und für die JVM normale jumps als relative Jumps behandelt.
+Zudem musste eine StackMapTable implementiert werden, da die JVM sonst unsere Klassen nicht lädt.
+Das Troubleshooten von Testfehlern war auch sehr aufwending da oft javap gar nicht erst den Fehler im Klassencode ausgab
+und wir mit einem Hex-Editor die Klassen von Hand analysieren mussten, da es auch kein anderes Tool gab, um solche Fehler 
+auszugeben und die Zeit fehlte ein Eigenes zu schreiben.
+
+Da es auch keine Dokumentation gibt, die in etwa zeigt, welcher Bytecode für welche Operationen genutzt wird, mussten wir
+uns die Bytecode-Spezifikationen anschauen und sehr viel mit Tools wie javap und [godbolt](https://godbolt.org/) arbeiten.
 
 ## Testing
 
 -   Wer hat welche Arbeit beim Testing gemacht?
 -   Wie funktioniert das Testing genau?
+
+Das Testen des Codegens war sehr aufwendig, er besteht aus diesen Schritten:
+1. Ein handgeschriebener TAST wird geladen
+2. Eine Java Klasse wird erstellt die jede Methode im TAST aufruft
+3. Die java Klasse wird mit javac kompiliert und ausgeführt, wobei die Ausgabe in einer Variable gespeichert wird
+4. Fürs Debugging wird die Java Klasse mit javap in Bytecode umgewandelt und in eine Datei geschrieben
+5. Der TAST wird in eine DIR umgewandelt und zu Bytecode umgewandelt
+6. Der Bytecode wird in eine .class-Datei geschrieben
+7. Die .class-Datei wird mit javap in Bytecode umgewandelt und in eine Datei geschrieben
+8. Die vom Codegen generierte .class-Datei wird ausgeführt und die Ausgabe in einer Variable gespeichert
+9. Die Ausgaben der richtigen Java Klasse und der vom Codegen generierten Klasse werden verglichen
 
 ## AST-Definition
 
