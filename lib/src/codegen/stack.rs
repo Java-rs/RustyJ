@@ -462,15 +462,9 @@ impl StackMapFrame {
                 v.push(255);
                 v.extend_from_slice(&offset_delta.to_be_bytes());
                 v.extend_from_slice(&number_of_locals.to_be_bytes());
-                v.append(&mut local_types.iter().map(|t| t.as_bytes()).flatten().collect());
+                v.append(&mut local_types.iter().flat_map(|t| t.as_bytes()).collect());
                 v.extend_from_slice(&number_of_operands.to_be_bytes());
-                v.append(
-                    &mut operand_types
-                        .iter()
-                        .map(|t| t.as_bytes())
-                        .flatten()
-                        .collect(),
-                );
+                v.append(&mut operand_types.iter().flat_map(|t| t.as_bytes()).collect());
                 v
             }
         }
