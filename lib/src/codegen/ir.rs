@@ -781,7 +781,6 @@ fn generate_code_stmt(
                         if_body.push(Instruction::relgoto(else_body.len() as i16));
                     }
                     // If the expression is false, jump to the else block
-                    // FIXME: Does not work
                     result.push(Instruction::reljumpifne(if_body.len() as i16));
                     result.append(&mut if_body);
                     // If there is an else block, append it
