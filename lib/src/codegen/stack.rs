@@ -97,16 +97,25 @@ impl StackMapTable {
                 Instruction::ldc(idx) => {
                     bytes_idx += 2;
                     match constant_pool.get(*idx as u16).unwrap() {
-                        Constant::String(_) => current_stack
-                            .operands
-                            .push(VerificationType::OBJECT(todo!())),
+                        Constant::String(_) => {
+                            current_stack.operands.push(VerificationType::OBJECT(
+                                constant_pool
+                                    .index_of(&Constant::Utf8("Ljava/lang/String".to_string()))
+                                    .unwrap(),
+                            ))
+                        }
                         Constant::Integer(_) => {
                             current_stack.operands.push(VerificationType::INTEGER)
                         }
                         Constant::FieldRef(f) => {
                             current_stack.operands.push(match f.field.r#type.as_str() {
-                                "I" | "Z" | "C" => VerificationType::INTEGER,
-                                _ => VerificationType::OBJECT(todo!()),
+                                "Z" | "C" | "I" => VerificationType::INTEGER,
+                                "Ljava/lang/String" => VerificationType::OBJECT(
+                                    constant_pool
+                                        .index_of(&Constant::Utf8("Ljava/lang/String".to_string()))
+                                        .unwrap(),
+                                ),
+                                _ => VerificationType::OBJECT(constant_pool.index_of_this_class()),
                             })
                         }
                         _ => unreachable!(),
@@ -167,7 +176,26 @@ impl StackMapTable {
                 Instruction::getfield(idx) => {
                     // Use idx to figure out what type the field has
                     // pops once and pushes type of field then
-                    todo!()
+                    bytes_idx += 3;
+                    if let Constant::FieldRef(f) = constant_pool.get(*idx).unwrap() {
+                        match f.field.r#type.as_str() {
+                            "Z" | "C" | "I" => {
+                                current_stack.operands.push(VerificationType::INTEGER)
+                            }
+                            "Ljava/lang/String" => {
+                                current_stack.operands.push(VerificationType::OBJECT(
+                                    constant_pool
+                                        .index_of(&Constant::Utf8("Ljava/lang/String".to_string()))
+                                        .unwrap(),
+                                ))
+                            }
+                            _ => current_stack.operands.push(VerificationType::OBJECT(
+                                constant_pool.index_of_this_class(),
+                            )),
+                        }
+                    } else {
+                        unreachable!();
+                    }
                 }
                 Instruction::dup => {
                     bytes_idx += 1;
@@ -184,6 +212,7 @@ impl StackMapTable {
                     println!(
                         "ifne: byte_offset={byte_offset}, instruction_offset={instruction_offset}"
                     );
+                    assert!(*instruction_offset != 0);
                     current_stack.operands.pop();
                     let mut new_stack = current_stack.clone();
                     new_stack.location = (bytes_idx as i16 + *byte_offset) as u16;
