@@ -438,7 +438,10 @@ impl StackMapFrame {
                 v
             }
             StackMapFrame::CHOP(chopped_amount, offset_delta) => {
-                todo!()
+                let mut v = Vec::with_capacity(8);
+                v.push(*chopped_amount);
+                v.extend_from_slice(&offset_delta.to_be_bytes());
+                v
             }
             StackMapFrame::APPEND(appended_amount, offset_delta, types) => {
                 let mut v = Vec::with_capacity(16);

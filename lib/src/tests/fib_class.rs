@@ -218,6 +218,23 @@ fn fib_class() -> Class {
                             Type::Int,
                         ),
                         TypedStmt(
+                            Box::new(LocalVarDecl(Type::Int, "next".to_string())),
+                            Type::Int,
+                        ),
+                        TypedStmt(
+                            Box::new(StmtExprStmt(TypedStmtExpr(
+                                Box::new(Assign(
+                                    Expr::TypedExpr(
+                                        Box::new(Expr::LocalVar("next".to_string())),
+                                        Type::Int,
+                                    ),
+                                    TypedExpr(Box::new(Expr::Integer(0)), Type::Int),
+                                )),
+                                Type::Int,
+                            ))),
+                            Type::Int,
+                        ),
+                        TypedStmt(
                             Box::new(While(
                                 TypedExpr(
                                     Box::new(Binary(
@@ -235,10 +252,6 @@ fn fib_class() -> Class {
                                 ),
                                 Box::new(TypedStmt(
                                     Box::new(Block(vec![
-                                        TypedStmt(
-                                            Box::new(LocalVarDecl(Type::Int, "next".to_string())),
-                                            Type::Int,
-                                        ),
                                         TypedStmt(
                                             Box::new(StmtExprStmt(TypedStmtExpr(
                                                 Box::new(Assign(
