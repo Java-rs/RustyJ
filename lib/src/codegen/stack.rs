@@ -78,7 +78,7 @@ impl StackMapTable {
         mut bytes_idx: usize,
         current_stack: &mut VerificationStack,
         stacks: &mut Vec<VerificationStack>,
-        constant_pool: &ConstantPool,
+        constant_pool: &mut ConstantPool,
     ) {
         while instruction_idx < code.len() {
             // FIXME: When are locals added and how can we detect that from the instructions alone?
@@ -99,9 +99,7 @@ impl StackMapTable {
                     match constant_pool.get(*idx as u16).unwrap() {
                         Constant::String(_) => {
                             current_stack.operands.push(VerificationType::OBJECT(
-                                constant_pool
-                                    .index_of(&Constant::Utf8("Ljava/lang/String".to_string()))
-                                    .unwrap(),
+                                constant_pool.add(Constant::Utf8("Ljava/lang/String".to_string())),
                             ))
                         }
                         Constant::Integer(_) => {
@@ -209,10 +207,11 @@ impl StackMapTable {
                 | Instruction::iflt(byte_offset, instruction_offset)
                 | Instruction::ifge(byte_offset, instruction_offset)
                 | Instruction::ifne(byte_offset, instruction_offset) => {
-                    println!(
-                        "ifne: byte_offset={byte_offset}, instruction_offset={instruction_offset}"
+                    assert!(
+                        *instruction_offset != 0,
+                        "Instruction {:?} has instruction_offset 0",
+                        code[instruction_idx]
                     );
-                    assert!(*instruction_offset != 0);
                     current_stack.operands.pop();
                     let mut new_stack = current_stack.clone();
                     new_stack.location = (bytes_idx as i16 + *byte_offset) as u16;
@@ -242,7 +241,7 @@ impl StackMapTable {
     pub(crate) fn new(
         code: &[Instruction],
         params: &[(Type, String)],
-        constant_pool: &ConstantPool,
+        constant_pool: &mut ConstantPool,
     ) -> Self {
         // We calculate the actual frames here
         // We do this via 2 passes
