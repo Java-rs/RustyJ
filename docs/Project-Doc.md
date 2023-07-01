@@ -52,7 +52,7 @@ Zur Bytecode-generierung wird der Typed Abstract Syntax Tree(TAST) in Java Bytec
 umgewandelt. Dafür wird eine Intermediate Representation (IR) genutzt, die eine Class-ähnliche Struktur(mit Konstantenpool, LocalVarpool, Methoden mit Code als Instruktionen, etc.)
 besitzt. Diese IR wird dann komplett manuell in Java Bytecode übersetzt. Dies hat dem Code-gen Team sehr viel
 Zeit gekostet, da z.B. die Stack-Size, der Konstantenpool, LocalVarpool und die Jumps manuell berechnet werden mussten.
-Zudem hatten wir zeitweise eigene Relative Instructions implementiert, da wir dachten dass die JVM keine relativen Jumps
+Zudem hatten wir zeitweise eigene Relative Instructions implementiert, da wir dachten, dass die JVM keine relativen Jumps
 unterstützt, hatten dann allerdings mit Try-and-Error herausgefunden, dass javap sich die absoluten Addressen ausrechnet
 und für die JVM normale jumps als relative Jumps behandelt.
 Zudem musste eine StackMapTable implementiert werden, da die JVM sonst unsere Klassen nicht lädt.
@@ -61,7 +61,13 @@ und wir mit einem Hex-Editor die Klassen von Hand analysieren mussten, da es auc
 auszugeben und die Zeit fehlte ein Eigenes zu schreiben.
 
 Da es auch keine Dokumentation gibt, die in etwa zeigt, welcher Bytecode für welche Operationen genutzt wird, mussten wir
-uns die Bytecode-Spezifikationen anschauen und sehr viel mit Tools wie javap und [godbolt](https://godbolt.org/) arbeiten.
+uns die Bytecode-Spezifikationen anschauen und sehr viel mit Tools wie javap und [godbolt](https://godbolt.org/) arbeiten
+in die wir manuell Java Code eingeben und schauten, was für Bytecode bei verschiedenen Operationenkombinationen generiert
+wird, was sehr zeitaufwendig war.
+
+Auch sehr schwierig war die Implementation einer StackMapTable, da Java diese erwartet. Diese ist eine Tabelle, die für
+jede Instruktion die Typen der Elemente auf dem Stack in komprimiertem Format angibt. Diese Tabelle muss manuell 
+erstellt werden und über die Typen aller Variablen, die in den Stack geschrieben wurden Bescheid wissen.
 
 ## Testing
 
