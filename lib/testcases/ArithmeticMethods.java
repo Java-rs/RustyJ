@@ -1,6 +1,7 @@
 class ArithmeticMethods {
 	int x = 69;
-	int y = 420;
+	int y = 420; // Too big for signed byte (important for codegen)
+	int bigInt = 131072; // Too big for signed short, which (important for codegen)
 
 	int addX(int a) {
 		return x + a;
@@ -14,6 +15,6 @@ class ArithmeticMethods {
 		a = y * (a + b) / x;
 		b = a + (-b);
 		a = x + b * a;
-		return x * a;
+		return x * a + bigInt;
 	}
 }

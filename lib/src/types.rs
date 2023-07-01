@@ -57,10 +57,7 @@ impl FieldDecl {
         // Descripter index
         bytes.extend_from_slice(
             &constant_pool
-                .add(Constant::NameAndType(NameAndType {
-                    name: self.name.clone(),
-                    r#type: self.field_type.to_ir_string(),
-                }))
+                .add(Constant::Utf8(self.field_type.to_ir_string()))
                 .to_be_bytes(),
         );
         // Attributes count

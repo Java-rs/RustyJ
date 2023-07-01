@@ -193,14 +193,12 @@ pub fn class_test(ast: &Class, tast: Option<&Class>, name: &str) {
         .expect("failed to open original java file for writing generated code");
     file.write_all(class_code.as_bytes())
         .expect("failed to write generated java code in original java file");
-    let mut file = File::create(format!("lib/testcases/{name}-expected.java")) // Only for debugging tests
+    let mut file = File::create(format!("lib/testcases/{name}-gen.java")) // Only for debugging tests
         .expect("failed to open generated java file for writing generated code");
     file.write_all(class_code.as_bytes())
         .expect("failed to write generated java code in generated java file");
-
-    // Compile generated java code
     compile_java(name);
-    let gen_clz = disassemble_java(name, &format!("{name}-expected"));
+    let gen_clz = disassemble_java(name, &format!("{name}-gen"));
 
     // Compile original java code
     let mut file = File::create(format!("lib/testcases/{name}.java"))
@@ -215,6 +213,7 @@ pub fn class_test(ast: &Class, tast: Option<&Class>, name: &str) {
 
 fn run_java(name: &str) -> std::process::Output {
     Command::new("java")
+        // .arg("-noverify")
         .arg(name)
         .current_dir("lib/testcases/")
         .output()
@@ -231,7 +230,10 @@ fn compile_java(name: &str) {
     let ecode = child
         .wait()
         .unwrap_or_else(|_| panic!("failed to wait on child compiling {name}.java"));
-    assert!(ecode.success());
+    assert!(
+        ecode.success(),
+        "Failed to compile {name}.java with exit code {ecode}"
+    );
     assert_eq!(ecode.code().unwrap(), 0);
 }
 

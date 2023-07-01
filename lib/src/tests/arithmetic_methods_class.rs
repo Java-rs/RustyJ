@@ -38,6 +38,11 @@ fn arithmetic_methods_class() -> Class {
                 name: "y".to_string(),
                 val: Some(Expr::Integer(420)),
             },
+            FieldDecl {
+                field_type: Type::Int,
+                name: "bigInt".to_string(),
+                val: Some(Expr::Integer(131072)),
+            },
         ],
         methods: vec![
             MethodDecl {
@@ -201,13 +206,23 @@ fn arithmetic_methods_class() -> Class {
                         TypedStmt(
                             Box::new(Return(TypedExpr(
                                 Box::new(Binary(
-                                    "*".to_string(),
+                                    "+".to_string(),
                                     Box::new(TypedExpr(
-                                        Box::new(FieldVar("x".to_string())),
+                                        Box::new(Binary(
+                                            "*".to_string(),
+                                            Box::new(TypedExpr(
+                                                Box::new(FieldVar("x".to_string())),
+                                                Type::Int,
+                                            )),
+                                            Box::new(TypedExpr(
+                                                Box::new(LocalVar("a".to_string())),
+                                                Type::Int,
+                                            )),
+                                        )),
                                         Type::Int,
                                     )),
                                     Box::new(TypedExpr(
-                                        Box::new(LocalVar("a".to_string())),
+                                        Box::new(FieldVar("bigInt".to_string())),
                                         Type::Int,
                                     )),
                                 )),
