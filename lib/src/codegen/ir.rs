@@ -609,12 +609,15 @@ fn generate_method(
         constant_pool,
         &mut local_var_pool,
         class_name,
+        true,
     );
+
     if code.last().unwrap_or(&Instruction::bipush(0)) != &Instruction::r#return
         && method.ret_type == Type::Void
     {
         code.push(Instruction::r#return);
     }
+
     let stack_map_table = StackMapTable::new(&code, &method.params, constant_pool);
     CompiledMethod {
         name: method.name.clone(),
@@ -630,10 +633,10 @@ fn generate_method(
 fn generate_code_stmt(
     stmt: Stmt,
     stack: &mut StackSize,
-
     constant_pool: &mut ConstantPool,
     local_var_pool: &mut LocalVarPool,
     class_name: &str,
+    is_last_instr: bool,
 ) -> Vec<Instruction> {
     let mut result = vec![];
     match stmt {
@@ -642,13 +645,14 @@ fn generate_code_stmt(
             let stmt = stmt.deref().clone();
             match stmt {
                 Stmt::Block(stmts) => {
-                    for stmt in stmts {
+                    for i in 0..stmts.len() {
                         result.append(&mut generate_code_stmt(
-                            stmt.clone(),
+                            stmts.get(i).unwrap().clone(),
                             stack,
                             constant_pool,
                             local_var_pool,
                             class_name,
+                            is_last_instr && i + 1 == stmts.len(),
                         ));
                     }
                 }
@@ -727,8 +731,14 @@ fn generate_code_stmt(
                     // Checking the condition removes one element from stack
                     stack.dec(1);
                     // Generate bytecode for our body
-                    let mut body =
-                        generate_code_stmt(*stmt, stack, constant_pool, local_var_pool, class_name);
+                    let mut body = generate_code_stmt(
+                        *stmt,
+                        stack,
+                        constant_pool,
+                        local_var_pool,
+                        class_name,
+                        is_last_instr,
+                    );
                     let body_len = get_instructions_length(&body) as i16;
                     result.push(Instruction::ifeq(3 + body_len, body.len() as i16 + 1));
                     result.append(&mut body);
@@ -752,45 +762,44 @@ fn generate_code_stmt(
                         class_name,
                     ));
                     stack.dec(1);
-                    // We set a label to jump to if the expression is false
                     let mut if_body = generate_code_stmt(
                         *stmt1,
                         stack,
                         constant_pool,
                         local_var_pool,
                         class_name,
+                        is_last_instr,
                     );
-                    if stmt2.is_some() {
-                        // If there is an else block we need to jump over it at the end of
-                        // the if block since the stack could be changed
-                        // TODO: This clone is fairly stupid
-                        let else_body = generate_code_stmt(
+                    let mut else_body = if stmt2.is_none() {
+                        vec![]
+                    } else {
+                        generate_code_stmt(
                             *stmt2.clone().unwrap(),
                             stack,
                             constant_pool,
                             local_var_pool,
                             class_name,
-                        );
+                            is_last_instr,
+                        )
+                    };
+
+                    // We only want to put a goto to after the else-block if there is another instruction after this one
+                    if stmt2.is_some() && !is_last_instr {
+                        // If there is an else block we need to jump over it at the end of
+                        // the if block since the stack could be changed
                         if_body.push(Instruction::goto(
                             3 + get_instructions_length(&else_body) as i16,
                             else_body.len() as i16,
                         ));
                     }
-                    // If the expression is false, jump to the else block
-                    result.push(Instruction::ifne(
-                        3 + get_instructions_length(&if_body) as i16,
+                    // If the expression is false, jump over the if-body
+                    result.push(Instruction::ifeq(
+                        2 + get_instructions_length(&if_body) as i16 + 1,
                         if_body.len() as i16,
                     ));
                     result.append(&mut if_body);
                     // If there is an else block, append it
                     if stmt2.is_some() {
-                        let mut else_body = generate_code_stmt(
-                            *stmt2.unwrap(),
-                            stack,
-                            constant_pool,
-                            local_var_pool,
-                            class_name,
-                        );
                         result.append(&mut else_body);
                     }
                 }
@@ -1272,7 +1281,7 @@ fn generate_code_expr(
                             result.push(Instruction::isub);
                             result.push(Instruction::iflt(8, 3));
                             result.push(Instruction::bipush(0));
-                            result.push(Instruction::goto(5, 2));
+                            result.push(Instruction::goto(2 + 2 + 1, 2));
                             result.push(Instruction::bipush(1));
                         }
                         BinaryOp::Gt => {
@@ -1317,6 +1326,10 @@ fn generate_code_expr(
                                 class_name,
                             ));
                             result.push(Instruction::isub);
+                            result.push(Instruction::ifeq(2 + 2 + 3 + 1, 3));
+                            result.push(Instruction::bipush(0));
+                            result.push(Instruction::goto(2 + 2 + 1, 2));
+                            result.push(Instruction::bipush(1));
                         }
                         BinaryOp::Ne => {
                             result.append(&mut generate_code_expr(
