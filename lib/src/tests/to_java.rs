@@ -41,8 +41,8 @@ pub fn field_to_java(field: &FieldDecl) -> String {
 }
 
 pub fn method_to_java(method: &MethodDecl) -> String {
-    let mut s: String = format!(
-        "\t{} {}({}) ",
+    format!(
+        "\t{} {}({})\n{}",
         method.ret_type,
         method.name,
         method
@@ -51,37 +51,31 @@ pub fn method_to_java(method: &MethodDecl) -> String {
             .into_iter()
             .map(|p| format!("{} {}", p.0, p.1))
             .reduce(|acc, s| format!("{}, {}", acc, s))
-            .unwrap_or("".to_string())
-    );
-    s += "{\n";
-    s = format!("{}{}", s, stmt_to_java(&method.body, 2));
-    s += "\t}\n";
-    s
+            .unwrap_or("".to_string()),
+        stmt_to_java(&method.body, 2)
+    )
 }
 
 pub fn stmt_to_java(stmt: &Stmt, indent: u8) -> String {
     match stmt {
         Stmt::Block(stmts) => format!(
-            "{{{}}}",
+            "{}{{\n{}\n{}}}",
+            get_indents(indent - 1),
             stmts
                 .into_iter()
                 .map(|stmt| stmt_to_java(stmt, indent))
-                .fold("".to_string(), |acc, s| acc + &s)
+                .fold("".to_string(), |acc, s| acc + &s),
+            get_indents(indent - 1)
         ),
         Stmt::If(cond, body, elze) => {
             let mut s = format!(
-                "{}if ({}) {{\n{}{}}}",
+                "{}if ({}) \n{}",
                 get_indents(indent),
                 expr_to_java(cond),
                 stmt_to_java(body, indent + 1),
-                get_indents(indent)
             );
             if let Some(x) = elze {
-                s += &format!(
-                    " else {{\n{}{}}}",
-                    stmt_to_java(x, indent + 1),
-                    get_indents(indent)
-                )
+                s += &format!(" else \n{}", stmt_to_java(x, indent + 1))
             }
             s += "\n";
             s
@@ -93,11 +87,10 @@ pub fn stmt_to_java(stmt: &Stmt, indent: u8) -> String {
         }
         Stmt::TypedStmt(stmt, typ) => stmt_to_java(stmt, indent),
         Stmt::While(cond, body) => format!(
-            "{}while ({}) {{\n{}{}}}\n",
+            "{}while ({}) \n{}\n",
             get_indents(indent),
             expr_to_java(cond),
             stmt_to_java(body, indent + 1),
-            get_indents(indent)
         ),
     }
 }

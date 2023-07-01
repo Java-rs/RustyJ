@@ -5,10 +5,9 @@
 extern crate pest;
 extern crate pest_derive;
 
-use crate::types::{Class, Expr, FieldDecl, MethodDecl, Stmt, StmtExpr, Type};
+use crate::types::{BinaryOp, Class, Expr, FieldDecl, MethodDecl, Stmt, StmtExpr, Type};
 use pest::error::Error;
 use pest::iterators::{Pair, Pairs};
-use pest::unicode::RUNIC;
 use pest::Parser;
 use pest_derive::Parser;
 
@@ -27,8 +26,7 @@ pub fn parse_programm(file: &str) -> Result<Vec<Class>, Error<Rule>> {
 }
 
 fn parse_class(pair: Pair<Rule>) -> Class {
-    let rule = pair.as_rule();
-    match rule {
+    match pair.as_rule() {
         Rule::ClassDecl => {
             let mut inners = pair.into_inner();
             let other_name = next_id(&mut inners);
@@ -53,7 +51,7 @@ fn parse_class(pair: Pair<Rule>) -> Class {
                 methods,
             }
         }
-        _ => unreachable!(),
+        _ => todo!(),
     }
 }
 fn next_id(inners: &mut Pairs<Rule>) -> String {
@@ -109,44 +107,67 @@ fn parse_method(pair: Pair<Rule>) -> MethodDecl {
 }
 
 fn parse_BlockStmt(pair: Pair<Rule>) -> Vec<Stmt> {
+    /*println!(
+        "parse_BlockStmt: rule = {:?}, str = {}",
+        pair.as_rule(),
+        pair.as_str()
+    );*/
     let rule = pair.as_rule().clone();
     let mut inner = pair.into_inner();
     match rule {
         Rule::BlockStmt => {
+            let mut result = vec![];
+
+            for curStmt in inner {
+                result.append(&mut parse_Stmt(curStmt));
+            }
+
+            result
+            /*
             let first = inner.next();
             if (first.is_none()) {
                 return vec![];
             }
             let first = first.unwrap();
-            match first.as_rule() {
-                Rule::JType => {
-                    let jtype = parse_Type(first);
-                    let var_decels = inner.next().unwrap().into_inner();
-                    var_decels
-                        .map(|x| {
-                            let mut inner = x.into_inner();
-                            let other_name = next_id(&mut inner);
-                            match inner.next() {
-                                None => {
-                                    vec![Stmt::LocalVarDecl(jtype.clone(), other_name)]
+
+            let result = vec![];
+            for first in inner {
+                match first.as_rule() {
+                    /*
+                    Rule::JType => {
+                        let jtype = parse_Type(first);
+                        let var_decels = inner.next().unwrap().into_inner();
+                        var_decels
+                            .map(|x| {
+                                let mut inner = x.into_inner();
+                                let other_name = next_id(&mut inner);
+                                match inner.next() {
+                                    None => {
+                                         Stmt::LocalVarDecl(jtype.clone(), other_name)
+                                    }
+                                    Some(expresion) => vec![
+                                        Stmt::LocalVarDecl(jtype.clone(), other_name.clone()),
+                                        Stmt::StmtExprStmt(StmtExpr::Assign(
+                                            other_name,
+                                            parse_expr(expresion),
+                                        )),
+                                    ],
                                 }
-                                Some(expresion) => vec![
-                                    Stmt::LocalVarDecl(jtype.clone(), other_name.clone()),
-                                    Stmt::StmtExprStmt(StmtExpr::Assign(
-                                        Expr::LocalOrFieldVar(other_name),
-                                        parse_expr(expresion),
-                                    )),
-                                ],
-                            }
-                        })
-                        .flatten()
-                        .collect()
-                }
-                Rule::Stmt => parse_Stmt(first.into_inner().next().unwrap()),
-                _ => {
-                    unreachable!()
+                            })
+                            .flatten()
+                            .collect()
+                    }
+
+                     */
+                    Rule::Stmt => parse_Stmt(first.into_inner().next().unwrap()),
+                    _ => {
+                        dbg!(first.as_rule());
+                        unreachable!()
+                    }
                 }
             }
+            result
+            */
         }
         _ => {
             unreachable!()
@@ -154,31 +175,39 @@ fn parse_BlockStmt(pair: Pair<Rule>) -> Vec<Stmt> {
     }
 }
 fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
+    /* println!(
+        "parse_Stmt: rule = {:?}, str = {}",
+        pair.as_rule(),
+        pair.as_str()
+    );*/
     match pair.as_rule() {
         Rule::Stmt => parse_Stmt(pair.into_inner().next().unwrap()), //@Notice this may be very wrong !!
         Rule::WhileStmt => {
             let mut inners = pair.into_inner();
-
             let Expr = parse_expr(inners.next().unwrap());
-            let Stmt = parse_Stmt(inners.next().unwrap()).get(0).unwrap().clone();
-            vec![Stmt::While(Expr, Box::new(Stmt))]
+            let Stmt = parse_Stmt(inners.next().unwrap());
+            vec![Stmt::While(Expr, Box::new(Stmt::Block(Stmt)))]
         }
         Rule::IfElseStmt => {
             let mut inners = pair.into_inner();
 
             let mut firstif = inners.next().unwrap().into_inner();
             let Expr = parse_expr(firstif.next().unwrap());
-            let Stmt = parse_Stmt(firstif.next().unwrap()).get(0).unwrap().clone();
+            let Stmt = parse_Stmt(firstif.next().unwrap());
+            let elsePart = parse_Stmt(inners.next().unwrap());
 
-            let elsePart = parse_Stmt(inners.next().unwrap()).get(0).unwrap().clone();
-            vec![Stmt::If(Expr, Box::new(Stmt), Some(Box::new(elsePart)))]
+            vec![Stmt::If(
+                Expr,
+                Box::new(Stmt::Block(Stmt)),
+                Some(Box::new(Stmt::Block(elsePart))),
+            )]
         }
         Rule::IfStmt => {
             let mut inners = pair.into_inner();
 
             let Expr = parse_expr(inners.next().unwrap());
-            let Stmt = parse_Stmt(inners.next().unwrap()).get(0).unwrap().clone();
-            vec![Stmt::If(Expr, Box::new(Stmt), None)]
+            let Stmt = parse_Stmt(inners.next().unwrap());
+            vec![Stmt::If(Expr, Box::new(Stmt::Block(Stmt)), None)]
         }
         Rule::ReturnStmt => {
             let mut inners = pair.into_inner();
@@ -204,7 +233,9 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
             }
         }
         Rule::StmtExpr => {
-            vec![Stmt::StmtExprStmt(parse_StmtExpr(pair))]
+            vec![Stmt::StmtExprStmt(parse_StmtExpr(
+                pair.into_inner().next().unwrap(),
+            ))]
         }
         Rule::BlockStmt => parse_BlockStmt(pair),
         _ => {
@@ -215,24 +246,24 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
 }
 
 fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
+    /*println!(
+        "parse_StmtExpr: rule = {:?}, str = {}",
+        pair.as_rule(),
+        pair.as_str()
+    );*/
     let rule = pair.as_rule().clone();
     match rule {
         Rule::AssignExpr => {
             let mut inners = pair.into_inner();
 
             let mut name = inners.next().unwrap();
-            let var;
-            match name.as_rule() {
-                Rule::Identifier => {
-                    var = Expr::LocalOrFieldVar(name.as_str().trim().to_string());
-                }
-                Rule::InstVarExpr => {
-                    todo!() // until further notice ignored
-                }
+            let var = match name.as_rule() {
+                Rule::Identifier => Expr::LocalOrFieldVar(name.as_str().trim().to_string()),
+                Rule::InstVarExpr => parse_expr(name),
                 _ => {
                     unreachable!()
                 }
-            }
+            };
             let Expr = parse_expr(inners.next().unwrap());
 
             StmtExpr::Assign(var, Expr)
@@ -250,7 +281,7 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
             StmtExpr::New(id_name, exprList)
         }
         Rule::MethodCallExpr => {
-            let mut inners = pair.clone().into_inner(); //i fogot how to do this withouth cone
+            let mut inners = pair.into_inner();
             let mut identifORinstVar = inners.next().unwrap();
             let String_name;
             let MethodExpr;
@@ -260,8 +291,7 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
                     MethodExpr = Expr::This;
                 }
                 Rule::InstVarExpr => {
-                    let Expr::InstVar(a, b) = parse_expr(pair) else { unreachable!() };
-
+                    let Expr::InstVar(a, b) = parse_expr(identifORinstVar) else { unreachable!() };
                     MethodExpr = *a;
                     String_name = b;
                 }
@@ -270,16 +300,18 @@ fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
                     unreachable!()
                 }
             }
-            let paramList = inners.next().unwrap().into_inner();
+
             let mut exprList: Vec<Expr> = vec![];
-            for param in paramList {
-                exprList.push(parse_expr(param));
+            if let Some(paramList) = inners.next() {
+                for param in paramList.into_inner() {
+                    exprList.push(parse_expr(param));
+                }
             }
 
             StmtExpr::MethodCall(MethodExpr, String_name, exprList)
         }
         _ => {
-            dbg!(rule);
+            dbg!(pair);
             unreachable!()
         }
     }
@@ -340,7 +372,13 @@ fn parse_Type(pair: Pair<Rule>) -> Type {
 }
 
 fn parse_expr(pair: Pair<Rule>) -> Expr {
-    match pair.as_rule() {
+    let rule = pair.as_rule();
+    /* println!(
+        "parse_expr: rule = {:?}, str = {}",
+        pair.as_rule(),
+        pair.as_str()
+    );*/
+    match rule {
         Rule::Expr => parse_expr(pair.into_inner().next().unwrap()),
         Rule::ThisExpr => Expr::This,
         Rule::JNull => Expr::Jnull,
@@ -363,27 +401,60 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
         }
         Rule::UnaryExpr => {
             let mut inners = pair.into_inner();
-            let unaryOp = inners.next().unwrap().as_str().trim().to_string();
-            let second = inners.next().unwrap();
-            let result = if second.as_rule() == Rule::Identifier {
-                Expr::LocalOrFieldVar(second.as_str().trim().to_string()) //@Notice: duno if this is corect
-            } else {
-                parse_expr(second)
-            };
-            Expr::Unary(unaryOp, Box::new(result))
+            let unaryOP = next_id(&mut inners);
+            let noBinExpr = parse_expr(inners.next().unwrap());
+            Expr::Unary(unaryOP, Box::new(noBinExpr))
         }
         Rule::ParanthesizedExpr => parse_expr(pair.into_inner().next().unwrap()),
-        Rule::IntLiteral => Expr::Integer(pair.as_str().parse().unwrap()),
+        Rule::IntLiteral => Expr::Integer(pair.as_str().trim().parse().unwrap()),
         Rule::BoolLiteral => Expr::Bool(pair.as_str().parse().unwrap()),
         Rule::CharLiteral => Expr::Char(get_str_content(pair.as_str()).parse().unwrap()),
         Rule::StrLiteral => Expr::String(get_str_content(pair.as_str()).to_string()),
-        Rule::StmtExpr => Expr::StmtExprExpr(Box::new(parse_StmtExpr(pair))),
-        Rule::NonBinaryExpr => parse_expr(pair.into_inner().next().unwrap()),
-        Rule::Prec3BinExpr => {
-            todo!()
+        Rule::StmtExpr => {
+            Expr::StmtExprExpr(Box::new(parse_StmtExpr(pair.into_inner().next().unwrap())))
         }
+        Rule::NonBinaryExpr => parse_expr(pair.into_inner().next().unwrap()),
+        Rule::Prec4BinExpr
+        | Rule::Prec3BinExpr
+        | Rule::Prec2BinExpr
+        | Rule::Prec1BinExpr
+        | Rule::Prec0BinExpr => {
+            let pc = pair.clone();
+            let mut inners = pair.into_inner();
+            let left = inners.next().unwrap();
+            let left = parse_expr(left);
+            match inners.next() {
+                None => left,
+                Some(Op) => {
+                    let opStr = Op.as_str().trim().to_string();
+                    let right = inners.next().unwrap();
+                    let right = parse_expr(right);
+
+                    match right {
+                        Expr::Binary(op, rl, rr) => {
+                            if BinaryOp::prec(&op) == BinaryOp::prec(&opStr) {
+                                Expr::Binary(
+                                    op,
+                                    Box::new(Expr::Binary(opStr, Box::new(left), rl)),
+                                    rr,
+                                )
+                            } else {
+                                Expr::Binary(
+                                    opStr,
+                                    Box::new(left),
+                                    Box::new(Expr::Binary(op, rl, rr)),
+                                )
+                            }
+                        }
+                        _ => Expr::Binary(opStr, Box::new(left), Box::new(right)),
+                    }
+                }
+            }
+        }
+        Rule::Identifier => Expr::LocalOrFieldVar(pair.as_str().trim().to_string()),
+
         _ => {
-            dbg!(pair.as_rule());
+            dbg!(pair);
             unreachable!()
         }
     }

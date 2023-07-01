@@ -57,10 +57,7 @@ impl FieldDecl {
         // Descripter index
         bytes.extend_from_slice(
             &constant_pool
-                .add(Constant::NameAndType(NameAndType {
-                    name: self.name.clone(),
-                    r#type: self.field_type.to_ir_string(),
-                }))
+                .add(Constant::Utf8(self.field_type.to_ir_string()))
                 .to_be_bytes(),
         );
         // Attributes count
@@ -214,6 +211,27 @@ impl From<&str> for BinaryOp {
             "==" => BinaryOp::Eq,
             "!=" => BinaryOp::Ne,
             _ => panic!("Invalid binary operator: {}", s),
+        }
+    }
+}
+
+impl BinaryOp {
+    pub fn prec(op: &str) -> u8 {
+        match op {
+            "*" => 0,
+            "/" => 0,
+            "%" => 0,
+            "+" => 1,
+            "-" => 1,
+            "<=" => 2,
+            ">=" => 2,
+            "<" => 2,
+            ">" => 2,
+            "==" => 3,
+            "!=" => 3,
+            "&&" => 4,
+            "||" => 4,
+            _ => panic!("Invalid binary operator: {}", op),
         }
     }
 }

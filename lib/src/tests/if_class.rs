@@ -48,7 +48,10 @@ fn if_class() -> Class {
                                 Type::Bool,
                             ),
                             Box::new(TypedStmt(
-                                Box::new(Return(TypedExpr(Box::new(Bool(true)), Type::Bool))),
+                                Box::new(Block(vec![TypedStmt(
+                                    Box::new(Return(TypedExpr(Box::new(Bool(true)), Type::Bool))),
+                                    Type::Bool,
+                                )])),
                                 Type::Bool,
                             )),
                             None,

@@ -48,10 +48,13 @@ fn fib_class() -> Class {
                                 Type::Bool,
                             ),
                             Box::new(TypedStmt(
-                                Box::new(Return(TypedExpr(
-                                    Box::new(LocalVar("n".to_string())),
+                                Box::new(Block(vec![TypedStmt(
+                                    Box::new(Return(TypedExpr(
+                                        Box::new(LocalVar("n".to_string())),
+                                        Type::Int,
+                                    ))),
                                     Type::Int,
-                                ))),
+                                )])),
                                 Type::Int,
                             )),
                             Some(Box::new(TypedStmt(
@@ -150,10 +153,13 @@ fn fib_class() -> Class {
                                     Type::Bool,
                                 ),
                                 Box::new(TypedStmt(
-                                    Box::new(Return(TypedExpr(
-                                        Box::new(LocalVar("n".to_string())),
+                                    Box::new(Block(vec![TypedStmt(
+                                        Box::new(Return(TypedExpr(
+                                            Box::new(LocalVar("n".to_string())),
+                                            Type::Int,
+                                        ))),
                                         Type::Int,
-                                    ))),
+                                    )])),
                                     Type::Int,
                                 )),
                                 None,
@@ -212,6 +218,23 @@ fn fib_class() -> Class {
                             Type::Int,
                         ),
                         TypedStmt(
+                            Box::new(LocalVarDecl(Type::Int, "next".to_string())),
+                            Type::Int,
+                        ),
+                        TypedStmt(
+                            Box::new(StmtExprStmt(TypedStmtExpr(
+                                Box::new(Assign(
+                                    Expr::TypedExpr(
+                                        Box::new(Expr::LocalVar("next".to_string())),
+                                        Type::Int,
+                                    ),
+                                    TypedExpr(Box::new(Expr::Integer(0)), Type::Int),
+                                )),
+                                Type::Int,
+                            ))),
+                            Type::Int,
+                        ),
+                        TypedStmt(
                             Box::new(While(
                                 TypedExpr(
                                     Box::new(Binary(
@@ -229,10 +252,6 @@ fn fib_class() -> Class {
                                 ),
                                 Box::new(TypedStmt(
                                     Box::new(Block(vec![
-                                        TypedStmt(
-                                            Box::new(LocalVarDecl(Type::Int, "next".to_string())),
-                                            Type::Int,
-                                        ),
                                         TypedStmt(
                                             Box::new(StmtExprStmt(TypedStmtExpr(
                                                 Box::new(Assign(
