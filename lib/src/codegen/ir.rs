@@ -1155,17 +1155,28 @@ fn generate_code_expr(
                                 local_var_pool,
                                 class_name,
                             );
+
+                            //   ...left
+                            //   ifeq (FALSE)
+                            //   ...right
+                            //   ifeq (FALSE)
+                            //   bipush 1
+                            //   goto 2
+                            // FALSE:
+                            //   bipush 0
+
                             // If left operand is false (== 0), return false immediately
+                            let right_len = get_instructions_length(&right_code) as i16;
                             result.append(&mut left_code);
                             result.push(Instruction::ifeq(
-                                12 + get_instructions_length(&right_code) as i16,
+                                2 + right_len + 3 + 2 + 3 + 1,
                                 4 + right_code.len() as i16,
                             ));
                             // If right operand is false (== 0), return false
                             result.append(&mut right_code);
-                            result.push(Instruction::ifeq(8, 3));
+                            result.push(Instruction::ifeq(2 + 2 + 3 + 1, 3));
                             result.push(Instruction::bipush(1));
-                            result.push(Instruction::goto(5, 2));
+                            result.push(Instruction::goto(2 + 2 + 1, 2));
                             result.push(Instruction::bipush(0));
                         }
                         BinaryOp::Or => {
@@ -1186,7 +1197,7 @@ fn generate_code_expr(
                             result.append(&mut left_code);
                             // If left operand is true (!= 0), return true immediately
                             result.push(Instruction::ifne(
-                                12 + get_instructions_length(&right_code) as i16,
+                                11 + get_instructions_length(&right_code) as i16,
                                 4 + right_code.len() as i16,
                             ));
                             // If right operand is true (!= 0) return true
