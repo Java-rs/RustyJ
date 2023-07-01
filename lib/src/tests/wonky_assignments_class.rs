@@ -104,10 +104,6 @@ fn wonky_assignments_class() -> Class {
                         Type::Bool,
                     ),
                     TypedStmt(
-                        Box::new(LocalVarDecl(Type::Int, "i".to_string())),
-                        Type::Int,
-                    ),
-                    TypedStmt(
                         Box::new(LocalVarDecl(Type::Int, "j".to_string())),
                         Type::Int,
                     ),
