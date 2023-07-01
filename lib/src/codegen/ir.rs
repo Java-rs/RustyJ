@@ -939,12 +939,7 @@ fn generate_code_stmt_expr(
                         } else {
                             &argument_types[..argument_types.len() - 1]
                         };
-                        format!(
-                            "{}:({}){}",
-                            return_type.to_ir_string(),
-                            argument_types,
-                            return_type.to_ir_string()
-                        )
+                        format!("({}){}", argument_types, return_type.to_ir_string())
                     }
                     let method_index = constant_pool.add(Constant::MethodRef(MethodRef {
                         class: class_name.to_string(),
