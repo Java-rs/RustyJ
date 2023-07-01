@@ -80,7 +80,6 @@ pub fn typechecker_test(ast: &Class, tast: &Class) {
 const TEST_VALS_AMOUNT: usize = 5;
 static BOOL_TEST_VALS: [&str; 4] = ["true", "false", "false", "true"];
 static CHAR_TEST_VALS: [&str; TEST_VALS_AMOUNT] = ["'c'", "'x'", "'!'", "'a'", "'f'"];
-static INT_TEST_VALS: [&str; TEST_VALS_AMOUNT] = ["5", "8", "257", "0", "69"];
 static STR_TEST_VALS: [&str; TEST_VALS_AMOUNT] = [
     "\"a\"",
     "\"test\"",
@@ -93,7 +92,7 @@ pub fn get_test_val(t: Type, i: usize) -> std::string::String {
     match t {
         Type::Bool => BOOL_TEST_VALS[xorshift().wrapping_add(i) % BOOL_TEST_VALS.len()].to_string(),
         Type::Char => CHAR_TEST_VALS[i % CHAR_TEST_VALS.len()].to_string(),
-        Type::Int => INT_TEST_VALS[i % INT_TEST_VALS.len()].to_string(),
+        Type::Int => (xorshift().wrapping_add(i) % 30).to_string(),
         Type::Null => "null".to_string(),
         Type::Void => panic!("can't create a test value for parameters of type 'void'"),
         Type::String => STR_TEST_VALS[i % STR_TEST_VALS.len()].to_string(),
