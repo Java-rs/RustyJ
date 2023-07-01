@@ -154,13 +154,14 @@ impl StackMapTable {
                 | Instruction::iflt(loc, reljmp)
                 | Instruction::ifge(loc, reljmp)
                 | Instruction::ifne(loc, reljmp) => {
+                    println!("ifne: loc={loc}, reljmp={reljmp}");
                     current_stack.operands.pop();
                     let mut new_stack = current_stack.clone();
-                    new_stack.location = (new_stack.location as i16 + *reljmp) as u16;
+                    new_stack.location = (new_stack.location as i16 + *loc) as u16;
                     stacks.push(new_stack.clone());
                     Self::create_stacks_for_branch(
                         code,
-                        *loc as usize,
+                        (new_stack.location as i16 + *reljmp) as usize,
                         &mut new_stack,
                         stacks,
                         constant_pool,
@@ -169,14 +170,9 @@ impl StackMapTable {
                 Instruction::goto(loc, reljmp) => {
                     // -1 because +1 is added at the end of the loop again
                     current_loc = (current_loc as i16 + reljmp) as usize;
-                    current_stack.location = *loc;
+                    current_stack.location = (current_stack.location as i16 + *loc) as u16;
                     stacks.push(current_stack.clone());
                 }
-                Instruction::relgoto(_)
-                | Instruction::reljumpifeq(_)
-                | Instruction::reljumpifne(_)
-                | Instruction::reljumpiflt(_)
-                | Instruction::reljumpifge(_) => unreachable!(),
             }
             current_loc += 1;
         }

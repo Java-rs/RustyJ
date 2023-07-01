@@ -2,7 +2,6 @@
 #![allow(unused)]
 #![allow(non_snake_case)]
 
-use super::reljumps::convert_to_absolute_jumps;
 use super::stack::*;
 use super::Instruction::getfield;
 use super::*;
@@ -121,7 +120,6 @@ fn make_default_constructor(class: &IRClass, constant_pool: &mut ConstantPool) -
     }
     code.push(Instruction::r#return);
 
-    let code = convert_to_absolute_jumps(code);
     let stack_map_table = StackMapTable::new(&code, &[], &constant_pool);
     CompiledMethod {
         name: "<init>".to_string(),
@@ -456,40 +454,45 @@ pub struct NameAndType {
     pub r#type: String,
 }
 
+fn get_instruction_length(istr: &Instruction) -> u16 {
+    match istr {
+        i => i.as_bytes().len() as u16,
+    }
+}
+
+fn get_instructions_length(instructions: &[Instruction]) -> u16 {
+    instructions.iter().map(get_instruction_length).sum()
+}
+
 /// The instructions for the JVM
 /// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.areturn
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub(crate) enum Instruction {
     invokespecial(u16), //Calling a method from the super class (probably only used in constructor)
     aload_0,
-    aload(u8),        //Load reference from local variable
-    iload(u8),        //Load int from local variable
-    ireturn,          //return int, char, boolean
-    r#return,         //return void
-    areturn,          //return object(string, integer, null)
-    bipush(i8),       //Push signed byte onto stack
-    sipush(i16),      //Push signed short onto stack
-    istore(u8),       //Store int into local variable
-    astore(u8),       //Store reference into local variable
-    reljumpifeq(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
-    aconst_null,      //Push null onto stack
+    aload(u8),   //Load reference from local variable
+    iload(u8),   //Load int from local variable
+    ireturn,     //return int, char, boolean
+    r#return,    //return void
+    areturn,     //return object(string, integer, null)
+    bipush(i8),  //Push signed byte onto stack
+    sipush(i16), //Push signed short onto stack
+    istore(u8),  //Store int into local variable
+    astore(u8),  //Store reference into local variable
+    aconst_null, //Push null onto stack
     ldc(u8), //Push item from constant pool onto stack - For some reason only one byte for index into constant pool :shrug:
     ineg,    //Negate int
-    // @Note: All absolute jumps store first the adress in the list of bytes and then the relative jump in instructions
-    ifeq(u16, i16),   //Branch if int is 0
-    iflt(u16, i16),   //Branch if int is < 0
-    ifge(u16, i16),   //Branch if int is >= 0
-    ifne(u16, i16),   //Branch if int is not 0
-    goto(u16, i16),   //Jump to instruction
-    relgoto(i16),     //Jump to instruction relative to current instruction
-    reljumpifne(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
-    reljumpiflt(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
-    reljumpifge(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
-    iadd,             //Add int
-    isub,             //Subtract int
-    imul,             //Multiply int
-    idiv,             //Divide int
-    irem,             //Remainder int
+    // @Note: All absolute jumps store first the relative offset in bytes and then in instructions
+    ifeq(i16, i16), //Branch if int is 0
+    iflt(i16, i16), //Branch if int is < 0
+    ifge(i16, i16), //Branch if int is >= 0
+    ifne(i16, i16), //Branch if int is not 0
+    goto(i16, i16), //Jump to instruction
+    iadd,           //Add int
+    isub,           //Subtract int
+    imul,           //Multiply int
+    idiv,           //Divide int
+    irem,           //Remainder int
     putfield(u16), //Sets a value for the field at the given index. The stack must have the reference to the object to which the field belongs and on top of that the value to set the field to
     getfield(u16), // Get field from object via an index into the constant pool
     new(u16),      //Create new object
@@ -518,19 +521,19 @@ impl Instruction {
             Instruction::ldc(idx) => vec![18, *idx],
             Instruction::ineg => vec![116],
             Instruction::ifeq(jmp_in_bytes, _jmp_in_inst) => {
-                vec![153, high_byte(*jmp_in_bytes), low_byte(*jmp_in_bytes)]
+                vec![153, shigh_byte(*jmp_in_bytes), slow_byte(*jmp_in_bytes)]
             }
             Instruction::ifne(jmp_in_bytes, _jmp_in_inst) => {
-                vec![154, high_byte(*jmp_in_bytes), low_byte(*jmp_in_bytes)]
+                vec![154, shigh_byte(*jmp_in_bytes), slow_byte(*jmp_in_bytes)]
             }
             Instruction::ifge(jmp_in_bytes, _jmp_in_inst) => {
-                vec![156, high_byte(*jmp_in_bytes), low_byte(*jmp_in_bytes)]
+                vec![156, shigh_byte(*jmp_in_bytes), slow_byte(*jmp_in_bytes)]
             }
             Instruction::iflt(jmp_in_bytes, _jmp_in_inst) => {
-                vec![155, high_byte(*jmp_in_bytes), low_byte(*jmp_in_bytes)]
+                vec![155, shigh_byte(*jmp_in_bytes), slow_byte(*jmp_in_bytes)]
             }
             Instruction::goto(jmp_in_bytes, _jmp_in_inst) => {
-                vec![167, high_byte(*jmp_in_bytes), low_byte(*jmp_in_bytes)]
+                vec![167, shigh_byte(*jmp_in_bytes), slow_byte(*jmp_in_bytes)]
             }
             Instruction::iadd => vec![96],
             Instruction::isub => vec![100],
@@ -541,9 +544,6 @@ impl Instruction {
             Instruction::getfield(idx) => vec![180, high_byte(*idx), low_byte(*idx)],
             Instruction::new(idx) => vec![187, high_byte(*idx), low_byte(*idx)],
             Instruction::dup => vec![89],
-            // Instruction::relgoto() =>
-            // Instruction::reljumpifeq(idx) =>
-            // Instruction::reljumpifne(idx) =>
             e => panic!("Instruction {:?} not implemented or unexpected", e),
         }
     }
@@ -615,7 +615,6 @@ fn generate_method(
     {
         code.push(Instruction::r#return);
     }
-    let code = convert_to_absolute_jumps(code);
     let stack_map_table = StackMapTable::new(&code, &method.params, &constant_pool);
     CompiledMethod {
         name: method.name.clone(),
@@ -733,9 +732,15 @@ fn generate_code_stmt(
                     // Generate bytecode for our body
                     let mut body =
                         generate_code_stmt(*stmt, stack, constant_pool, local_var_pool, class_name);
-                    result.push(Instruction::reljumpifeq(body.len() as i16));
+                    result.push(Instruction::ifeq(
+                        2 + get_instructions_length(&body) as i16,
+                        body.len() as i16,
+                    ));
                     result.append(&mut body);
-                    result.push(Instruction::reljumpifeq(-(body.len() as i16)));
+                    result.push(Instruction::ifeq(
+                        -2 - (get_instructions_length(&body) as i16),
+                        -(body.len() as i16),
+                    ));
                 }
                 Stmt::LocalVarDecl(types, name) => {
                     local_var_pool.add(name.clone());
@@ -771,10 +776,17 @@ fn generate_code_stmt(
                             local_var_pool,
                             class_name,
                         );
-                        if_body.push(Instruction::relgoto(else_body.len() as i16));
+                        if_body.push(Instruction::goto(
+                            2 + get_instructions_length(&else_body) as i16,
+                            else_body.len() as i16,
+                        ));
                     }
                     // If the expression is false, jump to the else block
-                    result.push(Instruction::reljumpifne(if_body.len() as i16));
+                    dbg!(get_instructions_length(&if_body) as i16);
+                    result.push(Instruction::ifne(
+                        2 + get_instructions_length(&if_body) as i16,
+                        if_body.len() as i16,
+                    ));
                     result.append(&mut if_body);
                     // If there is an else block, append it
                     if stmt2.is_some() {
@@ -1003,6 +1015,7 @@ fn generate_code_expr(
                         Expr::TypedExpr(expr, r#type) => match expr.deref() {
                             Expr::This => {
                                 result.push(Instruction::aload(0));
+                                stack.inc(1);
                             }
                             Expr::LocalVar(name) => {
                                 let idx = local_var_pool.get_index(name);
@@ -1016,6 +1029,7 @@ fn generate_code_expr(
                                         },
                                     }),
                                 )));
+                                stack.inc(3);
                             }
                             Expr::FieldVar(name) => {
                                 let field_index = constant_pool.add(Constant::FieldRef(FieldRef {
@@ -1027,6 +1041,7 @@ fn generate_code_expr(
                                 }));
                                 result.push(Instruction::aload_0);
                                 result.push(Instruction::getfield(field_index));
+                                stack.inc(3);
                             }
                             _ => panic!("Expected this got {:?}", exprs),
                         },
@@ -1147,13 +1162,15 @@ fn generate_code_expr(
                             );
                             // If left operand is false (== 0), return false immediately
                             result.append(&mut left_code);
-                            result.push(Instruction::reljumpifeq(2));
-                            result.push(Instruction::relgoto(4 + right_code.len() as i16));
+                            result.push(Instruction::ifeq(
+                                11 + get_instructions_length(&right_code) as i16,
+                                4 + right_code.len() as i16,
+                            ));
                             // If right operand is false (== 0), return false
                             result.append(&mut right_code);
-                            result.push(Instruction::reljumpifeq(3));
+                            result.push(Instruction::ifeq(8, 3));
                             result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::goto(5, 2));
                             result.push(Instruction::bipush(0));
                         }
                         BinaryOp::Or => {
@@ -1173,13 +1190,15 @@ fn generate_code_expr(
                             );
                             result.append(&mut left_code);
                             // If left operand is true (!= 0), return true immediately
-                            result.push(Instruction::reljumpifeq(2));
-                            result.push(Instruction::relgoto(4 + right_code.len() as i16));
+                            result.push(Instruction::ifne(
+                                11 + get_instructions_length(&right_code) as i16,
+                                4 + right_code.len() as i16,
+                            ));
                             // If right operand is true (!= 0) return true
                             result.append(&mut right_code);
-                            result.push(Instruction::reljumpifne(3));
+                            result.push(Instruction::ifne(8, 3));
                             result.push(Instruction::bipush(0));
-                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::goto(5, 2));
                             result.push(Instruction::bipush(1));
                         }
                         BinaryOp::Le => {
@@ -1197,11 +1216,16 @@ fn generate_code_expr(
                                 local_var_pool,
                                 class_name,
                             ));
+                            // a <= b
+                            // a - b <= 0
+                            // a - b - 1 < 0
                             result.push(Instruction::isub);
-                            result.push(Instruction::reljumpiflt(3));
-                            result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::iload(1));
+                            result.push(Instruction::isub);
+                            result.push(Instruction::iflt(8, 3));
                             result.push(Instruction::bipush(0));
+                            result.push(Instruction::goto(5, 2));
+                            result.push(Instruction::bipush(1));
                         }
                         BinaryOp::Ge => {
                             result.append(&mut generate_code_expr(
@@ -1219,10 +1243,10 @@ fn generate_code_expr(
                                 class_name,
                             ));
                             result.push(Instruction::isub);
-                            result.push(Instruction::reljumpifge(3));
-                            result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::ifge(8, 3));
                             result.push(Instruction::bipush(0));
+                            result.push(Instruction::goto(5, 2));
+                            result.push(Instruction::bipush(1));
                         }
                         BinaryOp::Lt => {
                             result.append(&mut generate_code_expr(
@@ -1240,10 +1264,10 @@ fn generate_code_expr(
                                 class_name,
                             ));
                             result.push(Instruction::isub);
-                            result.push(Instruction::reljumpifge(3));
-                            result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::iflt(8, 3));
                             result.push(Instruction::bipush(0));
+                            result.push(Instruction::goto(5, 2));
+                            result.push(Instruction::bipush(1));
                         }
                         BinaryOp::Gt => {
                             result.append(&mut generate_code_expr(
@@ -1260,11 +1284,16 @@ fn generate_code_expr(
                                 local_var_pool,
                                 class_name,
                             ));
+                            // a >= b
+                            // a - b >= 0
+                            // a - b + 1 > 0
                             result.push(Instruction::isub);
-                            result.push(Instruction::reljumpiflt(3));
-                            result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::iload(1));
+                            result.push(Instruction::iadd);
+                            result.push(Instruction::ifge(8, 3));
                             result.push(Instruction::bipush(0));
+                            result.push(Instruction::goto(5, 2));
+                            result.push(Instruction::bipush(1));
                         }
                         BinaryOp::Eq => {
                             result.append(&mut generate_code_expr(
@@ -1298,9 +1327,9 @@ fn generate_code_expr(
                                 local_var_pool,
                                 class_name,
                             ));
-                            result.push(Instruction::reljumpifeq(3));
+                            result.push(Instruction::ifeq(8, 3));
                             result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::goto(5, 2));
                             result.push(Instruction::bipush(0))
                         }
                     }
@@ -1316,9 +1345,9 @@ fn generate_code_expr(
                     ));
                     match UnaryOp::from(&op as &str) {
                         UnaryOp::Not => {
-                            result.push(Instruction::reljumpifne(3));
+                            result.push(Instruction::ifne(8, 3));
                             result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::goto(5, 2));
                             result.push(Instruction::bipush(0));
                         }
                         UnaryOp::Neg => {
