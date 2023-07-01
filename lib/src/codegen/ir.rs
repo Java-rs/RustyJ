@@ -2,9 +2,9 @@
 #![allow(unused)]
 #![allow(non_snake_case)]
 
-use crate::codegen::reljumps::convert_to_absolute_jumps;
-use crate::codegen::Instruction::getfield;
-use crate::types::Expr::Binary;
+use super::reljumps::convert_to_absolute_jumps;
+use super::stack::*;
+use super::Instruction::getfield;
 use crate::types::*;
 use std::fmt::Debug;
 use std::ops::Deref;
@@ -121,6 +121,9 @@ fn make_default_constructor(class: &IRClass, constant_pool: &mut ConstantPool) -
         }
     }
     code.push(Instruction::r#return);
+
+    let code = convert_to_absolute_jumps(code);
+    let stack_map_table = StackMapTable::new(&code, &[], &constant_pool);
     CompiledMethod {
         name: "<init>".to_string(),
         return_type: Type::Void,
@@ -128,13 +131,14 @@ fn make_default_constructor(class: &IRClass, constant_pool: &mut ConstantPool) -
         max_stack: stack.max,
         max_locals: 1 + local_var_pool.0.len() as u16,
         code,
+        stack_map_table,
     }
 }
 
 #[derive(Debug)]
 pub struct ConstantPool(Vec<Constant>);
 impl ConstantPool {
-    fn new(name: &str) -> Self {
+    pub fn new(name: &str) -> Self {
         // This is the same boilerplate constantpool for all files
         // so we can just hardcode it here.
         // This would only ever change, if we allowed the user
@@ -161,7 +165,7 @@ impl ConstantPool {
         ])
     }
     // For some unknown reason, this is 1-indexed and we have to add 1 to the count
-    fn count(&self) -> u16 {
+    pub fn count(&self) -> u16 {
         self.0.len() as u16 + 1
     }
     /// Adds a constant to the constant pool, returning its index
@@ -195,7 +199,7 @@ impl ConstantPool {
         self.0.push(constant);
         self.0.len() as u16
     }
-    fn index_of(&self, constant: &Constant) -> Option<u16> {
+    pub fn index_of(&self, constant: &Constant) -> Option<u16> {
         self.0
             .iter()
             .position(|c| *c == *constant)
@@ -203,11 +207,11 @@ impl ConstantPool {
     }
     /// Returns the constant at the given index. Note that this is 1-indexed since the constant
     /// pool of the JVM is 1-indexed
-    fn get(&self, index: u16) -> Option<&Constant> {
+    pub fn get(&self, index: u16) -> Option<&Constant> {
         self.0.get(index as usize - 1)
     }
     /// See this table: https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.4
-    fn as_bytes(&mut self) -> Vec<u8> {
+    pub fn as_bytes(&mut self) -> Vec<u8> {
         let mut result = vec![];
         for idx in 0..self.0.len() {
             let constant = self.0.get(idx).unwrap().clone();
@@ -352,6 +356,7 @@ pub(crate) struct CompiledMethod {
     pub(crate) max_stack: u16,
     pub(crate) max_locals: u16,
     pub(crate) code: Vec<Instruction>,
+    pub(crate) stack_map_table: StackMapTable,
 }
 
 impl CompiledMethod {
@@ -391,22 +396,26 @@ impl CompiledMethod {
                 .unwrap()
                 .to_be_bytes(),
         );
-        // Expand the relative jumps in the code to absolute jumps
-        let expanded_code = convert_to_absolute_jumps(self.code.clone());
-        let expanded_code = dbg!(expanded_code);
         // attr = attribute after attribute_length
         let mut attr = vec![];
         attr.extend_from_slice(&self.max_stack.to_be_bytes());
         attr.extend_from_slice(&self.max_locals.to_be_bytes());
         let mut code_bytes = vec![];
-        expanded_code
+        self.code
             .iter()
             .for_each(|i| code_bytes.append(&mut i.as_bytes()));
         attr.extend_from_slice(&(code_bytes.len() as u32).to_be_bytes());
         attr.append(&mut code_bytes);
         attr.extend_from_slice(&[0, 0]); // Exception table length
-        attr.extend_from_slice(&[0, 0]); // Inner Attributes count
 
+        // Inner Attributes (only StackMapTable)
+        // First count, then the each attribute
+        if self.stack_map_table.is_implicit() {
+            attr.extend_from_slice(&[0, 0]);
+        } else {
+            attr.extend_from_slice(&[0, 1]);
+            attr.append(&mut self.stack_map_table.as_bytes(constant_pool))
+        }
         // Attribute length
         result.extend_from_slice(&(attr.len() as u32).to_be_bytes());
         result.append(&mut attr);
@@ -450,9 +459,6 @@ pub(crate) enum Instruction {
     aload_0,
     aload(u8),        //Load reference from local variable
     iload(u8),        //Load int from local variable
-    ifeq(u16),        //Branch if int is 0
-    iflt(u16),        //Branch if int is < 0
-    ifge(u16),        //Branch if int is >= 0
     ireturn,          //return int, char, boolean
     r#return,         //return void
     areturn,          //return object(string, integer, null)
@@ -464,9 +470,12 @@ pub(crate) enum Instruction {
     aconst_null,      //Push null onto stack
     ldc(u8), //Push item from constant pool onto stack - For some reason only one byte for index into constant pool :shrug:
     ineg,    //Negate int
+    ifeq(u16), //Branch if int is 0
+    iflt(u16), //Branch if int is < 0
+    ifge(u16), //Branch if int is >= 0
+    ifne(u16), //Branch if int is not 0
     goto(u16), //Jump to instruction
     relgoto(i16), //Jump to instruction relative to current instruction
-    ifne(u16), //Branch if int is not 0
     reljumpifne(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
     reljumpiflt(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
     reljumpifge(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
@@ -593,6 +602,8 @@ fn generate_method(
         &mut local_var_pool,
         class_name,
     );
+    let code = convert_to_absolute_jumps(code);
+    let stack_map_table = StackMapTable::new(&code, &method.params, &constant_pool);
     CompiledMethod {
         name: method.name.clone(),
         return_type: method.ret_type.clone(),
@@ -600,42 +611,14 @@ fn generate_method(
         max_stack: stack.max,
         max_locals: 1 + local_var_pool.0.len() as u16,
         code,
-    }
-}
-
-#[derive(Debug)]
-struct StackSize {
-    current: u16,
-    max: u16,
-}
-
-impl StackSize {
-    pub fn new() -> Self {
-        StackSize { current: 0, max: 0 }
-    }
-
-    pub fn inc(&mut self, step: u16) {
-        self.current += step;
-        if self.current > self.max {
-            self.max = self.current;
-        }
-    }
-
-    pub fn dec(&mut self, step: u16) {
-        self.current -= step;
-    }
-
-    pub fn set(&mut self, val: u16) {
-        self.current = val;
-        if self.current > self.max {
-            self.max = self.current;
-        }
+        stack_map_table,
     }
 }
 
 fn generate_code_stmt(
     stmt: Stmt,
     stack: &mut StackSize,
+
     constant_pool: &mut ConstantPool,
     local_var_pool: &mut LocalVarPool,
     class_name: &str,
@@ -800,6 +783,7 @@ fn generate_code_stmt(
 fn generate_code_stmt_expr(
     stmt_expr: &StmtExpr,
     stack: &mut StackSize,
+
     constant_pool: &mut ConstantPool,
     local_var_pool: &mut LocalVarPool,
     class_name: &str,
@@ -951,6 +935,7 @@ fn generate_code_stmt_expr(
 fn generate_code_expr(
     expr: Expr,
     stack: &mut StackSize,
+
     constant_pool: &mut ConstantPool,
     local_var_pool: &mut LocalVarPool,
     class_name: &str,
@@ -1047,7 +1032,7 @@ fn generate_code_expr(
                     // I'm thinking 2 here since we load the field here too and leave the class on the stack
                     stack.inc(2);
                 }
-                Binary(op, left, right) => {
+                Expr::Binary(op, left, right) => {
                     match BinaryOp::from(&op as &str) {
                         BinaryOp::Add => {
                             result.append(&mut generate_code_expr(
