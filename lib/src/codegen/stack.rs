@@ -244,8 +244,12 @@ impl StackMapTable {
                 }
                 Instruction::goto(byte_offset, instruction_offset) => {
                     // -1 because +1 is added at the end of the loop again
+                    if taken_branches_idxs.iter().any(|x| *x == instruction_idx) {
+                        return;
+                    }
+                    taken_branches_idxs.push(instruction_idx);
                     instruction_idx = (instruction_idx as i16 + instruction_offset) as usize;
-                    current_stack.location = (current_stack.location as i16 + *byte_offset) as u16;
+                    current_stack.location = (bytes_idx as i16 + *byte_offset) as u16;
                     stacks.push(current_stack.clone());
                 }
             }
@@ -299,6 +303,7 @@ impl StackMapTable {
             |a, b| a.location == b.location,
             |a, b| a.location < b.location,
         );
+        let stacks = dbg!(stacks);
 
         // First stack/frame are implicit
         let mut last_stack = VerificationStack {
