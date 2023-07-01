@@ -913,6 +913,7 @@ fn generate_code_stmt_expr(
                     // 1. Write Function Name into Constant Pool generating the necessary Constants
                     // 2. Push all arguments onto the stack
                     // 3. Call invokespecial on the given back function index
+                    result.push(Instruction::aload_0);
                     result.append(
                         &mut args
                             .iter()
