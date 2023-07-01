@@ -720,25 +720,20 @@ fn generate_code_stmt(
                 }
                 Stmt::While(expr, stmt) => {
                     // Generate bytecode for our condition
-                    result.append(&mut generate_code_expr(
-                        expr,
-                        stack,
-                        constant_pool,
-                        local_var_pool,
-                        class_name,
-                    ));
+                    let mut cond =
+                        generate_code_expr(expr, stack, constant_pool, local_var_pool, class_name);
+                    let cond_len = get_instructions_length(&cond) as i16;
+                    result.append(&mut cond);
                     // Checking the condition removes one element from stack
                     stack.dec(1);
                     // Generate bytecode for our body
                     let mut body =
                         generate_code_stmt(*stmt, stack, constant_pool, local_var_pool, class_name);
-                    result.push(Instruction::ifeq(
-                        3 + get_instructions_length(&body) as i16,
-                        body.len() as i16 + 1,
-                    ));
+                    let body_len = get_instructions_length(&body) as i16;
+                    result.push(Instruction::ifeq(3 + body_len, body.len() as i16 + 1));
                     result.append(&mut body);
-                    result.push(Instruction::ifeq(
-                        -3 - (get_instructions_length(&body) as i16),
+                    result.push(Instruction::goto(
+                        -3 - body_len - cond_len,
                         -(body.len() as i16) - 1,
                     ));
                 }

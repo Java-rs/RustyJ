@@ -160,6 +160,9 @@ impl StackMapTable {
                     bytes_idx += 1;
                     // No changes in stack
                 }
+
+                // Locals
+                // this x
                 Instruction::istore(x) => {
                     bytes_idx += 2;
                     current_stack.operands.pop();
@@ -185,6 +188,7 @@ impl StackMapTable {
                     // Use idx to figure out what type the field has
                     // pops once and pushes type of field then
                     bytes_idx += 3;
+                    current_stack.operands.pop();
                     if let Constant::FieldRef(f) = constant_pool.get(*idx).unwrap() {
                         match f.field.r#type.as_str() {
                             "Z" | "C" | "I" => {
@@ -244,8 +248,12 @@ impl StackMapTable {
                 }
                 Instruction::goto(byte_offset, instruction_offset) => {
                     // -1 because +1 is added at the end of the loop again
+                    if taken_branches_idxs.iter().any(|x| *x == instruction_idx) {
+                        return;
+                    }
+                    taken_branches_idxs.push(instruction_idx);
                     instruction_idx = (instruction_idx as i16 + instruction_offset) as usize;
-                    current_stack.location = (current_stack.location as i16 + *byte_offset) as u16;
+                    current_stack.location = (bytes_idx as i16 + *byte_offset) as u16;
                     stacks.push(current_stack.clone());
                 }
             }
@@ -266,20 +274,26 @@ impl StackMapTable {
         // Second, we create a Frame from each of those stacks
         let mut frames = vec![];
         let mut stacks = vec![];
-        let initial_locals: Vec<VerificationType> = params
-            .iter()
-            .map(|(t, _)| match t {
-                Type::Bool | Type::Char | Type::Int => VerificationType::INTEGER,
-                Type::Null => VerificationType::NULL,
-                Type::String => VerificationType::OBJECT(todo!()),
-                Type::Class(name) => VerificationType::OBJECT(
-                    constant_pool
-                        .index_of(&Constant::Class(name.to_string()))
-                        .unwrap(),
-                ),
-                Type::Void => unreachable!(),
-            })
-            .collect();
+        let mut initial_locals: Vec<VerificationType> = vec![VerificationType::OBJECT(
+            constant_pool.index_of_this_class(),
+        )];
+        initial_locals.append(
+            &mut params
+                .iter()
+                .map(|(t, _)| match t {
+                    Type::Bool | Type::Char | Type::Int => VerificationType::INTEGER,
+                    Type::Null => VerificationType::NULL,
+                    Type::String => VerificationType::OBJECT(todo!()),
+                    Type::Class(name) => VerificationType::OBJECT(
+                        constant_pool
+                            .index_of(&Constant::Class(name.to_string()))
+                            .unwrap(),
+                    ),
+                    Type::Void => unreachable!(),
+                })
+                .collect(),
+        );
+
         let mut current_stack = VerificationStack {
             location: 0,
             locals: initial_locals.clone(),
@@ -309,6 +323,7 @@ impl StackMapTable {
         let mut is_first = true;
         for stack in stacks {
             let offset_delta = stack.location - last_stack.location - if !is_first { 1 } else { 0 };
+            is_first = false;
             let frame = if stack == last_stack {
                 if offset_delta < 64 {
                     StackMapFrame::SAME(offset_delta as u8)
@@ -412,12 +427,13 @@ impl StackMapFrame {
             }
             StackMapFrame::SAME_LOCALS_1(offset_delta, r#type) => {
                 let mut v = Vec::with_capacity(8);
-                v.push(*offset_delta + 64);
+                v.push(*offset_delta);
                 v.extend_from_slice(&r#type.as_bytes());
                 v
             }
             StackMapFrame::SAME_LOCALS_1_EXTENDED(offset_delta, r#type) => {
                 let mut v = Vec::with_capacity(8);
+                v.push(247);
                 v.extend_from_slice(&offset_delta.to_be_bytes());
                 v.extend_from_slice(&r#type.as_bytes());
                 v
@@ -426,7 +442,12 @@ impl StackMapFrame {
                 todo!()
             }
             StackMapFrame::APPEND(appended_amount, offset_delta, types) => {
-                todo!()
+                let mut v = Vec::with_capacity(16);
+                v.push(*appended_amount);
+                v.extend_from_slice(&offset_delta.to_be_bytes());
+                v.append(&mut types.iter().map(|t| t.as_bytes()).flatten().collect());
+                let v = dbg!(v);
+                v
             }
             StackMapFrame::FULL(
                 offset_delta,
@@ -436,6 +457,7 @@ impl StackMapFrame {
                 operand_types,
             ) => {
                 let mut v = Vec::with_capacity(32);
+                v.push(255);
                 v.extend_from_slice(&offset_delta.to_be_bytes());
                 v.extend_from_slice(&number_of_locals.to_be_bytes());
                 v.append(&mut local_types.iter().map(|t| t.as_bytes()).flatten().collect());
