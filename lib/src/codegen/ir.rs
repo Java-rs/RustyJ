@@ -794,8 +794,8 @@ fn generate_code_stmt(
                     }
                     // If the expression is false, jump over the if-body
                     result.push(Instruction::ifeq(
-                        2 + get_instructions_length(&if_body) as i16 + 1,
-                        if_body.len() as i16,
+                        3 + get_instructions_length(&if_body) as i16,
+                        1 + if_body.len() as i16,
                     ));
                     result.append(&mut if_body);
                     // If there is an else block, append it
@@ -869,6 +869,9 @@ fn generate_code_stmt_expr(
                                 result.append(&mut expr_code);
                                 result.push(Instruction::putfield(idx));
                                 stack.dec(2);
+                                result.push(Instruction::aload_0);
+                                result.push(Instruction::getfield(idx));
+                                stack.inc(1);
                             }
                             Expr::InstVar(expr, name) => {
                                 let idx = constant_pool.add(Constant::FieldRef(FieldRef {

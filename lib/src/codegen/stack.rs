@@ -230,7 +230,7 @@ impl StackMapTable {
                         return;
                     }
                     taken_branches_idxs.push(instruction_idx);
-                    // assert!(*instruction_offset != 0);
+
                     current_stack.operands.pop();
                     let mut new_stack = current_stack.clone();
                     new_stack.location = (bytes_idx as i16 + *byte_offset) as u16;
@@ -252,7 +252,7 @@ impl StackMapTable {
                         return;
                     }
                     taken_branches_idxs.push(instruction_idx);
-                    instruction_idx = (instruction_idx as i16 + instruction_offset) as usize;
+                    instruction_idx = (instruction_idx as i16 + *instruction_offset) as usize;
                     current_stack.location = (bytes_idx as i16 + *byte_offset) as u16;
                     stacks.push(current_stack.clone());
                 }
@@ -332,10 +332,7 @@ impl StackMapTable {
                 } else {
                     StackMapFrame::SAME_EXTENDED(offset_delta)
                 }
-            } else if stack.locals == last_stack.locals
-                && !stack.operands.is_empty()
-                && stack.operands[0..stack.operands.len() - 1] == last_stack.operands
-            {
+            } else if stack.locals == last_stack.locals && stack.operands.len() == 1 {
                 if offset_delta < 64 {
                     StackMapFrame::SAME_LOCALS_1(
                         64 + offset_delta as u8,
