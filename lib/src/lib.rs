@@ -1,3 +1,5 @@
+extern crate core;
+
 pub mod codegen;
 pub mod parser;
 #[cfg(test)]

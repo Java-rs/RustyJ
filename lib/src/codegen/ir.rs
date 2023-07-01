@@ -2,9 +2,9 @@
 #![allow(unused)]
 #![allow(non_snake_case)]
 
-use crate::codegen::reljumps::convert_to_absolute_jumps;
-use crate::codegen::Instruction::getfield;
-use crate::types::Expr::Binary;
+use super::stack::*;
+use super::Instruction::getfield;
+use super::*;
 use crate::types::*;
 use std::fmt::Debug;
 use std::ops::Deref;
@@ -52,7 +52,7 @@ impl DIR {
             .iter()
             .flat_map(|m| m.as_bytes(&mut self.constant_pool))
             .collect();
-
+        println!("Constant pool: {:?}", self.constant_pool);
         // Constant Pool
         result.extend_from_slice(&self.constant_pool.count().to_be_bytes());
         result.append(&mut self.constant_pool.as_bytes());
@@ -119,6 +119,8 @@ fn make_default_constructor(class: &IRClass, constant_pool: &mut ConstantPool) -
         }
     }
     code.push(Instruction::r#return);
+
+    let stack_map_table = StackMapTable::new(&code, &[], &constant_pool);
     CompiledMethod {
         name: "<init>".to_string(),
         return_type: Type::Void,
@@ -126,40 +128,44 @@ fn make_default_constructor(class: &IRClass, constant_pool: &mut ConstantPool) -
         max_stack: stack.max,
         max_locals: 1 + local_var_pool.0.len() as u16,
         code,
+        stack_map_table,
     }
 }
 
 #[derive(Debug)]
-pub struct ConstantPool(Vec<Constant>);
+pub struct ConstantPool(Vec<Constant>, String);
 impl ConstantPool {
-    fn new(name: &str) -> Self {
+    pub fn new(name: String) -> Self {
         // This is the same boilerplate constantpool for all files
         // so we can just hardcode it here.
         // This would only ever change, if we allowed the user
         // to create their own constructors, which we don't
-        Self(vec![
-            Constant::MethodRef(MethodRef {
-                class: JAVA_LANG_OBJECT.to_string(),
-                method: NameAndType {
+        Self(
+            vec![
+                Constant::MethodRef(MethodRef {
+                    class: JAVA_LANG_OBJECT.to_string(),
+                    method: NameAndType {
+                        name: OBJECT_INIT_METHOD.to_string(),
+                        r#type: OBJECT_INIT_RET.to_string(),
+                    },
+                }),
+                Constant::Class(JAVA_LANG_OBJECT.to_string()),
+                Constant::NameAndType(NameAndType {
                     name: OBJECT_INIT_METHOD.to_string(),
                     r#type: OBJECT_INIT_RET.to_string(),
-                },
-            }),
-            Constant::Class(JAVA_LANG_OBJECT.to_string()),
-            Constant::NameAndType(NameAndType {
-                name: OBJECT_INIT_METHOD.to_string(),
-                r#type: OBJECT_INIT_RET.to_string(),
-            }),
-            Constant::Utf8(JAVA_LANG_OBJECT.to_string()),
-            Constant::Utf8(OBJECT_INIT_METHOD.to_string()),
-            Constant::Utf8(OBJECT_INIT_RET.to_string()),
-            Constant::Class(name.to_string()),
-            Constant::Utf8(name.to_string()),
-            Constant::Utf8("Code".to_string()),
-        ])
+                }),
+                Constant::Utf8(JAVA_LANG_OBJECT.to_string()),
+                Constant::Utf8(OBJECT_INIT_METHOD.to_string()),
+                Constant::Utf8(OBJECT_INIT_RET.to_string()),
+                Constant::Class(name.clone()),
+                Constant::Utf8(name.clone()),
+                Constant::Utf8("Code".to_string()),
+            ],
+            name,
+        )
     }
     // For some unknown reason, this is 1-indexed and we have to add 1 to the count
-    fn count(&self) -> u16 {
+    pub fn count(&self) -> u16 {
         self.0.len() as u16 + 1
     }
     /// Adds a constant to the constant pool, returning its index
@@ -193,19 +199,22 @@ impl ConstantPool {
         self.0.push(constant);
         self.0.len() as u16
     }
-    fn index_of(&self, constant: &Constant) -> Option<u16> {
+    pub fn index_of(&self, constant: &Constant) -> Option<u16> {
         self.0
             .iter()
             .position(|c| *c == *constant)
             .map(|x| x as u16 + 1) // +1 because the constant pool is 1-indexed
     }
+    pub fn index_of_this_class(&self) -> u16 {
+        self.index_of(&Constant::Class(self.1.clone())).unwrap()
+    }
     /// Returns the constant at the given index. Note that this is 1-indexed since the constant
     /// pool of the JVM is 1-indexed
-    fn get(&self, index: u16) -> Option<&Constant> {
+    pub fn get(&self, index: u16) -> Option<&Constant> {
         self.0.get(index as usize - 1)
     }
     /// See this table: https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.4
-    fn as_bytes(&mut self) -> Vec<u8> {
+    pub fn as_bytes(&mut self) -> Vec<u8> {
         let mut result = vec![];
         for idx in 0..self.0.len() {
             let constant = self.0.get(idx).unwrap().clone();
@@ -350,6 +359,7 @@ pub(crate) struct CompiledMethod {
     pub(crate) max_stack: u16,
     pub(crate) max_locals: u16,
     pub(crate) code: Vec<Instruction>,
+    pub(crate) stack_map_table: StackMapTable,
 }
 
 impl CompiledMethod {
@@ -389,22 +399,26 @@ impl CompiledMethod {
                 .unwrap()
                 .to_be_bytes(),
         );
-        // Expand the relative jumps in the code to absolute jumps
-        let expanded_code = convert_to_absolute_jumps(self.code.clone());
-        let expanded_code = dbg!(expanded_code);
         // attr = attribute after attribute_length
         let mut attr = vec![];
         attr.extend_from_slice(&self.max_stack.to_be_bytes());
         attr.extend_from_slice(&self.max_locals.to_be_bytes());
         let mut code_bytes = vec![];
-        expanded_code
+        self.code
             .iter()
             .for_each(|i| code_bytes.append(&mut i.as_bytes()));
         attr.extend_from_slice(&(code_bytes.len() as u32).to_be_bytes());
         attr.append(&mut code_bytes);
         attr.extend_from_slice(&[0, 0]); // Exception table length
-        attr.extend_from_slice(&[0, 0]); // Inner Attributes count
 
+        // Inner Attributes (only StackMapTable)
+        // First count, then the each attribute
+        if self.stack_map_table.is_implicit() {
+            attr.extend_from_slice(&[0, 0]);
+        } else {
+            attr.extend_from_slice(&[0, 1]);
+            attr.append(&mut self.stack_map_table.as_bytes(constant_pool))
+        }
         // Attribute length
         result.extend_from_slice(&(attr.len() as u32).to_be_bytes());
         result.append(&mut attr);
@@ -440,51 +454,49 @@ pub struct NameAndType {
     pub r#type: String,
 }
 
+fn get_instruction_length(istr: &Instruction) -> u16 {
+    match istr {
+        i => i.as_bytes().len() as u16,
+    }
+}
+
+fn get_instructions_length(instructions: &[Instruction]) -> u16 {
+    instructions.iter().map(get_instruction_length).sum()
+}
+
 /// The instructions for the JVM
 /// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.areturn
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub(crate) enum Instruction {
     invokespecial(u16), //Calling a method from the super class (probably only used in constructor)
     aload_0,
-    aload(u8),        //Load reference from local variable
-    iload(u8),        //Load int from local variable
-    ifeq(u16),        //Branch if int is 0
-    iflt(u16),        //Branch if int is < 0
-    ifge(u16),        //Branch if int is >= 0
-    ireturn,          //return int, char, boolean
-    r#return,         //return void
-    areturn,          //return object(string, integer, null)
-    bipush(i8),       //Push signed byte onto stack
-    sipush(i16),      //Push signed short onto stack
-    istore(u8),       //Store int into local variable
-    astore(u8),       //Store reference into local variable
-    reljumpifeq(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
-    aconst_null,      //Push null onto stack
+    aload(u8),   //Load reference from local variable
+    iload(u8),   //Load int from local variable
+    ireturn,     //return int, char, boolean
+    r#return,    //return void
+    areturn,     //return object(string, integer, null)
+    bipush(i8),  //Push signed byte onto stack
+    sipush(i16), //Push signed short onto stack
+    istore(u8),  //Store int into local variable
+    astore(u8),  //Store reference into local variable
+    aconst_null, //Push null onto stack
     ldc(u8), //Push item from constant pool onto stack - For some reason only one byte for index into constant pool :shrug:
     ineg,    //Negate int
-    goto(u16), //Jump to instruction
-    relgoto(i16), //Jump to instruction relative to current instruction
-    ifne(u16), //Branch if int is not 0
-    reljumpifne(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
-    reljumpiflt(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
-    reljumpifge(i16), //relative jump, useful for if, while etc. Has i16 because it can jump backwards and it gets converted to u8 later
-    iadd,             //Add int
-    isub,             //Subtract int
-    imul,             //Multiply int
-    idiv,             //Divide int
-    irem,             //Remainder int
+    // @Note: All absolute jumps store first the relative offset in bytes and then in instructions
+    ifeq(i16, i16), //Branch if int is 0
+    iflt(i16, i16), //Branch if int is < 0
+    ifge(i16, i16), //Branch if int is >= 0
+    ifne(i16, i16), //Branch if int is not 0
+    goto(i16, i16), //Jump to instruction
+    iadd,           //Add int
+    isub,           //Subtract int
+    imul,           //Multiply int
+    idiv,           //Divide int
+    irem,           //Remainder int
     putfield(u16), //Sets a value for the field at the given index. The stack must have the reference to the object to which the field belongs and on top of that the value to set the field to
     getfield(u16), // Get field from object via an index into the constant pool
     new(u16),      //Create new object
     dup,           //Duplicate the top value on the stack
-}
-
-fn high_byte(short: u16) -> u8 {
-    (short >> 8) as u8
-}
-
-fn low_byte(short: u16) -> u8 {
-    short as u8
 }
 
 impl Instruction {
@@ -496,7 +508,6 @@ impl Instruction {
             Instruction::aload_0 => vec![42],
             Instruction::aload(idx) => vec![25, *idx],
             Instruction::iload(idx) => vec![21, *idx],
-            Instruction::ifeq(jmp) => vec![153, high_byte(*jmp), low_byte(*jmp)],
             Instruction::ireturn => vec![172],
             Instruction::r#return => vec![177],
             Instruction::areturn => vec![176],
@@ -509,10 +520,21 @@ impl Instruction {
             Instruction::aconst_null => vec![1],
             Instruction::ldc(idx) => vec![18, *idx],
             Instruction::ineg => vec![116],
-            Instruction::goto(jmp) => vec![167, high_byte(*jmp), low_byte(*jmp)],
-            Instruction::ifne(jmp) => vec![154, high_byte(*jmp), low_byte(*jmp)],
-            Instruction::ifge(jmp) => vec![156, high_byte(*jmp), low_byte(*jmp)],
-            Instruction::iflt(jmp) => vec![155, high_byte(*jmp), low_byte(*jmp)],
+            Instruction::ifeq(jmp_in_bytes, _jmp_in_inst) => {
+                vec![153, shigh_byte(*jmp_in_bytes), slow_byte(*jmp_in_bytes)]
+            }
+            Instruction::ifne(jmp_in_bytes, _jmp_in_inst) => {
+                vec![154, shigh_byte(*jmp_in_bytes), slow_byte(*jmp_in_bytes)]
+            }
+            Instruction::ifge(jmp_in_bytes, _jmp_in_inst) => {
+                vec![156, shigh_byte(*jmp_in_bytes), slow_byte(*jmp_in_bytes)]
+            }
+            Instruction::iflt(jmp_in_bytes, _jmp_in_inst) => {
+                vec![155, shigh_byte(*jmp_in_bytes), slow_byte(*jmp_in_bytes)]
+            }
+            Instruction::goto(jmp_in_bytes, _jmp_in_inst) => {
+                vec![167, shigh_byte(*jmp_in_bytes), slow_byte(*jmp_in_bytes)]
+            }
             Instruction::iadd => vec![96],
             Instruction::isub => vec![100],
             Instruction::imul => vec![104],
@@ -522,9 +544,6 @@ impl Instruction {
             Instruction::getfield(idx) => vec![180, high_byte(*idx), low_byte(*idx)],
             Instruction::new(idx) => vec![187, high_byte(*idx), low_byte(*idx)],
             Instruction::dup => vec![89],
-            // Instruction::relgoto() =>
-            // Instruction::reljumpifeq(idx) =>
-            // Instruction::reljumpifne(idx) =>
             e => panic!("Instruction {:?} not implemented or unexpected", e),
         }
     }
@@ -532,7 +551,7 @@ impl Instruction {
 
 pub fn generate_dir(ast: &Prg) -> DIR {
     let mut dir = DIR {
-        constant_pool: ConstantPool::new(&ast.get(0).unwrap().name),
+        constant_pool: ConstantPool::new(ast.get(0).unwrap().name.clone()),
         classes: vec![],
     };
     for class in ast {
@@ -596,6 +615,7 @@ fn generate_method(
     {
         code.push(Instruction::r#return);
     }
+    let stack_map_table = StackMapTable::new(&code, &method.params, &constant_pool);
     CompiledMethod {
         name: method.name.clone(),
         return_type: method.ret_type.clone(),
@@ -603,42 +623,14 @@ fn generate_method(
         max_stack: stack.max,
         max_locals: 1 + local_var_pool.0.len() as u16,
         code,
-    }
-}
-
-#[derive(Debug)]
-struct StackSize {
-    current: u16,
-    max: u16,
-}
-
-impl StackSize {
-    pub fn new() -> Self {
-        StackSize { current: 0, max: 0 }
-    }
-
-    pub fn inc(&mut self, step: u16) {
-        self.current += step;
-        if self.current > self.max {
-            self.max = self.current;
-        }
-    }
-
-    pub fn dec(&mut self, step: u16) {
-        self.current.saturating_sub(step);
-    }
-
-    pub fn set(&mut self, val: u16) {
-        self.current = val;
-        if self.current > self.max {
-            self.max = self.current;
-        }
+        stack_map_table,
     }
 }
 
 fn generate_code_stmt(
     stmt: Stmt,
     stack: &mut StackSize,
+
     constant_pool: &mut ConstantPool,
     local_var_pool: &mut LocalVarPool,
     class_name: &str,
@@ -740,9 +732,15 @@ fn generate_code_stmt(
                     // Generate bytecode for our body
                     let mut body =
                         generate_code_stmt(*stmt, stack, constant_pool, local_var_pool, class_name);
-                    result.push(Instruction::reljumpifeq(body.len() as i16));
+                    result.push(Instruction::ifeq(
+                        3 + get_instructions_length(&body) as i16,
+                        body.len() as i16,
+                    ));
                     result.append(&mut body);
-                    result.push(Instruction::reljumpifeq(-(body.len() as i16)));
+                    result.push(Instruction::ifeq(
+                        -3 - (get_instructions_length(&body) as i16),
+                        -(body.len() as i16),
+                    ));
                 }
                 Stmt::LocalVarDecl(types, name) => {
                     local_var_pool.add(name.clone());
@@ -778,10 +776,16 @@ fn generate_code_stmt(
                             local_var_pool,
                             class_name,
                         );
-                        if_body.push(Instruction::relgoto(else_body.len() as i16));
+                        if_body.push(Instruction::goto(
+                            3 + get_instructions_length(&else_body) as i16,
+                            else_body.len() as i16,
+                        ));
                     }
                     // If the expression is false, jump to the else block
-                    result.push(Instruction::reljumpifne(if_body.len() as i16));
+                    result.push(Instruction::ifne(
+                        3 + get_instructions_length(&if_body) as i16,
+                        if_body.len() as i16,
+                    ));
                     result.append(&mut if_body);
                     // If there is an else block, append it
                     if stmt2.is_some() {
@@ -815,6 +819,7 @@ fn generate_code_stmt(
 fn generate_code_stmt_expr(
     stmt_expr: &StmtExpr,
     stack: &mut StackSize,
+
     constant_pool: &mut ConstantPool,
     local_var_pool: &mut LocalVarPool,
     class_name: &str,
@@ -961,6 +966,7 @@ fn generate_code_stmt_expr(
 fn generate_code_expr(
     expr: Expr,
     stack: &mut StackSize,
+
     constant_pool: &mut ConstantPool,
     local_var_pool: &mut LocalVarPool,
     class_name: &str,
@@ -1008,15 +1014,7 @@ fn generate_code_expr(
                         Expr::TypedExpr(expr, r#type) => match expr.deref() {
                             Expr::This => {
                                 result.push(Instruction::aload(0));
-                                result.push(Instruction::getfield(constant_pool.add(
-                                    Constant::FieldRef(FieldRef {
-                                        class: class_name.to_string(),
-                                        field: NameAndType {
-                                            name: name.clone(),
-                                            r#type: r#type.to_ir_string(),
-                                        },
-                                    }),
-                                )));
+                                stack.inc(1);
                             }
                             Expr::LocalVar(name) => {
                                 let idx = local_var_pool.get_index(name);
@@ -1030,6 +1028,7 @@ fn generate_code_expr(
                                         },
                                     }),
                                 )));
+                                stack.inc(3);
                             }
                             Expr::FieldVar(name) => {
                                 let field_index = constant_pool.add(Constant::FieldRef(FieldRef {
@@ -1041,6 +1040,7 @@ fn generate_code_expr(
                                 }));
                                 result.push(Instruction::aload_0);
                                 result.push(Instruction::getfield(field_index));
+                                stack.inc(3);
                             }
                             _ => panic!("Expected this got {:?}", exprs),
                         },
@@ -1057,8 +1057,7 @@ fn generate_code_expr(
                     // I'm thinking 2 here since we load the field here too and leave the class on the stack
                     stack.inc(2);
                 }
-                Binary(op, left, right) => {
-                    // TODO: We have to look over some of them again. Eq works but i am not sure about the others
+                Expr::Binary(op, left, right) => {
                     match BinaryOp::from(&op as &str) {
                         BinaryOp::Add => {
                             result.append(&mut generate_code_expr(
@@ -1162,13 +1161,15 @@ fn generate_code_expr(
                             );
                             // If left operand is false (== 0), return false immediately
                             result.append(&mut left_code);
-                            result.push(Instruction::reljumpifeq(2));
-                            result.push(Instruction::relgoto(4 + right_code.len() as i16));
+                            result.push(Instruction::ifeq(
+                                12 + get_instructions_length(&right_code) as i16,
+                                4 + right_code.len() as i16,
+                            ));
                             // If right operand is false (== 0), return false
                             result.append(&mut right_code);
-                            result.push(Instruction::reljumpifeq(3));
+                            result.push(Instruction::ifeq(8, 3));
                             result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::goto(5, 2));
                             result.push(Instruction::bipush(0));
                         }
                         BinaryOp::Or => {
@@ -1188,13 +1189,15 @@ fn generate_code_expr(
                             );
                             result.append(&mut left_code);
                             // If left operand is true (!= 0), return true immediately
-                            result.push(Instruction::reljumpifeq(2));
-                            result.push(Instruction::relgoto(4 + right_code.len() as i16));
+                            result.push(Instruction::ifne(
+                                12 + get_instructions_length(&right_code) as i16,
+                                4 + right_code.len() as i16,
+                            ));
                             // If right operand is true (!= 0) return true
                             result.append(&mut right_code);
-                            result.push(Instruction::reljumpifne(3));
+                            result.push(Instruction::ifne(8, 3));
                             result.push(Instruction::bipush(0));
-                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::goto(5, 2));
                             result.push(Instruction::bipush(1));
                         }
                         BinaryOp::Le => {
@@ -1212,11 +1215,16 @@ fn generate_code_expr(
                                 local_var_pool,
                                 class_name,
                             ));
+                            // a <= b
+                            // a - b <= 0
+                            // a - b - 1 < 0
                             result.push(Instruction::isub);
-                            result.push(Instruction::reljumpiflt(3));
-                            result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::iload(1));
+                            result.push(Instruction::isub);
+                            result.push(Instruction::iflt(8, 3));
                             result.push(Instruction::bipush(0));
+                            result.push(Instruction::goto(5, 2));
+                            result.push(Instruction::bipush(1));
                         }
                         BinaryOp::Ge => {
                             result.append(&mut generate_code_expr(
@@ -1234,10 +1242,10 @@ fn generate_code_expr(
                                 class_name,
                             ));
                             result.push(Instruction::isub);
-                            result.push(Instruction::reljumpifge(3));
-                            result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::ifge(8, 3));
                             result.push(Instruction::bipush(0));
+                            result.push(Instruction::goto(5, 2));
+                            result.push(Instruction::bipush(1));
                         }
                         BinaryOp::Lt => {
                             result.append(&mut generate_code_expr(
@@ -1255,10 +1263,10 @@ fn generate_code_expr(
                                 class_name,
                             ));
                             result.push(Instruction::isub);
-                            result.push(Instruction::reljumpifge(3));
-                            result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::iflt(8, 3));
                             result.push(Instruction::bipush(0));
+                            result.push(Instruction::goto(5, 2));
+                            result.push(Instruction::bipush(1));
                         }
                         BinaryOp::Gt => {
                             result.append(&mut generate_code_expr(
@@ -1275,11 +1283,16 @@ fn generate_code_expr(
                                 local_var_pool,
                                 class_name,
                             ));
+                            // a >= b
+                            // a - b >= 0
+                            // a - b + 1 > 0
                             result.push(Instruction::isub);
-                            result.push(Instruction::reljumpiflt(3));
-                            result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::iload(1));
+                            result.push(Instruction::iadd);
+                            result.push(Instruction::ifge(8, 3));
                             result.push(Instruction::bipush(0));
+                            result.push(Instruction::goto(5, 2));
+                            result.push(Instruction::bipush(1));
                         }
                         BinaryOp::Eq => {
                             result.append(&mut generate_code_expr(
@@ -1313,9 +1326,9 @@ fn generate_code_expr(
                                 local_var_pool,
                                 class_name,
                             ));
-                            result.push(Instruction::reljumpifeq(3));
+                            result.push(Instruction::ifeq(8, 3));
                             result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::goto(5, 2));
                             result.push(Instruction::bipush(0))
                         }
                     }
@@ -1331,9 +1344,9 @@ fn generate_code_expr(
                     ));
                     match UnaryOp::from(&op as &str) {
                         UnaryOp::Not => {
-                            result.push(Instruction::reljumpifne(3));
+                            result.push(Instruction::ifne(8, 3));
                             result.push(Instruction::bipush(1));
-                            result.push(Instruction::relgoto(2));
+                            result.push(Instruction::goto(5, 2));
                             result.push(Instruction::bipush(0));
                         }
                         UnaryOp::Neg => {
