@@ -61,7 +61,6 @@ fn normalize_str(s: std::string::String) -> std::string::String {
 
 pub fn parser_test(ast: &Class, name: &str) {
     // Call parser with java code
-    // TODO: Can only be done, once we have a parsing method that returns a Class
     let parse_res = parser::parse_programm(
         &read_to_string(File::open(format!("lib/testcases/{name}.java")).unwrap()).unwrap(),
     )
@@ -71,7 +70,6 @@ pub fn parser_test(ast: &Class, name: &str) {
 }
 
 pub fn typechecker_test(ast: &Class, tast: &Class) {
-    // TODO: Errors are just ignored for now, oops
     let mut tc = TypeChecker::new(vec![ast.clone()]).unwrap();
     let typed_classes = tc.check_and_type_program().unwrap();
     assert_eq!(typed_classes[0], *tast);
