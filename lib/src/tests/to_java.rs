@@ -22,10 +22,10 @@ pub fn class_to_java(class: &Class) -> String {
     let mut s: String = format!("class {} ", class.name);
     s += "{\n";
     for field in &class.fields {
-        s = format!("{}{}", s, field_to_java(&field));
+        s = format!("{}{}", s, field_to_java(field));
     }
     for method in &class.methods {
-        s = format!("{}{}", s, method_to_java(&method));
+        s = format!("{}{}", s, method_to_java(method));
     }
     s += "}\n";
     s
@@ -62,7 +62,7 @@ pub fn stmt_to_java(stmt: &Stmt, indent: u8) -> String {
             "{}{{\n{}\n{}}}",
             get_indents(indent - 1),
             stmts
-                .into_iter()
+                .iter()
                 .map(|stmt| stmt_to_java(stmt, indent))
                 .fold("".to_string(), |acc, s| acc + &s),
             get_indents(indent - 1)
@@ -97,8 +97,8 @@ pub fn stmt_to_java(stmt: &Stmt, indent: u8) -> String {
 
 pub fn params_to_java(params: &Vec<Expr>) -> String {
     params
-        .into_iter()
-        .map(|expr| expr_to_java(expr))
+        .iter()
+        .map(expr_to_java)
         .reduce(|acc, s| format!("{}, {}", acc, s))
         .unwrap_or(String::new())
 }

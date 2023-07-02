@@ -55,7 +55,7 @@ impl TypeChecker {
         for (_, class) in &self.typed_classes {
             typed_classes.push(class.clone());
         }
-        return Ok(typed_classes);
+        Ok(typed_classes)
     }
 
     fn check_and_type_class(&mut self, class: &Class) -> Result<(), String> {
@@ -70,7 +70,7 @@ impl TypeChecker {
 
         self.methods.insert(class.name.clone(), vec![]);
         for method in &class.methods {
-            if self.methods.get(&class.name).unwrap().contains(&method) {
+            if self.methods.get(&class.name).unwrap().contains(method) {
                 return Err(format!("Duplicatess method name: {}", method.name));
             } else {
                 self.methods
@@ -105,7 +105,7 @@ impl TypeChecker {
             .unwrap();
 
         // Check for duplicate field names
-        if names.iter().any(|vec_field| &vec_field.name == &field.name) {
+        if names.iter().any(|vec_field| vec_field.name == field.name) {
             return Err(format!("Duplicate field name: {}", field.name));
         } else {
             names.push(field.clone());
@@ -118,7 +118,7 @@ impl TypeChecker {
         if let Expr::TypedExpr(x, t) = expr {
             t.clone()
         } else if let Expr::TypedExpr(x, t) = self.type_expr(expr) {
-            t.clone()
+            t
         } else {
             unreachable!()
         }
@@ -129,29 +129,29 @@ impl TypeChecker {
             match field_type {
                 Type::Int => {
                     if self.type_of_expr(val) != *field_type {
-                        return Err(format!("Field type is int, but val is not int"));
+                        return Err("Field type is int, but val is not int".to_string());
                     }
                 }
                 Type::Bool => {
                     if self.type_of_expr(val) != *field_type {
-                        return Err(format!("Field type is bool, but val is not bool"));
+                        return Err("Field type is bool, but val is not bool".to_string());
                     }
                 }
                 Type::Char => {
                     if self.type_of_expr(val) != *field_type {
-                        return Err(format!("Field type is char, but val is not char"));
+                        return Err("Field type is char, but val is not char".to_string());
                     }
                 }
                 Type::String => {
                     if self.type_of_expr(val) != *field_type {
-                        return Err(format!("Field type is string, but val is not string"));
+                        return Err("Field type is string, but val is not string".to_string());
                     }
                 }
                 Type::Void => {
-                    return Err(format!("Field type cannot be void"));
+                    return Err("Field type cannot be void".to_string());
                 }
                 Type::Null => {
-                    return Err(format!("Field type cannot be null"));
+                    return Err("Field type cannot be null".to_string());
                 }
                 Type::Class(str) => {
                     if !self.classes.contains_key(str) {
@@ -310,15 +310,16 @@ impl TypeChecker {
 
                 let mut return_stmt_types: Vec<Type> = vec![];
 
-                typed_stmts.iter().for_each(|s| match s {
-                    Stmt::TypedStmt(boxed_stmt, t) => match **boxed_stmt {
-                        Stmt::While(_, _) => return_stmt_types.push(t.clone()),
-                        Stmt::If(_, _, _) => return_stmt_types.push(t.clone()),
-                        Stmt::Return(_) => return_stmt_types.push(t.clone()),
+                typed_stmts.iter().for_each(|s| {
+                    if let Stmt::TypedStmt(boxed_stmt, t) = s {
+                        match **boxed_stmt {
+                            Stmt::While(_, _) => return_stmt_types.push(t.clone()),
+                            Stmt::If(_, _, _) => return_stmt_types.push(t.clone()),
+                            Stmt::Return(_) => return_stmt_types.push(t.clone()),
 
-                        _ => {}
-                    },
-                    _ => {}
+                            _ => {}
+                        }
+                    }
                 });
 
                 let mut return_type = Type::Void;
@@ -337,7 +338,7 @@ impl TypeChecker {
             }
             Stmt::Return(expr) => {
                 let typed_expr = match self.type_expr(expr) {
-                    Expr::TypedExpr(e, t) => (Expr::TypedExpr(Box::new(*e.clone()), t.clone()), t),
+                    Expr::TypedExpr(e, t) => (Expr::TypedExpr(Box::new(*e), t.clone()), t),
                     _ => panic!("Expected typed expr"),
                 };
                 Stmt::TypedStmt(Box::new(Stmt::Return(typed_expr.0.clone())), typed_expr.1)
@@ -348,7 +349,7 @@ impl TypeChecker {
                         if t != Type::Bool {
                             panic!("While condition must be bool");
                         }
-                        Expr::TypedExpr(Box::new(*e.clone()), t.clone())
+                        Expr::TypedExpr(Box::new(*e), t)
                     }
                     _ => panic!("Expected typed expr"),
                 };
@@ -380,7 +381,7 @@ impl TypeChecker {
                         if t != Type::Bool {
                             panic!("If condition must be bool");
                         }
-                        Expr::TypedExpr(Box::new(*e.clone()), t.clone())
+                        Expr::TypedExpr(Box::new(*e), t)
                     }
                     _ => panic!("Expected typed expr"),
                 };
@@ -668,9 +669,9 @@ impl TypeChecker {
                             Box::new(StmtExpr::MethodCall(
                                 self.type_expr(expr),
                                 name.clone(),
-                                typed_expr.clone(),
+                                typed_expr,
                             )),
-                            current_method.ret_type.clone(),
+                            current_method.ret_type,
                         )
                     }
                     _ => panic!("Ambiguous method call"),

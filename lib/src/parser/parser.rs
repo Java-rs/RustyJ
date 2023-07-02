@@ -10,6 +10,7 @@ use pest::error::Error;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
+use tracing::debug;
 
 #[derive(Parser)]
 #[grammar = "../lib/src/parser/JavaGrammar.pest"]
@@ -70,7 +71,7 @@ fn parse_method(pair: Pair<Rule>) -> MethodDecl {
             let method_name = next_id(&mut inners);
             let mut params = vec![];
             let mut body = None;
-            while let Some(p) = inners.next() {
+            for p in inners {
                 match p.as_rule() {
                     Rule::ParamDeclList => {
                         let mut inner_param = p.into_inner();
@@ -112,7 +113,7 @@ fn parse_BlockStmt(pair: Pair<Rule>) -> Vec<Stmt> {
         pair.as_rule(),
         pair.as_str()
     );*/
-    let rule = pair.as_rule().clone();
+    let rule = pair.as_rule();
     let mut inner = pair.into_inner();
     match rule {
         Rule::BlockStmt => {
@@ -175,11 +176,11 @@ fn parse_BlockStmt(pair: Pair<Rule>) -> Vec<Stmt> {
     }
 }
 fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
-    /* println!(
+    debug!(
         "parse_Stmt: rule = {:?}, str = {}",
         pair.as_rule(),
         pair.as_str()
-    );*/
+    );
     match pair.as_rule() {
         Rule::Stmt => parse_Stmt(pair.into_inner().next().unwrap()), //@Notice this may be very wrong !!
         Rule::WhileStmt => {
@@ -246,12 +247,12 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
 }
 
 fn parse_StmtExpr(pair: Pair<Rule>) -> StmtExpr {
-    /*println!(
+    debug!(
         "parse_StmtExpr: rule = {:?}, str = {}",
         pair.as_rule(),
         pair.as_str()
-    );*/
-    let rule = pair.as_rule().clone();
+    );
+    let rule = pair.as_rule();
     match rule {
         Rule::AssignExpr => {
             let mut inners = pair.into_inner();
@@ -339,7 +340,7 @@ fn parse_field_var_decl_list(jtype: Type, pair: Pair<Rule>) -> Vec<FieldDecl> {
     let mut inners = pair.into_inner();
     let mut var_decl = inners.next().unwrap().into_inner();
     let name = next_id(&mut var_decl);
-    let val = var_decl.next().and_then(|expr| Some(parse_expr(expr)));
+    let val = var_decl.next().map(parse_expr);
     let mut out = vec![FieldDecl {
         field_type: jtype.clone(),
         name,
@@ -348,7 +349,7 @@ fn parse_field_var_decl_list(jtype: Type, pair: Pair<Rule>) -> Vec<FieldDecl> {
     if let Some(p) = inners.next() {
         out.append(&mut parse_field_var_decl_list(jtype, p));
     }
-    return out;
+    out
 }
 
 fn parse_Type(pair: Pair<Rule>) -> Type {
@@ -393,7 +394,7 @@ fn parse_expr(pair: Pair<Rule>) -> Expr {
                     unreachable!()
                 }
             };
-            while let Some(p) = pairs.next() {
+            for p in pairs {
                 assert_eq!(p.as_rule(), Rule::Identifier);
                 obj = Expr::InstVar(Box::new(obj), p.as_str().trim().to_string());
             }

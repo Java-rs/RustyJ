@@ -347,7 +347,7 @@ impl LocalVarPool {
             .iter()
             .position(|n| n == name)
             .map(|i| i as u8)
-            .expect(&*format!("Local var {:?} not found in  {:?}", name, self.0))
+            .unwrap_or_else(|| panic!("Local var {:?} not found in  {:?}", name, self.0))
     }
 }
 #[derive(Debug)]
@@ -750,7 +750,7 @@ fn generate_code_stmt(
                     ));
                 }
                 Stmt::LocalVarDecl(types, name) => {
-                    local_var_pool.add(name.clone());
+                    local_var_pool.add(name);
                     stack.inc(1);
                 }
                 Stmt::If(expr, stmt1, stmt2) => {
@@ -901,8 +901,7 @@ fn generate_code_stmt_expr(
                 }
                 StmtExpr::New(types, exprs) => {
                     // Generate bytecode for new
-                    let class_index =
-                        constant_pool.add(Constant::Class(types.to_ir_string().to_string()));
+                    let class_index = constant_pool.add(Constant::Class(types.to_ir_string()));
                     let method_index = constant_pool.add(Constant::MethodRef(MethodRef {
                         class: types.to_ir_string(),
                         method: NameAndType {
@@ -1007,7 +1006,7 @@ fn generate_code_expr(
                     stack.inc(1);
                 }
                 Expr::String(s) => {
-                    let index = constant_pool.add(Constant::String(s.to_string()));
+                    let index = constant_pool.add(Constant::String(s));
                     result.push(Instruction::ldc(index as u8));
                     stack.inc(1);
                 }
@@ -1059,7 +1058,7 @@ fn generate_code_expr(
                     let field_index = constant_pool.add(Constant::FieldRef(FieldRef {
                         class: class_name.to_string(),
                         field: NameAndType {
-                            name: name.clone(),
+                            name: name,
                             r#type: r#type.to_ir_string(),
                         },
                     }));
@@ -1385,16 +1384,16 @@ fn generate_code_expr(
                     let index = local_var_pool.get_index(&name);
                     match r#type {
                         Type::Int => {
-                            result.push(Instruction::iload(index as u8));
+                            result.push(Instruction::iload(index));
                         }
                         Type::Bool => {
-                            result.push(Instruction::iload(index as u8));
+                            result.push(Instruction::iload(index));
                         }
                         Type::Char => {
-                            result.push(Instruction::iload(index as u8));
+                            result.push(Instruction::iload(index));
                         }
                         Type::String => {
-                            result.push(Instruction::aload(index as u8));
+                            result.push(Instruction::aload(index));
                         }
                         _ => panic!("Unexpected type: {:?}", r#type),
                     }
@@ -1413,7 +1412,7 @@ fn generate_code_expr(
                     let index = constant_pool.add(Constant::FieldRef(FieldRef {
                         class: class_name.to_string(),
                         field: NameAndType {
-                            name: name.clone(),
+                            name: name,
                             r#type: r#type.to_ir_string(),
                         },
                     }));
