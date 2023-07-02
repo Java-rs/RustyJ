@@ -30,37 +30,31 @@ fn method_call_class() -> Class {
         fields: vec![],
         methods: vec![
             MethodDecl {
-                ret_type: Type::String,
-                name: "world".to_string(),
+                ret_type: Type::Int,
+                name: "a".to_string(),
                 params: vec![],
                 body: TypedStmt(
                     Box::new(Block(vec![TypedStmt(
-                        Box::new(Return(TypedExpr(
-                            Box::new(Expr::String("World".to_string())),
-                            Type::String,
-                        ))),
-                        Type::String,
+                        Box::new(Return(TypedExpr(Box::new(Expr::Integer(2)), Type::Int))),
+                        Type::Int,
                     )])),
-                    Type::String,
+                    Type::Int,
                 ),
             },
             MethodDecl {
-                ret_type: Type::String,
-                name: "hello".to_string(),
+                ret_type: Type::Int,
+                name: "b".to_string(),
                 params: vec![],
                 body: TypedStmt(
                     Box::new(Block(vec![TypedStmt(
-                        Box::new(Return(TypedExpr(
-                            Box::new(Expr::String("Hello".to_string())),
-                            Type::String,
-                        ))),
-                        Type::String,
+                        Box::new(Return(TypedExpr(Box::new(Expr::Integer(5)), Type::Int))),
+                        Type::Int,
                     )])),
-                    Type::String,
+                    Type::Int,
                 ),
             },
             MethodDecl {
-                ret_type: Type::String,
+                ret_type: Type::Int,
                 name: "f".to_string(),
                 params: vec![],
                 body: TypedStmt(
@@ -75,43 +69,33 @@ fn method_call_class() -> Class {
                                                 Box::new(This),
                                                 Type::Class("MethodCall".to_string()),
                                             ),
-                                            "hello".to_string(),
+                                            "a".to_string(),
                                             vec![],
                                         )),
-                                        Type::String,
+                                        Type::Int,
                                     )))),
-                                    Type::String,
+                                    Type::Int,
                                 )),
                                 Box::new(TypedExpr(
-                                    Box::new(Binary(
-                                        "+".to_string(),
-                                        Box::new(TypedExpr(
-                                            Box::new(Expr::String(" ".to_string())),
-                                            Type::String,
+                                    Box::new(StmtExprExpr(Box::new(TypedStmtExpr(
+                                        Box::new(MethodCall(
+                                            TypedExpr(
+                                                Box::new(This),
+                                                Type::Class("MethodCall".to_string()),
+                                            ),
+                                            "b".to_string(),
+                                            vec![],
                                         )),
-                                        Box::new(TypedExpr(
-                                            Box::new(StmtExprExpr(Box::new(TypedStmtExpr(
-                                                Box::new(MethodCall(
-                                                    TypedExpr(
-                                                        Box::new(This),
-                                                        Type::Class("MethodCall".to_string()),
-                                                    ),
-                                                    "world".to_string(),
-                                                    vec![],
-                                                )),
-                                                Type::String,
-                                            )))),
-                                            Type::String,
-                                        )),
-                                    )),
-                                    Type::String,
+                                        Type::Int,
+                                    )))),
+                                    Type::Int,
                                 )),
                             )),
-                            Type::String,
+                            Type::Int,
                         ))),
-                        Type::String,
+                        Type::Int,
                     )])),
-                    Type::String,
+                    Type::Int,
                 ),
             },
         ],

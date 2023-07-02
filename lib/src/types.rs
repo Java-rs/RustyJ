@@ -6,7 +6,7 @@ use crate::codegen::ConstantPool;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Default, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Class {
     pub name: String,
     pub fields: Vec<FieldDecl>,
@@ -31,16 +31,6 @@ impl Display for Class {
     }
 }
 
-impl Default for Class {
-    fn default() -> Self {
-        Class {
-            name: String::new(),
-            fields: Vec::new(),
-            methods: Vec::new(),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct FieldDecl {
     pub field_type: Type,
@@ -50,16 +40,29 @@ pub struct FieldDecl {
 
 impl FieldDecl {
     /// See https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.5
-    pub fn as_bytes(&self, constant_pool: &mut ConstantPool) -> Vec<u8> {
+    pub fn as_bytes(&self, class_name: &str, constant_pool: &mut ConstantPool) -> Vec<u8> {
+        use crate::codegen::Constant;
+        use crate::codegen::FieldRef;
+        use crate::codegen::NameAndType;
+
         let mut bytes = Vec::new();
-        // Public access modifier
-        bytes.extend_from_slice(&[0x0, 0x1]);
-        bytes.extend_from_slice(&self.field_type.as_bytes());
-        bytes.extend_from_slice(&self.name.as_bytes());
-        if let Some(val) = &self.val {
-            // bytes.extend_from_slice(&val.as_bytes());
-            todo!()
-        }
+        // No access modifier
+        bytes.extend_from_slice(&[0x0, 0x0]);
+        // Name index
+        bytes.extend_from_slice(
+            &constant_pool
+                .add(Constant::Utf8(self.name.clone()))
+                .to_be_bytes(),
+        );
+        // Descripter index
+        bytes.extend_from_slice(
+            &constant_pool
+                .add(Constant::Utf8(self.field_type.to_ir_string()))
+                .to_be_bytes(),
+        );
+        // Attributes count
+        bytes.extend_from_slice(&[0x0, 0x0]);
+        if let Some(val) = &self.val {}
         bytes
     }
 }
@@ -85,10 +88,15 @@ pub enum Stmt {
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum StmtExpr {
-    // @Decide should actually be Assign(Expr, Expr) for assigning values to instance variables
-    // See for example the SetterGetter test (i.e. cases like `this.x = 5`)
-    Assign(String, Expr), // first the name of the variable, then the value it is being assigned to
+    Assign(Expr, Expr), // first the name of the variable, then the value it is being assigned to
     New(Type, Vec<Expr>), // first the class type, that should be instantiated, then the list of arguments for the constructor
+    // FIXME: This needs to be changed to represent more how the JVM handles method calls. We need a class(at least name) and a method name with the typed arguments inside it, also the return type
+    //    #2 = Methodref          #3.#17         // MethodTest.y:(I)I
+    //    #3 = Class              #18            // MethodTest
+    //    #17 = NameAndType        #19:#20        // y:(I)I
+    //    #18 = Utf8               MethodTest
+    //    #19 = Utf8               y
+    //    #20 = Utf8               (I)I
     MethodCall(Expr, String, Vec<Expr>), // first the object to which the method belongs (e.g. Expr::This), then the name of the method and lastly the list of arguments for the method call
     TypedStmtExpr(Box<StmtExpr>, Type),
 }
@@ -109,6 +117,16 @@ pub enum Expr {
     Jnull,
     StmtExprExpr(Box<StmtExpr>),
     TypedExpr(Box<Expr>, Type),
+}
+
+impl Expr {
+    /// Gets the type if one is present
+    pub(crate) fn get_type(&self) -> Option<Type> {
+        match self {
+            Expr::TypedExpr(_, t) => Some(t.clone()),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -197,6 +215,27 @@ impl From<&str> for BinaryOp {
     }
 }
 
+impl BinaryOp {
+    pub fn prec(op: &str) -> u8 {
+        match op {
+            "*" => 0,
+            "/" => 0,
+            "%" => 0,
+            "+" => 1,
+            "-" => 1,
+            "<=" => 2,
+            ">=" => 2,
+            "<" => 2,
+            ">" => 2,
+            "==" => 3,
+            "!=" => 3,
+            "&&" => 4,
+            "||" => 4,
+            _ => panic!("Invalid binary operator: {}", op),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Hash, Eq)]
 pub enum Type {
     Int,
@@ -224,7 +263,7 @@ impl Display for Type {
 
 impl Type {
     fn as_bytes(&self) -> Vec<u8> {
-        todo!()
+        self.to_ir_string().as_bytes().to_vec()
     }
     pub fn to_ir_string(&self) -> String {
         match self {
@@ -233,7 +272,7 @@ impl Type {
             Type::Bool => "Z",
             Type::String => "Ljava/lang/String;",
             Type::Void => "V",
-            // TODO: Either the class has the formatting `L<class>;' or we have to add it here.
+            // FIXME: Either the class has the formatting `L<class>;' or we have to add it here.
             Type::Class(name) => name,
             _ => panic!("Invalid type: {}", self),
         }

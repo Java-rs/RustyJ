@@ -4,7 +4,7 @@ class WonkyAssignments {
 
 	int f(int newX) {
 		c = (x = newX) > y;
-		int i, j = z = x, k = -1;
+		int j = z = x, k = -1;
 		a = !(b = c == true);
 		if (a) return z;
 		else return k;
