@@ -6,6 +6,10 @@ use crate::codegen::ConstantPool;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
+/// All types necessary for the AST.
+
+pub type Prg = Vec<Class>;
+
 #[derive(Debug, Default, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Class {
     pub name: String,
@@ -13,58 +17,11 @@ pub struct Class {
     pub methods: Vec<MethodDecl>,
 }
 
-impl Display for Class {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut fields = String::new();
-        for field in &self.fields {
-            fields.push_str(&format!("{}: {}, ", field.name, field.field_type));
-        }
-        let mut methods = String::new();
-        for method in &self.methods {
-            methods.push_str(&format!("{}: {}, ", method.name, method.ret_type));
-        }
-        write!(
-            f,
-            "class {} {{\n\tfields: {}\n\tmethods: {}\n}}",
-            self.name, fields, methods
-        )
-    }
-}
-
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct FieldDecl {
     pub field_type: Type,
     pub name: String,
     pub val: Option<Expr>,
-}
-
-impl FieldDecl {
-    /// See https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.5
-    pub fn as_bytes(&self, class_name: &str, constant_pool: &mut ConstantPool) -> Vec<u8> {
-        use crate::codegen::Constant;
-        use crate::codegen::FieldRef;
-        use crate::codegen::NameAndType;
-
-        let mut bytes = Vec::new();
-        // No access modifier
-        bytes.extend_from_slice(&[0x0, 0x0]);
-        // Name index
-        bytes.extend_from_slice(
-            &constant_pool
-                .add(Constant::Utf8(self.name.clone()))
-                .to_be_bytes(),
-        );
-        // Descripter index
-        bytes.extend_from_slice(
-            &constant_pool
-                .add(Constant::Utf8(self.field_type.to_ir_string()))
-                .to_be_bytes(),
-        );
-        // Attributes count
-        bytes.extend_from_slice(&[0x0, 0x0]);
-        if let Some(val) = &self.val {}
-        bytes
-    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
@@ -112,6 +69,122 @@ pub enum Expr {
     TypedExpr(Box<Expr>, Type),
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum UnaryOp {
+    Pos,
+    Neg,
+    Not,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum BinaryOp {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Mod,
+    And,
+    Or,
+    Le,
+    Ge,
+    Lt,
+    Gt,
+    Eq,
+    Ne,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Hash, Eq)]
+pub enum Type {
+    Int,
+    Bool,
+    Char,
+    String,
+    Void,
+    Null,
+    Class(String),
+}
+
+/// All necessary methods/implementations for the type system
+
+impl Display for Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Type::Int => write!(f, "int"),
+            Type::Bool => write!(f, "boolean"),
+            Type::Char => write!(f, "char"),
+            Type::String => write!(f, "String"),
+            Type::Void => write!(f, "void"),
+            Type::Null => write!(f, "null"),
+            Type::Class(name) => write!(f, "{}", name),
+        }
+    }
+}
+
+impl Type {
+    fn as_bytes(&self) -> Vec<u8> {
+        self.to_ir_string().as_bytes().to_vec()
+    }
+    pub fn to_ir_string(&self) -> String {
+        match self {
+            Type::Int => "I",
+            Type::Char => "C",
+            Type::Bool => "Z",
+            Type::String => "Ljava/lang/String;",
+            Type::Void => "V",
+            Type::Class(name) => name,
+            _ => panic!("Invalid type: {}", self),
+        }
+        .to_string()
+    }
+}
+
+impl Display for Class {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut fields = String::new();
+        for field in &self.fields {
+            fields.push_str(&format!("{}: {}, ", field.name, field.field_type));
+        }
+        let mut methods = String::new();
+        for method in &self.methods {
+            methods.push_str(&format!("{}: {}, ", method.name, method.ret_type));
+        }
+        write!(
+            f,
+            "class {} {{\n\tfields: {}\n\tmethods: {}\n}}",
+            self.name, fields, methods
+        )
+    }
+}
+
+impl FieldDecl {
+    /// See https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.5
+    pub fn as_bytes(&self, class_name: &str, constant_pool: &mut ConstantPool) -> Vec<u8> {
+        use crate::codegen::Constant;
+        use crate::codegen::FieldRef;
+        use crate::codegen::NameAndType;
+
+        let mut bytes = Vec::new();
+        // No access modifier
+        bytes.extend_from_slice(&[0x0, 0x0]);
+        // Name index
+        bytes.extend_from_slice(
+            &constant_pool
+                .add(Constant::Utf8(self.name.clone()))
+                .to_be_bytes(),
+        );
+        // Descripter index
+        bytes.extend_from_slice(
+            &constant_pool
+                .add(Constant::Utf8(self.field_type.to_ir_string()))
+                .to_be_bytes(),
+        );
+        // Attributes count
+        bytes.extend_from_slice(&[0x0, 0x0]);
+        if let Some(val) = &self.val {}
+        bytes
+    }
+}
+
 impl Expr {
     /// Gets the type if one is present
     pub(crate) fn get_type(&self) -> Option<Type> {
@@ -120,13 +193,6 @@ impl Expr {
             _ => None,
         }
     }
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum UnaryOp {
-    Pos,
-    Neg,
-    Not,
 }
 
 impl Display for UnaryOp {
@@ -148,23 +214,6 @@ impl From<&str> for UnaryOp {
             _ => panic!("Invalid unary operator: {}", s),
         }
     }
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum BinaryOp {
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Mod,
-    And,
-    Or,
-    Le,
-    Ge,
-    Lt,
-    Gt,
-    Eq,
-    Ne,
 }
 
 impl Display for BinaryOp {
@@ -228,48 +277,3 @@ impl BinaryOp {
         }
     }
 }
-
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Hash, Eq)]
-pub enum Type {
-    Int,
-    Bool,
-    Char,
-    String,
-    Void,
-    Null,
-    Class(String),
-}
-
-impl Display for Type {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Type::Int => write!(f, "int"),
-            Type::Bool => write!(f, "boolean"),
-            Type::Char => write!(f, "char"),
-            Type::String => write!(f, "String"),
-            Type::Void => write!(f, "void"),
-            Type::Null => write!(f, "null"),
-            Type::Class(name) => write!(f, "{}", name),
-        }
-    }
-}
-
-impl Type {
-    fn as_bytes(&self) -> Vec<u8> {
-        self.to_ir_string().as_bytes().to_vec()
-    }
-    pub fn to_ir_string(&self) -> String {
-        match self {
-            Type::Int => "I",
-            Type::Char => "C",
-            Type::Bool => "Z",
-            Type::String => "Ljava/lang/String;",
-            Type::Void => "V",
-            Type::Class(name) => name,
-            _ => panic!("Invalid type: {}", self),
-        }
-        .to_string()
-    }
-}
-
-pub type Prg = Vec<Class>;
