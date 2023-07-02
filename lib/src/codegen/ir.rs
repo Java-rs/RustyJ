@@ -52,7 +52,6 @@ impl DIR {
             .iter()
             .flat_map(|m| m.as_bytes(&mut self.constant_pool))
             .collect();
-        println!("Constant pool: {:?}", self.constant_pool);
         // Constant Pool
         result.extend_from_slice(&self.constant_pool.count().to_be_bytes());
         result.append(&mut self.constant_pool.as_bytes());
