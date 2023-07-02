@@ -55,34 +55,36 @@ Folgende Fehler werden vom Typechecker erkannt:
 
 ## Codegenerierung
 
-ByteCode-Umwandlung, Bugfixes, StackSize und sehr viele Verbesserungen: Val Richter
+Definition DIR(Duck Intermediate Representation), ConstantPool, LocalVarPool, Methoden zur Generierung der DIR-Instructions, BugFixes, etwas ByteCode-Umwandlung: Marion Hinkel und Benedikt Brandmaier im Pair Programming
 
-Definition DIR(Duck Intermediate Representation), ConstantPool, LocalVarPool, Methoden zur Instruction-generierung, BugFixes, etwas ByteCode-Umwandlung: Marion Hinkel und Benedikt Brandmaier im Pair Programming
+ByteCode-Umwandlung, Bugfixes, StackSize, StackMapTable und ausführliche Mithilfe: Val Richter
 
-Zur Bytecode-generierung wird der Typed Abstract Syntax Tree(TAST) in Java Bytecode komplett selber
-umgewandelt. Dafür wird eine Intermediate Representation (IR) genutzt, die eine Class-ähnliche Struktur(mit Konstantenpool, LocalVarpool, Methoden mit Code als Instruktionen, etc.)
-besitzt. Diese IR wird dann komplett manuell in Java Bytecode übersetzt. Dies hat dem Code-gen Team sehr viel
-Zeit gekostet, da z.B. die Stack-Size, der Konstantenpool, LocalVarpool und die Jumps manuell berechnet werden mussten.
+Zur Bytecode-Generierung wird der Typed Abstract Syntax Tree (TAST) in Java Bytecode umgewandelt.
+Es wurden keine Libraries (wie z.B. [ASM](https://asm.ow2.io/javadoc/)) verwendet.
+Für die Codegenerierung wird eine Intermediate Representation (IR) genutzt, die eine Class-ähnliche Struktur
+(mit Konstantenpool, LocalVarpool, Methoden mit Code als Instruktionen, etc.) besitzt.
+Diese IR wird dann komplett manuell in Java Bytecode übersetzt. Dies hat dem Code-gen Team sehr viel Zeit gekostet,
+da z.B. die Stack-Size, der Konstantenpool, LocalVarPool und alle Jumps manuell berechnet werden mussten.
 
-Zudem hatten wir zeitweise eigene Relative Instructions implementiert, da wir dachten, dass die JVM keine relativen Jumps
-unterstützt, hatten dann allerdings mit Try-and-Error herausgefunden, dass javap sich die absoluten Addressen ausrechnet
-und für die JVM normale jumps als relative Jumps behandelt. Auch die relativen Jumps waren aber sehr fehleranfällig und
-hatten häufig off-by-one Errors.
+Zudem hatten wir zeitweise eigene Instructions für relative Jumps implementiert, die wir dann in absolute Jumps umgerechnet haben,
+da wir dachten, dass die JVM keine relativen Jumps unterstützt. Dieser Glauben kam daher, dass die Ausgabe von `javap` die
+Ziel-Adressen von Jumps immer als absolute Adressen angezeigt hat. Es stellte sich dann aber heraus, dass die JVM eigentlich
+nur relative Jumps versteht und nur javap diese schon umgerechnet dargestellt hat. Aber selbst danch waren die relativen Jumps
+noch sehr fehleranfällig und hatten häufig off-by-one Errors.
 
-Zudem musste eine StackMapTable implementiert werden, da die JVM sonst unsere Klassen nicht lädt.
+Zudem musste eine [StackMapTable](https://docs.oracle.com/javase/specs/jvms/se20/html/jvms-4.html#jvms-4.7.4) per Hand implementiert werden,
+da die JVM unsere Klassen sonst nicht geladen hat. Die Implementation dieser war ebenfalls sehr zeitaufwendig, da an sich ein ganzer
+Typchecker für den generierten Bytecode implementiert werden musste, um korrekte StackMapTables zu generieren.
+
 Das Troubleshooten von Testfehlern war auch sehr aufwendig da oft javap gar nicht erst den Fehler im Klassencode ausgab
 und wir mit einem Hex-Editor die Klassen von Hand analysieren mussten, da es auch kein anderes Tool gab, um solche Fehler
-auszugeben und die Zeit fehlte ein Eigenes zu schreiben.
+auszugeben und die Zeit fehlte ein eigenes Tool dafür zu schreiben.
 
 Da es auch keine gute Dokumentation gibt, die in etwa zeigt, welcher Bytecode für welche Operationen genutzt wird, mussten wir
 uns die Bytecode-Spezifikationen anschauen und sehr viel mit Tools wie javap und [godbolt](https://godbolt.org/) arbeiten
-(wir haben auch https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-3.html genutzt, aber diese Dokumentation nutzt
-sehr spezifische Instruktionen und wurde deswegen selten genutzt)in die wir manuell Java Code eingeben und schauten,
-welcher Bytecode bei verschiedenen Operationenkombinationen generiert wird, was sehr zeitaufwendig war.
-
-Auch sehr schwierig war die Implementation einer StackMapTable, da Java diese erwartet. Diese ist eine Tabelle, die für
-jede Instruktion die Typen der Elemente auf dem Stack in komprimiertem Format angibt. Diese Tabelle muss manuell
-erstellt werden und über die Typen aller Variablen, die in den Stack geschrieben wurden Bescheid wissen.
+(wir haben auch https://docs.oracle.com/javase/specs/jvms/se20/html/jvms-3.html genutzt, aber diese Dokumentation nutzt
+sehr spezifische Instruktionen und wurde deswegen selten genutzt) in die wir manuell Java Code eingeben konnten, um zu sehen,
+welcher Bytecode bei verschiedenen Operationskombinationen generiert wird, was sehr zeitaufwendig war.
 
 ## Testing
 
