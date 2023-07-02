@@ -6,7 +6,7 @@ Mögliche Kombinationen sind den [Tests](../lib/testcases) zu entnehmen.
 
 ## Parser
 
-Geschrieben von: Victoria Gönnheimer, Sander Stella
+Geschrieben von: Viktoria Gönnheimer, Sander Stella
 
 Der Parser akzeptiert denn text eines Java programs und gibt einen Abstract Syntax Tree (AST) zurück.
 Dafür wird die Libray [pest.rs](https://pest.rs/) verwendet um das Inital parsing durchzufüren.
