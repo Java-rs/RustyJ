@@ -2,10 +2,12 @@
 
 Geschrieben von: Victoria Gönnheimer, Sander Stella
 
-Der Parser akzeptiert denn text eines Java programs und gibt einen Abstract Syntax Tree (AST) zurück.
-Dafür wird die Libray [pest.rs](https://pest.rs/) verwendet um das Inital parsing durchzufüren.
-Für dieses inital parsing nutzt pest unsere vorher definiete Gramatik. Bei der Gramatik wurde sich primär and der vorlesugn orientiert mit signifikaten abänderungen um das parsing zuvereinfachen sowie den spezifikationen der library nachzukommen.
-Das egebnis welches Pest zurückgibt wird von uneren parser funktionen analysiert und umgewandelt.
+Der Parser akzeptiert den Text eines Java Programs und gibt einen Abstract Syntax Tree (AST) zurück.
+Dafür wird die Libray [pest.rs](https://pest.rs/) verwendet, um das Inital parsing durchzufüren.
+Für dieses inital parsing nutzt pest unsere vorher definiete Gramatik.
+
+Die Grammatik hat sich Anfangs an den Hilfsmitteln der Vorlesung orientiert. Später wurde diese allerdings neu geschrieben, um sich stärker am verwendeten AST zu orientieren. Dadurch wurde auch die Implementation des restlichen Parsers sehr viel erleichtert.
+Das Ergebnis, welches Pest zurückgibt, wird .
 Dabei wird wie folgt vorgegangenen:
 
 -   Eine funktion schaut sich die aktuelle regel an
@@ -82,7 +84,7 @@ erstellt werden und über die Typen aller Variablen, die in den Stack geschriebe
 
 ## Testing
 
-Das Testen des Codegens war sehr aufwendig, er besteht aus diesen Schritten:
+Das Testen des Codegens war sehr aufwendig. Es besteht aus den folgenden Schritten:
 
 1. Ein handgeschriebener TAST wird geladen
 2. Eine Java Klasse wird erstellt die jede Methode im TAST aufruft
