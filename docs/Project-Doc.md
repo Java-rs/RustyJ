@@ -2,15 +2,19 @@
 
 Geschrieben von: Tori Gönnheimer, Sander Stella
 
-Ausfürhliche Mithilfe (v.a. beim Schreiben der Grammatik): Val Richter
+Ausführliche Mithilfe (v.a. beim Schreiben der Grammatik): Val Richter
 
 Der Parser akzeptiert den Text eines Java Programs und gibt einen Abstract Syntax Tree (AST) zurück.
-Dafür wird die Libray [pest.rs](https://pest.rs/) verwendet, um das Inital parsing durchzufüren.
-Für dieses inital parsing nutzt pest unsere vorher definiete Gramatik.
+Dafür wird die Libray [pest.rs](https://pest.rs/) verwendet, um das Inital Parsing durchzufüren.
+Für dieses inital Parsing nutzt pest unsere vorher definiete Gramatik.
 
-Die Grammatik hat sich Anfangs an den Hilfsmitteln der Vorlesung orientiert. Später wurde diese allerdings neu geschrieben, um sich stärker am verwendeten AST zu orientieren. Dadurch wurde auch die Implementation des restlichen Parsers sehr viel erleichtert.
-Das Ergebnis, welches Pest zurückgibt, wird .
+Bei der Grammatik wurde sich Anfangs an den Hilfsmitteln der Vorlesung orientiert. Später wurde diese allerdings neu geschrieben, um sich stärker am verwendeten AST zu orientieren. Dadurch wurde auch die Implementation des restlichen Parsers sehr viel erleichtert.
+Das Egebnis, welches Pest zurückgibt wird von uneren Parser-Funktionen analysiert und umgewandelt.
 Dabei wird wie folgt vorgegangenen:
+
+-   Eine Funktion schaut sich die aktuelle Regel an
+-   Es wird der Entsprechende Code zu dieser Regel ausgeführt
+-   Sofern Subregeln in dieser Regel vorkommen, wird die entsprechende Funktion aufgerufen
 
 -   Eine Funktion schaut sich die aktuelle Regel an
 -   Es wird der entsprechende Code zu dieser Regel ausgeführt
