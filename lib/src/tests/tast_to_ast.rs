@@ -3,16 +3,13 @@ use super::*;
 pub fn stmt_tast_to_ast(stmt: &Stmt) -> Stmt {
     match stmt {
         Stmt::TypedStmt(x, _typ) => stmt_tast_to_ast(x),
-        Stmt::Block(stmts) => Block(stmts.iter().map(|x| stmt_tast_to_ast(x)).collect()),
+        Stmt::Block(stmts) => Block(stmts.iter().map(stmt_tast_to_ast).collect()),
         Stmt::Return(expr) => Return(expr_tast_to_ast(expr)),
         Stmt::While(cond, body) => While(expr_tast_to_ast(cond), Box::new(stmt_tast_to_ast(body))),
         Stmt::If(cond, body, elze) => If(
             expr_tast_to_ast(cond),
             Box::new(stmt_tast_to_ast(body)),
-            match elze {
-                Some(x) => Some(Box::new(stmt_tast_to_ast(x))),
-                None => None,
-            },
+            elze.as_ref().map(|x| Box::new(stmt_tast_to_ast(x))),
         ),
         Stmt::StmtExprStmt(stmt_expr) => StmtExprStmt(stmt_expr_tast_to_ast(stmt_expr)),
         _ => stmt.clone(),
@@ -22,14 +19,13 @@ pub fn stmt_tast_to_ast(stmt: &Stmt) -> Stmt {
 pub fn stmt_expr_tast_to_ast(stmt_expr: &StmtExpr) -> StmtExpr {
     match stmt_expr {
         StmtExpr::Assign(var, val) => Assign(expr_tast_to_ast(var), expr_tast_to_ast(val)),
-        StmtExpr::New(typ, params) => New(
-            typ.clone(),
-            params.iter().map(|x| expr_tast_to_ast(x)).collect(),
-        ),
+        StmtExpr::New(typ, params) => {
+            New(typ.clone(), params.iter().map(expr_tast_to_ast).collect())
+        }
         StmtExpr::MethodCall(obj, method, params) => MethodCall(
             expr_tast_to_ast(obj),
             method.clone(),
-            params.iter().map(|x| expr_tast_to_ast(x)).collect(),
+            params.iter().map(expr_tast_to_ast).collect(),
         ),
         StmtExpr::TypedStmtExpr(x, _typ) => stmt_expr_tast_to_ast(x),
     }
@@ -61,7 +57,7 @@ pub fn tast_to_ast(class: &Class) -> Class {
             .map(|field| FieldDecl {
                 field_type: field.field_type.clone(),
                 name: field.name.clone(),
-                val: field.val.clone().and_then(|x| Some(expr_tast_to_ast(&x))),
+                val: field.val.clone().map(|x| expr_tast_to_ast(&x)),
             })
             .collect(),
         methods: class
