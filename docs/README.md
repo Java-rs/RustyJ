@@ -4,7 +4,7 @@ There are three parts to the documentation:
 
 ## 1. Short user documentation
 
-[This](./User-Doc.md) is a short doument, detailing how to compile and run each separate part of the compiler.
+[This](./User-Doc.md) is a short document, detailing how to compile and run each separate part of the compiler.
 
 ## 2. UML Class-Diagram for AST
 

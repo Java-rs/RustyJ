@@ -34,12 +34,10 @@ ReturnStmt = {"return" ~ Expr ~ ";"}
 
 WhileStmt = {"while" ~ "(" ~ Expr ~ ")" ~ Stmt}
 
-// @Question: Is this a correct and easy-to-use definition?
 IfElseStmt = {IfStmt ~ "else" ~ Stmt}
 
 IfStmt = {"if" ~ "(" ~ Expr ~ ")" ~ Stmt}
 
-// @Cleanup: Can maybe be unified with FieldVarDecl and AssignExpr?
 LocalVarDeclStmt = {JType ~ Identifier ~ ("="~Expr)? ~ ("," ~ Identifier ~ ("="~Expr)?)* ~ ";"}
 
 StmtExpr = {AssignExpr | NewExpr | MethodCallExpr}

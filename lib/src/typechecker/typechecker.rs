@@ -50,7 +50,7 @@ impl TypeChecker {
             self.check_and_type_class(class)?;
             self.fields.clear();
         }
-        println!("Program successfully type checked!🎉🧙\n\n");
+        println!("Typechecked program succesfully!🎉🧙");
         let mut typed_classes = vec![];
         for class in self.typed_classes.values() {
             typed_classes.push(class.clone());

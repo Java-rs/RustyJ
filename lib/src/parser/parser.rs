@@ -23,6 +23,7 @@ pub fn parse_programm(file: &str) -> Result<Vec<Class>, Error<Rule>> {
         panic!();
     }
     let pased_clases = prg.into_inner().map(parse_class).collect();
+    println!("Parsed program successfully!🎉✍️");
     Ok(pased_clases)
 }
 
@@ -124,51 +125,6 @@ fn parse_BlockStmt(pair: Pair<Rule>) -> Vec<Stmt> {
             }
 
             result
-            /*
-            let first = inner.next();
-            if (first.is_none()) {
-                return vec![];
-            }
-            let first = first.unwrap();
-
-            let result = vec![];
-            for first in inner {
-                match first.as_rule() {
-                    /*
-                    Rule::JType => {
-                        let jtype = parse_Type(first);
-                        let var_decels = inner.next().unwrap().into_inner();
-                        var_decels
-                            .map(|x| {
-                                let mut inner = x.into_inner();
-                                let other_name = next_id(&mut inner);
-                                match inner.next() {
-                                    None => {
-                                         Stmt::LocalVarDecl(jtype.clone(), other_name)
-                                    }
-                                    Some(expresion) => vec![
-                                        Stmt::LocalVarDecl(jtype.clone(), other_name.clone()),
-                                        Stmt::StmtExprStmt(StmtExpr::Assign(
-                                            other_name,
-                                            parse_expr(expresion),
-                                        )),
-                                    ],
-                                }
-                            })
-                            .flatten()
-                            .collect()
-                    }
-
-                     */
-                    Rule::Stmt => parse_Stmt(first.into_inner().next().unwrap()),
-                    _ => {
-                        dbg!(first.as_rule());
-                        unreachable!()
-                    }
-                }
-            }
-            result
-            */
         }
         _ => {
             unreachable!()
@@ -219,19 +175,36 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
         Rule::LocalVarDeclStmt => {
             let mut inners = pair.into_inner();
 
+            let mut result = vec![];
             let typeJ = parse_Type(inners.next().unwrap());
-            let var_name = next_id(&mut inners);
-            //   StmtExprStmt
-            let lVD = Stmt::LocalVarDecl(typeJ, var_name.clone());
 
-            match inners.next() {
-                None => vec![lVD],
-                Some(expr_pair) => {
-                    let expr =
-                        StmtExpr::Assign(Expr::LocalOrFieldVar(var_name), parse_expr(expr_pair));
-                    vec![lVD, Stmt::StmtExprStmt(expr)]
+            let mut last_var_name = None;
+            for inner in inners {
+                match inner.as_rule() {
+                    Rule::Identifier => {
+                        if last_var_name.is_some() {
+                            result.push(Stmt::LocalVarDecl(typeJ.clone(), last_var_name.unwrap()));
+                        }
+                        last_var_name = Some(inner.as_str().trim().to_string());
+                    }
+                    Rule::Expr => {
+                        result.push(Stmt::LocalVarDecl(
+                            typeJ.clone(),
+                            last_var_name.as_ref().unwrap().clone(),
+                        ));
+                        result.push(Stmt::StmtExprStmt(StmtExpr::Assign(
+                            Expr::LocalOrFieldVar(last_var_name.unwrap()),
+                            parse_expr(inner),
+                        )));
+                        last_var_name = None;
+                    }
+                    _ => unreachable!(),
                 }
             }
+            if last_var_name.is_some() {
+                result.push(Stmt::LocalVarDecl(typeJ, last_var_name.unwrap()));
+            }
+            result
         }
         Rule::StmtExpr => {
             vec![Stmt::StmtExprStmt(parse_StmtExpr(

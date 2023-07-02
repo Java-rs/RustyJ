@@ -200,17 +200,23 @@ fn wonky_assignments_class() -> Class {
                         Box::new(If(
                             TypedExpr(Box::new(FieldVar("a".to_string())), Type::Bool),
                             Box::new(TypedStmt(
-                                Box::new(Return(TypedExpr(
-                                    Box::new(FieldVar("z".to_string())),
+                                Box::new(Block(vec![TypedStmt(
+                                    Box::new(Return(TypedExpr(
+                                        Box::new(FieldVar("z".to_string())),
+                                        Type::Int,
+                                    ))),
                                     Type::Int,
-                                ))),
+                                )])),
                                 Type::Int,
                             )),
                             Some(Box::new(TypedStmt(
-                                Box::new(Return(TypedExpr(
-                                    Box::new(LocalVar("k".to_string())),
+                                Box::new(Block(vec![TypedStmt(
+                                    Box::new(Return(TypedExpr(
+                                        Box::new(LocalVar("k".to_string())),
+                                        Type::Int,
+                                    ))),
                                     Type::Int,
-                                ))),
+                                )])),
                                 Type::Int,
                             ))),
                         )),
