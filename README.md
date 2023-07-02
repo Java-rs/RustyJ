@@ -4,14 +4,14 @@ A MiniJava Compiler written in Rust.
 
 ## MiniJava
 
-MiniJava is a subset of Java. It is a simple object-oriented language that supports classes, single inheritance(not 
+MiniJava is a subset of Java. It is a simple object-oriented language that supports classes, single inheritance(not
 supported in this compiler), and strong typing.
 
 ## Build
 
 ### Requirements
 
-- [Rust](https://rustup.rs/)
+-   [Rust](https://rustup.rs/)
 
 ### Build
 
@@ -22,29 +22,25 @@ cargo build --release
 ## Usage
 
 ```bash
-cargo r -r -- <input_file> <output_file>
+cargo r -r -- <input_file> [<output_file>]
 ```
 
-# Disclaimer
+## Documentation
+
+A more detailed documentation on how to use the separate parts of the compiler is given in [User-Doc](./docs/User-Doc.md). A detailed documentation on how the project was done is given in [Project-Doc](./docs/Project-Doc.md).
+
+## Disclaimer
+
 This compiler was done as a student project and doesn't support many language features and may contain bugs. It is not intended to be used in production.
 
 However, it was a great learning experience, and we hope it can be useful to someone else.
 
-## Parsing
-Parsing is done using a [Pest grammar](https://pest.rs/).
-
-## Type Checking
-I do not know what to write about type checking as i am clueless
-
-## Code Generation
-Code generation is done manually to generate Java Bytecode. The code generation uses two passes. 
-The first pass generates all instructions and the second one is used to convert relative jumps into absolute jumps.
-
 ## Authors
-- Flippchen
-- Marion
-- mfloto
-- Nereuxofficial
-- Sander
-- Tori
-- Val
+
+-   Philipp Wolf (Flippchen)
+-   Maximilian Floto (mfloto)
+-   Marion Hinkel (MarionHinkel)
+-   Benedikt Brandmaier (Nereuxofficial)
+-   Tori Gönnheimer (ToriTheGreenOne)
+-   Sander Stella (SanderForGodot)
+-   Val Richter (ArtInLines)
