@@ -7,6 +7,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
 -   [JDK 20](https://www.oracle.com/java/technologies/downloads/) (Wird in Tests für die Validierung des Codegens benötigt)
+-   `java`, `javac` und `javap` müssen dabei für die Tests der Codegenerierung im Pfad sein, damit diese vom Test genutzt werden können.
 
 # Ausführen
 

@@ -1,9 +1,3 @@
-## Supported types
-
-Unterstützte Typen sind in [Types](../lib/src/types.rs) definiert.
-Mögliche Kombinationen sind den [Tests](../lib/testcases) zu entnehmen.
-
-
 ## Parser
 
 Geschrieben von: Victoria Gönnheimer, Sander Stella
@@ -13,10 +7,10 @@ Dafür wird die Libray [pest.rs](https://pest.rs/) verwendet um das Inital parsi
 Für dieses inital parsing nutzt pest unsere vorher definiete Gramatik. Bei der Gramatik wurde sich primär and der vorlesugn orientiert mit signifikaten abänderungen um das parsing zuvereinfachen sowie den spezifikationen der library nachzukommen.
 Das egebnis welches Pest zurückgibt wird von uneren parser funktionen analysiert und umgewandelt.
 Dabei wird wie folgt vorgegangenen:
-- Eine funktion schaut sich die aktuelle regel an
-- Es wird der entsprechende code zu dieser regelausgefür
-- Sofern subregeln in dieser regel vorkommen wird die entsprechende funktion aufgerufen
 
+-   Eine Funktion schaut sich die aktuelle Regel an
+-   Es wird der entsprechende Code zu dieser Regel ausgeführt
+-   Sofern Subregeln in dieser Regel vorkommen wird die entsprechende Funktion aufgerufen
 
 ## Typechecker
 
@@ -98,6 +92,11 @@ Das Testen des Codegens war sehr aufwendig, er besteht aus diesen Schritten:
 7. Die .class-Datei wird mit javap in Bytecode umgewandelt und in eine Datei geschrieben
 8. Die vom Codegen generierte .class-Datei wird ausgeführt und die Ausgabe in einer Variable gespeichert
 9. Die Ausgaben der richtigen Java Klasse und der vom Codegen generierten Klasse werden verglichen
+
+## Supported types
+
+Unterstützte Typen sind in [Types](../lib/src/types.rs) definiert.
+Mögliche Kombinationen sind den [Tests](../lib/testcases) zu entnehmen.
 
 ## AST-Definition
 

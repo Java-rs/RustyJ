@@ -23,6 +23,7 @@ pub fn parse_programm(file: &str) -> Result<Vec<Class>, Error<Rule>> {
         panic!();
     }
     let pased_clases = prg.into_inner().map(parse_class).collect();
+    println!("Parsed program successfully!🎉✍️");
     Ok(pased_clases)
 }
 
