@@ -12,9 +12,9 @@ Die Grammatik hat sich Anfangs an den Hilfsmitteln der Vorlesung orientiert. Sp�
 Das Ergebnis, welches Pest zurückgibt, wird .
 Dabei wird wie folgt vorgegangenen:
 
--   Eine funktion schaut sich die aktuelle regel an
--   Es wird der entsprechende code zu dieser regelausgefür
--   Sofern subregeln in dieser regel vorkommen wird die entsprechende funktion aufgerufen
+-   Eine Funktion schaut sich die aktuelle Regel an
+-   Es wird der entsprechende Code zu dieser Regel ausgeführt
+-   Sofern Subregeln in dieser Regel vorkommen wird die entsprechende Funktion aufgerufen
 
 ## Typechecker
 
@@ -109,6 +109,11 @@ Dafür wurde zuerst die originale Java-Datei kompiliert. Zusätzlich wird eine T
 Im nächsten Schritt überschreiben wir nun die `.class`-Datei der originalen Java-Datei mit den Bytes, die wir aus der Codegenerierung erhalten. Dann können wir Test-Datei nochmal ausführen. Diesmal versucht java aber natürlich die von uns geschriebene `.class`-Datei zu lesen und zu benutzen. Wenn die Test-klasse dann die selben Ausgaben macht, wissen wir, dass sich unsere `.class`-Datei genauso wie die originale `.class`-Datei verhält und unsere Codegenerierung entsprechend richtig funktioniert.
 
 Zusätzlich nutzen wir in diesem Test auch das mit Java mitgelieferte Tool `javap`, welches uns erlaubt den originalen und den von uns generierten Bytecode zu disassemblieren. Wir schreiben die Ausgabe von `javap` dann in jeweils eine Datei (eine Datei für die originale von `javac` kompilierte Klasse und eine Datei für die von uns kompilierte Klasse). Diese Ausgaben sind zwar für den Test nicht notwendig, haben aber sehr geholfen bei Fehlersuche und Fehlerbehebung.
+
+## Supported types
+
+Unterstützte Typen sind in [Types](../lib/src/types.rs) definiert.
+Mögliche Kombinationen sind den [Tests](../lib/testcases) zu entnehmen.
 
 ## Supported types
 
