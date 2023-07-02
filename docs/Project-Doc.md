@@ -55,15 +55,15 @@ Folgende Fehler werden vom Typechecker erkannt:
 
 ## Codegenerierung
 
-Definition DIR(Duck Intermediate Representation), ConstantPool, LocalVarPool, Methoden zur Generierung der DIR-Instructions, BugFixes, etwas ByteCode-Umwandlung: Marion Hinkel und Benedikt Brandmaier im Pair Programming
+Geschrieben von: Marion Hinkel und Benedikt Brandmaier im Pair Programming
 
-ByteCode-Umwandlung, Bugfixes, StackSize, StackMapTable und ausführliche Mithilfe: Val Richter
+StackMapTable-Implementation, Mithilfe bei Transformation von DIR zu Bytes und sonstigem Bugfixing: Val Richter
 
 Zur Bytecode-Generierung wird der Typed Abstract Syntax Tree (TAST) in Java Bytecode umgewandelt.
 Es wurden keine Libraries (wie z.B. [ASM](https://asm.ow2.io/javadoc/)) verwendet.
 Für die Codegenerierung wird eine Intermediate Representation (IR) genutzt, die eine Class-ähnliche Struktur
 (mit Konstantenpool, LocalVarpool, Methoden mit Code als Instruktionen, etc.) besitzt.
-Diese IR wird dann komplett manuell in Java Bytecode übersetzt. Dies hat dem Code-gen Team sehr viel Zeit gekostet,
+Diese IR wird dann komplett manuell in Java Bytecode übersetzt. Dies hat sehr viel Zeit gekostet,
 da z.B. die Stack-Size, der Konstantenpool, LocalVarPool und alle Jumps manuell berechnet werden mussten.
 
 Zudem hatten wir zeitweise eigene Instructions für relative Jumps implementiert, die wir dann in absolute Jumps umgerechnet haben,
@@ -87,6 +87,8 @@ sehr spezifische Instruktionen und wurde deswegen selten genutzt) in die wir man
 welcher Bytecode bei verschiedenen Operationskombinationen generiert wird, was sehr zeitaufwendig war.
 
 ## Testing
+
+Geschrieben von: Val Richter
 
 Jeder Test besteht aus einer Java-Klasse (liegt jeweils in `lib/testcases`) und aus dem dazugehörigen getypten AST, welcher für jeden Test per Hand geschrieben wurde. Mit diesen beiden Teilen testen wir dann den Parser, Typchecker und die Codegenerierung. Außerdem testen wir auch, dass der handgeschriebene TAST korrekt ist. Wie diese Tests funktionieren, wird im Folgenden ausgeführt.
 
