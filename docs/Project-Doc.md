@@ -1,6 +1,8 @@
 ## Parser
 
-Geschrieben von: Victoria Gönnheimer, Sander Stella
+Geschrieben von: Tori Gönnheimer, Sander Stella
+
+Ausfürhliche Mithilfe (v.a. beim Schreiben der Grammatik): Val Richter
 
 Der Parser akzeptiert den Text eines Java Programs und gibt einen Abstract Syntax Tree (AST) zurück.
 Dafür wird die Libray [pest.rs](https://pest.rs/) verwendet, um das Inital parsing durchzufüren.
