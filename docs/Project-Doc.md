@@ -44,9 +44,9 @@ Folgende Fehler werden vom Typechecker erkannt:
 
 ## Codegenerierung
 
-ByteCode-Umwandlung, Bugfixes, StackSize und viele Improvements: Val Richter
+ByteCode-Umwandlung, Bugfixes, StackSize, StackMapTable und sehr viele Improvements: Val Richter
 
-Definition DIR(Duck Intermediate Representation), ConstantPool, LocalVarPool, Methoden zur Instruction-generierung, BugFixes, etwas ByteCode-Umwandlung und Umwandlung relativer in absolute Jumps: Marion Hinkel und Benedikt Brandmaier im Pair Programming
+Definition DIR(Duck Intermediate Representation), ConstantPool, LocalVarPool, Methoden zur Instruction-generierung, BugFixes, etwas ByteCode-Umwandlung: Marion Hinkel und Benedikt Brandmaier im Pair Programming
 
 Zur Bytecode-generierung wird der Typed Abstract Syntax Tree(TAST) in Java Bytecode komplett selber
 umgewandelt. Dafür wird eine Intermediate Representation (IR) genutzt, die eine Class-ähnliche Struktur(mit Konstantenpool, LocalVarpool, Methoden mit Code als Instruktionen, etc.)
@@ -59,14 +59,15 @@ und für die JVM normale jumps als relative Jumps behandelt. Auch die relativen 
 hatten häufig off-by-one Errors.
 
 Zudem musste eine StackMapTable implementiert werden, da die JVM sonst unsere Klassen nicht lädt.
-Das Troubleshooten von Testfehlern war auch sehr aufwending da oft javap gar nicht erst den Fehler im Klassencode ausgab
+Das Troubleshooten von Testfehlern war auch sehr aufwendig da oft javap gar nicht erst den Fehler im Klassencode ausgab
 und wir mit einem Hex-Editor die Klassen von Hand analysieren mussten, da es auch kein anderes Tool gab, um solche Fehler 
 auszugeben und die Zeit fehlte ein Eigenes zu schreiben.
 
-Da es auch keine Dokumentation gibt, die in etwa zeigt, welcher Bytecode für welche Operationen genutzt wird, mussten wir
+Da es auch keine gute Dokumentation gibt, die in etwa zeigt, welcher Bytecode für welche Operationen genutzt wird, mussten wir
 uns die Bytecode-Spezifikationen anschauen und sehr viel mit Tools wie javap und [godbolt](https://godbolt.org/) arbeiten
-in die wir manuell Java Code eingeben und schauten, was für Bytecode bei verschiedenen Operationenkombinationen generiert
-wird, was sehr zeitaufwendig war.
+(wir haben auch https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-3.html genutzt, aber diese Dokumentation nutzt 
+sehr spezifische Instruktionen und wurde deswegen selten genutzt)in die wir manuell Java Code eingeben und schauten, 
+welcher Bytecode bei verschiedenen Operationenkombinationen generiert wird, was sehr zeitaufwendig war.
 
 Auch sehr schwierig war die Implementation einer StackMapTable, da Java diese erwartet. Diese ist eine Tabelle, die für
 jede Instruktion die Typen der Elemente auf dem Stack in komprimiertem Format angibt. Diese Tabelle muss manuell 
