@@ -1,6 +1,8 @@
 ## Supported types
 
--   Welche Types, Strukturen und deren Kombinationen werden unterstützt?
+Unterstützte Typen sind in [Types](../lib/src/types.rs) definiert.
+Mögliche Kombinationen sind den [Tests](../lib/testcases) zu entnehmen.
+
 
 ## Parser
 
