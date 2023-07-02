@@ -52,7 +52,7 @@ fn parse_class(pair: Pair<Rule>) -> Class {
                 methods,
             }
         }
-        _ => todo!(),
+        _ => unreachable!(),
     }
 }
 fn next_id(inners: &mut Pairs<Rule>) -> String {
@@ -182,7 +182,7 @@ fn parse_Stmt(pair: Pair<Rule>) -> Vec<Stmt> {
         pair.as_str()
     );
     match pair.as_rule() {
-        Rule::Stmt => parse_Stmt(pair.into_inner().next().unwrap()), //@Notice this may be very wrong !!
+        Rule::Stmt => parse_Stmt(pair.into_inner().next().unwrap()),
         Rule::WhileStmt => {
             let mut inners = pair.into_inner();
             let Expr = parse_expr(inners.next().unwrap());

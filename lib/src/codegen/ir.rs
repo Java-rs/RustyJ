@@ -256,7 +256,6 @@ impl ConstantPool {
                     result.extend_from_slice(&self.add(Constant::Utf8(r#type)).to_be_bytes());
                 }
                 Constant::FieldRef(FieldRef { class, field }) => {
-                    //TODO: Maybe this should be moved Prio2
                     result.push(9);
                     result.extend_from_slice(
                         &self
@@ -572,18 +571,6 @@ fn generate_class(class: &Class, dir: &mut DIR) -> IRClass {
             .push(generate_method(method, &mut dir.constant_pool, &class.name));
     }
     ir_class
-}
-
-// @Cleanup this function is never used
-/// If this method is used the caller has to still set a NameAndType constant and a FieldRef
-/// constant, which is technically optional if the field is not used but we're lazy
-fn generate_field(field: &FieldDecl, constant_pool: &mut ConstantPool) -> IRFieldDecl {
-    let name_index = constant_pool.add(Constant::Utf8(field.name.clone()));
-    let type_index = constant_pool.add(Constant::Utf8(format!(
-        "(){}",
-        field.field_type.clone().to_ir_string()
-    )));
-    IRFieldDecl::new(type_index, name_index)
 }
 
 /// Generates a Vector of instructions for a given method

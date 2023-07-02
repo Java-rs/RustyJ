@@ -82,12 +82,10 @@ impl StackMapTable {
         constant_pool: &mut ConstantPool,
     ) {
         while instruction_idx < code.len() {
-            // FIXME: When are locals added and how can we detect that from the instructions alone?
             match code.get(instruction_idx).unwrap() {
                 Instruction::invokespecial(idx) => {
                     bytes_idx += 3;
                     if let Some(Constant::MethodRef(m)) = constant_pool.get(*idx) {
-                        // FIXME: Somehow figure out how many parameters are popped when calling the given function
                         let pop_amount = 1;
                         let l = current_stack.operands.len();
                         current_stack.operands.splice(l - pop_amount..l, []);
@@ -124,7 +122,7 @@ impl StackMapTable {
                     bytes_idx += 1;
                     current_stack.operands.push(VerificationType::NULL)
                 }
-                Instruction::new(_) => todo!(), // requires special treatment, I think, see documentation VerificationType::UNINITIALIZED
+                Instruction::new(_) => unimplemented!(),
                 Instruction::aload_0 => {
                     bytes_idx += 1;
                     current_stack.operands.push(VerificationType::OBJECT(
@@ -477,8 +475,7 @@ pub(crate) enum VerificationType {
     INTEGER,
     NULL,
     UNINITIALIZED_THIS,
-    OBJECT(u16),        // index in constant pool
-    UNINITIALIZED(u16), // offset (see docs for specific infos)
+    OBJECT(u16), // index in constant pool
 }
 
 impl VerificationType {
@@ -494,7 +491,6 @@ impl VerificationType {
                 v.extend_from_slice(&cp_idx.to_be_bytes());
                 v
             }
-            VerificationType::UNINITIALIZED(offset) => todo!(),
         }
     }
 }

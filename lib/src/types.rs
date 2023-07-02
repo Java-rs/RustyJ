@@ -90,13 +90,6 @@ pub enum Stmt {
 pub enum StmtExpr {
     Assign(Expr, Expr), // first the name of the variable, then the value it is being assigned to
     New(Type, Vec<Expr>), // first the class type, that should be instantiated, then the list of arguments for the constructor
-    // FIXME: This needs to be changed to represent more how the JVM handles method calls. We need a class(at least name) and a method name with the typed arguments inside it, also the return type
-    //    #2 = Methodref          #3.#17         // MethodTest.y:(I)I
-    //    #3 = Class              #18            // MethodTest
-    //    #17 = NameAndType        #19:#20        // y:(I)I
-    //    #18 = Utf8               MethodTest
-    //    #19 = Utf8               y
-    //    #20 = Utf8               (I)I
     MethodCall(Expr, String, Vec<Expr>), // first the object to which the method belongs (e.g. Expr::This), then the name of the method and lastly the list of arguments for the method call
     TypedStmtExpr(Box<StmtExpr>, Type),
 }
@@ -272,7 +265,6 @@ impl Type {
             Type::Bool => "Z",
             Type::String => "Ljava/lang/String;",
             Type::Void => "V",
-            // FIXME: Either the class has the formatting `L<class>;' or we have to add it here.
             Type::Class(name) => name,
             _ => panic!("Invalid type: {}", self),
         }
