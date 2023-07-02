@@ -86,17 +86,27 @@ erstellt werden und über die Typen aller Variablen, die in den Stack geschriebe
 
 ## Testing
 
-Das Testen des Codegens war sehr aufwendig. Es besteht aus den folgenden Schritten:
+Jeder Test besteht aus einer Java-Klasse (liegt jeweils in `lib/testcases`) und aus dem dazugehörigen getypten AST, welcher für jeden Test per Hand geschrieben wurde. Mit diesen beiden Teilen testen wir dann den Parser, Typchecker und die Codegenerierung. Außerdem testen wir auch, dass der handgeschriebene TAST korrekt ist. Wie diese Tests funktionieren, wird im Folgenden ausgeführt.
 
-1. Ein handgeschriebener TAST wird geladen
-2. Eine Java Klasse wird erstellt die jede Methode im TAST aufruft
-3. Die java Klasse wird mit javac kompiliert und ausgeführt, wobei die Ausgabe in einer Variable gespeichert wird
-4. Fürs Debugging wird die Java Klasse mit javap in Bytecode umgewandelt und in eine Datei geschrieben
-5. Der TAST wird in eine DIR umgewandelt und zu Bytecode umgewandelt
-6. Der Bytecode wird in eine .class-Datei geschrieben
-7. Die .class-Datei wird mit javap in Bytecode umgewandelt und in eine Datei geschrieben
-8. Die vom Codegen generierte .class-Datei wird ausgeführt und die Ausgabe in einer Variable gespeichert
-9. Die Ausgaben der richtigen Java Klasse und der vom Codegen generierten Klasse werden verglichen
+Um zu testen, dass die handgeschriebenen TASTs korrekt sind, wird aus dem TAST ein syntaktisch korrektes Java-Programm geschrieben. Alle Typinformationen des TAST werden dabei ignoriert.
+Das so erstellte Java-Programm wird dann in eine Datei geschrieben und mit `javac` kompiliert. Daraufhin wird überprüft, dass die kompilierte `.class`-Datei identisch mit der `.class`-Datei ist,
+die man beim Kompilieren des originalen Java-Programms erhält. Eine nervige Besonderheit bei diesem Vorgehen ist, dass der vom AST generierte Java-Code die originale Java-Datei überschreiben muss,
+da der `javac` Compiler sonst minimal unterschiedliche `.class`-Dateien schreibt. Trotzdem war dieser Test sehr hilfreich, da beim handschriftlichen Schreiben der teilweise sehr großen TASTs,
+sehr oft kleine Fehler gemacht wurden, die ansonsten nur schwer zu finden wären.
+
+Außerdem schreiben wir bei dem Test des TASTs den erwarteten AST und TAST als `.json`-Dateien in den `lib/testcases` Ordner. Diese Dateien dienen vor allen bei der Implementation der anderen Teile des Compilers, da somit leicht sichtbar ist, wie der erwartete AST bzw. TAST aussehen sollten für den jeweiligen Test.
+
+Das Testen des Parsers war relativ leicht. Hier musste nur die jeweilige Java-Datei gelesen und in den Parser gegeben werden. Sobald dieser dann den erstellten AST zurück gibt, kann überprüft werden, ob er identisch mit dem handgeschriebenen TAST ist. Dabei werden alle Typinformationen vom TAST vorher entfernt (wodurch wir den AST erhalten), weil der Parser ja noch keine Typinformationen hinzufügt.
+
+Das Testen des Typcheckers läuft ähnlich ab. Der handgeschriebene TAST dient als erwartete Ausgabe des Typcheckers. Der AST, der als Eingabe für den Typchecker dient, wird über Entfernen der Typinformationen beim TAST generiert.
+
+Das Testen des Codegens war dagegen sehr viel aufwendiger. Die Eingabe für die Codegenerierung ist mit den handgeschriebenen TASTs bereits gegeben. Um die Ausgabe zu überprüfen, hätte man allerdings die erwarteten Bytes per Hand aufschreiben müssen. Das wäre zu aufwendig und fehleranfällig gewesen. Stattdessen testen wir, dass die von uns geschriebene `.class`-Datei sich identisch mit der von `javac` erstellten `.class`-Datei verhält.
+
+Dafür wurde zuerst die originale Java-Datei kompiliert. Zusätzlich wird eine Test-Datei geschrieben, welche eine `main` Funktion hat und alle Methoden der originalen Java-Datei aufruft. Über die handgeschriebenen TASTs wissen wir, welche Methoden die Klasse besitzt und welche Eingaben sie erwartet und was sie ausgibt. Die Eingaben werden pseudo-zufällig für den Test generiert. Falls die Methoden einen Wert ausgibt, schreibt die `main` Funktion der Test-Datei diesen Ausgabewert in die Konsole. Damit erhalten wir das erwartete Verhalten der originalen Java-Klasse.
+
+Im nächsten Schritt überschreiben wir nun die `.class`-Datei der originalen Java-Datei mit den Bytes, die wir aus der Codegenerierung erhalten. Dann können wir Test-Datei nochmal ausführen. Diesmal versucht java aber natürlich die von uns geschriebene `.class`-Datei zu lesen und zu benutzen. Wenn die Test-klasse dann die selben Ausgaben macht, wissen wir, dass sich unsere `.class`-Datei genauso wie die originale `.class`-Datei verhält und unsere Codegenerierung entsprechend richtig funktioniert.
+
+Zusätzlich nutzen wir in diesem Test auch das mit Java mitgelieferte Tool `javap`, welches uns erlaubt den originalen und den von uns generierten Bytecode zu disassemblieren. Wir schreiben die Ausgabe von `javap` dann in jeweils eine Datei (eine Datei für die originale von `javac` kompilierte Klasse und eine Datei für die von uns kompilierte Klasse). Diese Ausgaben sind zwar für den Test nicht notwendig, haben aber sehr geholfen bei Fehlersuche und Fehlerbehebung.
 
 ## Supported types
 
