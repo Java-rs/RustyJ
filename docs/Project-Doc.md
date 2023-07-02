@@ -1,5 +1,6 @@
 ## Supported types
-- Welche Types, Strukturen und deren Kombinationen werden unterstützt?
+
+-   Welche Types, Strukturen und deren Kombinationen werden unterstützt?
 
 ## Parser
 
@@ -19,32 +20,33 @@ Funktionsweise des Typecheckers:
 Der Typechecker iteriert über alle übergebenen Klassen und prüft auf mehrfache Klassendeklarationen. Die Felddeklarationen werden in einem neuen getypten Klassenobjekt gespeichert, in dem alle weiteren getypten Methoden und deren Statements gespeichert werden. Anschließend iteriert der Typechecker über alle Methoden und prüft auf mehrfache Methodendeklarationen und typisiert die Methodenparameter. Nachdem alle Statements typisiert wurden, wird der Rückgabetyp der Methode geprüft und die Methode im getypten Klassenobjekt gespeichert. Nach dem Überprüfen und Typisieren der Klasse wird diese in einen Vektor an getypten Klassen gespeichert. Nachdem alle Klassen getypt wurden, wird der Vektor an getypten Klassen zurückgegeben.
 
 Folgende Funktionen werden vom Typechecker übernommen:
--  Liest alle definierten Types/Strukturen
--  Typisierung aller Variablen und Ausdrücke
--  Checken von mehreren Klassen
--  Checken der Rückgabe-Typen von Methoden
--  Ersetzen von LocalOrFieldVar durch LocalVar oder FieldVar
 
+-   Liest alle definierten Types/Strukturen
+-   Typisierung aller Variablen und Ausdrücke
+-   Checken von mehreren Klassen
+-   Checken der Rückgabe-Typen von Methoden
+-   Ersetzen von LocalOrFieldVar durch LocalVar oder FieldVar
 
 Folgende Fehler werden vom Typechecker erkannt:
--  Mehrfache Deklaration einer Klasse
--  Mehrfache Deklaration einer Methode
--  Type-Mismatch bei Methodenrückgabe
--  Type-Mismatch bei Methodenaufruf
--  Type-Mismatch bei Methodenparametern
--  Type-Mismatch bei FieldDecl
--  Type-Mismatch bei Unary/Binary-Operationen
--  Mehrfache Deklaration von FieldDecl
--  Mehrfache Deklaration von LocalOrFieldVar
--  Nicht deklarierte Variable
--  Unbekannte Methode bei Methodenaufruf
--  Verwendung einer nicht deklarierten Variable
--  Panic bei TypedExpr in AST
--  Bedingung von If/While-Statement ist kein Bool
+
+-   Mehrfache Deklaration einer Klasse
+-   Mehrfache Deklaration einer Methode
+-   Type-Mismatch bei Methodenrückgabe
+-   Type-Mismatch bei Methodenaufruf
+-   Type-Mismatch bei Methodenparametern
+-   Type-Mismatch bei FieldDecl
+-   Type-Mismatch bei Unary/Binary-Operationen
+-   Mehrfache Deklaration von FieldDecl
+-   Mehrfache Deklaration von LocalOrFieldVar
+-   Nicht deklarierte Variable
+-   Unbekannte Methode bei Methodenaufruf
+-   Verwendung einer nicht deklarierten Variable
+-   Panic bei TypedExpr in AST
+-   Bedingung von If/While-Statement ist kein Bool
 
 ## Codegenerierung
 
-ByteCode-Umwandlung, Bugfixes, StackSize und viele Improvements: Val Richter
+ByteCode-Umwandlung, Bugfixes, StackSize und viele Verbesserungen: Val Richter
 
 Definition DIR(Duck Intermediate Representation), ConstantPool, LocalVarPool, Methoden zur Instruction-generierung, BugFixes, etwas ByteCode-Umwandlung und Umwandlung relativer in absolute Jumps: Marion Hinkel und Benedikt Brandmaier im Pair Programming
 
@@ -60,7 +62,7 @@ hatten häufig off-by-one Errors.
 
 Zudem musste eine StackMapTable implementiert werden, da die JVM sonst unsere Klassen nicht lädt.
 Das Troubleshooten von Testfehlern war auch sehr aufwending da oft javap gar nicht erst den Fehler im Klassencode ausgab
-und wir mit einem Hex-Editor die Klassen von Hand analysieren mussten, da es auch kein anderes Tool gab, um solche Fehler 
+und wir mit einem Hex-Editor die Klassen von Hand analysieren mussten, da es auch kein anderes Tool gab, um solche Fehler
 auszugeben und die Zeit fehlte ein Eigenes zu schreiben.
 
 Da es auch keine Dokumentation gibt, die in etwa zeigt, welcher Bytecode für welche Operationen genutzt wird, mussten wir
@@ -69,15 +71,13 @@ in die wir manuell Java Code eingeben und schauten, was für Bytecode bei versch
 wird, was sehr zeitaufwendig war.
 
 Auch sehr schwierig war die Implementation einer StackMapTable, da Java diese erwartet. Diese ist eine Tabelle, die für
-jede Instruktion die Typen der Elemente auf dem Stack in komprimiertem Format angibt. Diese Tabelle muss manuell 
+jede Instruktion die Typen der Elemente auf dem Stack in komprimiertem Format angibt. Diese Tabelle muss manuell
 erstellt werden und über die Typen aller Variablen, die in den Stack geschrieben wurden Bescheid wissen.
 
 ## Testing
 
--   Wer hat welche Arbeit beim Testing gemacht?
--   Wie funktioniert das Testing genau?
-
 Das Testen des Codegens war sehr aufwendig, er besteht aus diesen Schritten:
+
 1. Ein handgeschriebener TAST wird geladen
 2. Eine Java Klasse wird erstellt die jede Methode im TAST aufruft
 3. Die java Klasse wird mit javac kompiliert und ausgeführt, wobei die Ausgabe in einer Variable gespeichert wird
@@ -90,9 +90,6 @@ Das Testen des Codegens war sehr aufwendig, er besteht aus diesen Schritten:
 
 ## AST-Definition
 
--   Wer hat wie zur endgültigen Definition des ASTs beigetragen?
--   v.a. interessant, dass während der Arbeit der einzelnen Teams, der AST iterativ verändert wurde
+Die genaue Definition des ASTs, die verwendet wurde, ist in [AST-Klassendiagramm](./AST-Klassendiagramm.png) als UML-Diagramm dargestellt. Zusätzlich lassen sich in [hier](./Notizen%20zum%20AST.md) einige Erklärungen zum Diagramm finden.
 
-## Projektmanagement
-
--   Welche Arbeit lief von wem ins Projektmanagement?
+![Klassendiagramm](AST-Klassendiagramm.png)
