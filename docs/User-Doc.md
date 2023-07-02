@@ -22,22 +22,28 @@ cargo r -r -- <input_file> [<output_file>]
 
 ## Parser
 
-2. Parser tests ausführen: `cargo test --lib test_parser`
+2. Parser Tests ausführen: `cargo test --lib test_parser`
 
 Spezifischen Test ausführen: `cargo test --lib <test_name>::test_parser`
 
 ## Typchecker
 
-2. Typechecker tests ausführen: `cargo test --lib test_typechecker`
+2. Typechecker Tests ausführen: `cargo test --lib test_typechecker`
 
 Spezifischen Test ausführen: `cargo test --lib <test_name>::test_typechecker`
 
 ## Codegenerierung
 
-2. Codegenerierung tests ausführen: `cargo test --lib test_codegen`
+2. Codegenerierung Tests ausführen: `cargo test --lib test_codegen`
 
 Spezifischen Test ausführen: `cargo test --lib <test_name>::test_codegen`
 
+## TAST
+
+2. Ausführung der Tests von den handgeschriebenen TASTs: `cargo test --lib test_class`
+
+Spezifischen Test ausführen: `cargo test --lib <test_name>::test_class`
+
 ## Testing
 
-Zur ausführung aller tests: `cargo test --lib`. Dabei sollte beachtet werden, dass die Tests teilweise die selben Dateien schreiben und entsprechend Probleme aufkommen können, wenn alle Tests auf einmal ausgeführt werden. Diese Probleme treten nicht auf, wenn die Teile des Compilers (Parser, Typchecker, Codegenerierung) einzeln getestet werden.
+Zur ausführung aller Tests: `cargo test --lib`. Dabei sollte beachtet werden, dass die Tests teilweise die selben Dateien schreiben und entsprechend Probleme aufkommen können, wenn alle Tests gleichzeitig ausgeführt werden. Diese Probleme treten nicht auf, wenn die Teile des Compilers (Parser, Typchecker, Codegenerierung) einzeln getestet werden.
