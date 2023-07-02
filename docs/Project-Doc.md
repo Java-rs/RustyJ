@@ -8,14 +8,14 @@ Mögliche Kombinationen sind den [Tests](../lib/testcases) zu entnehmen.
 
 Geschrieben von: Viktoria Gönnheimer, Sander Stella
 
-Der Parser akzeptiert denn text eines Java programs und gibt einen Abstract Syntax Tree (AST) zurück.
-Dafür wird die Libray [pest.rs](https://pest.rs/) verwendet um das Inital parsing durchzufüren.
-Für dieses inital parsing nutzt pest unsere vorher definiete Gramatik. Bei der Gramatik wurde sich primär and der vorlesugn orientiert mit signifikaten abänderungen um das parsing zuvereinfachen sowie den spezifikationen der library nachzukommen.
-Das egebnis welches Pest zurückgibt wird von uneren parser funktionen analysiert und umgewandelt.
+Der Parser akzeptiert den text eines Java Programms und gibt einen Abstract Syntax Tree (AST) zurück.
+Dafür wird die Libray [pest.rs](https://pest.rs/) verwendet, um das Inital Parsing durchzufüren.
+Für dieses inital parsing nutzt pest unsere vorher definiete Gramatik. Bei der Gramatik wurde sich primär and der Vorlesugn orientiert mit signifikaten Abänderungen um das parsing zu vereinfachen, sowie den Spezifikationen der Library nachzukommen.
+Das Egebnis, welches Pest zurückgibt wird von uneren Parser-Funktionen analysiert und umgewandelt.
 Dabei wird wie folgt vorgegangenen:
-- Eine funktion schaut sich die aktuelle regel an
-- Es wird der entsprechende code zu dieser regelausgefür
-- Sofern subregeln in dieser regel vorkommen wird die entsprechende funktion aufgerufen
+- Eine Funktion schaut sich die aktuelle Regel an
+- Es wird der Entsprechende Code zu dieser Regel ausgeführt
+- Sofern Subregeln in dieser Regel vorkommen, wird die entsprechende Funktion aufgerufen
 
 
 ## Typechecker
