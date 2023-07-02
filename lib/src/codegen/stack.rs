@@ -394,7 +394,7 @@ impl StackMapTable {
                 .to_be_bytes(),
         );
         // Attribute
-        let mut attr: Vec<u8> = self.frames.iter().map(|x| x.as_bytes()).flatten().collect();
+        let mut attr: Vec<u8> = self.frames.iter().flat_map(|x| x.as_bytes()).collect();
         // Attribute length
         // +2 because the 2 bytes for the entries length should also be included
         result.extend_from_slice(&(2 + attr.len() as u32).to_be_bytes());
@@ -405,7 +405,7 @@ impl StackMapTable {
         result
     }
 }
-
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug)]
 pub(crate) enum StackMapFrame {
     SAME(u8),                                                          // u8 in [0, 63]
@@ -447,7 +447,7 @@ impl StackMapFrame {
                 let mut v = Vec::with_capacity(16);
                 v.push(*appended_amount);
                 v.extend_from_slice(&offset_delta.to_be_bytes());
-                v.append(&mut types.iter().map(|t| t.as_bytes()).flatten().collect());
+                v.append(&mut types.iter().flat_map(|t| t.as_bytes()).collect());
                 let v = dbg!(v);
                 v
             }
@@ -470,7 +470,7 @@ impl StackMapFrame {
         }
     }
 }
-
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum VerificationType {
     TOP,
