@@ -44,7 +44,7 @@ impl TypeChecker {
 
     pub fn check_and_type_program(&mut self) -> Result<Vec<Class>, String> {
         let classes = self.classes.clone();
-        for (_, class) in &classes {
+        for class in classes.values() {
             self.current_class = Some(class.clone());
 
             self.check_and_type_class(class)?;
@@ -52,7 +52,7 @@ impl TypeChecker {
         }
         println!("Program successfully type checked!🎉🧙\n\n");
         let mut typed_classes = vec![];
-        for (_, class) in &self.typed_classes {
+        for class in self.typed_classes.values() {
             typed_classes.push(class.clone());
         }
         Ok(typed_classes)

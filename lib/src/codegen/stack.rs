@@ -447,7 +447,7 @@ impl StackMapFrame {
                 let mut v = Vec::with_capacity(16);
                 v.push(*appended_amount);
                 v.extend_from_slice(&offset_delta.to_be_bytes());
-                v.append(&mut types.iter().map(|t| t.as_bytes()).flatten().collect());
+                v.append(&mut types.iter().flat_map(|t| t.as_bytes()).collect());
                 let v = dbg!(v);
                 v
             }
@@ -470,7 +470,7 @@ impl StackMapFrame {
         }
     }
 }
-
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum VerificationType {
     TOP,

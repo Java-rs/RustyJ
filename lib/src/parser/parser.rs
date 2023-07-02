@@ -15,7 +15,7 @@ use tracing::debug;
 #[derive(Parser)]
 #[grammar = "../lib/src/parser/JavaGrammar.pest"]
 struct JavaParser;
-
+#[allow(clippy::result_large_err)]
 pub fn parse_programm(file: &str) -> Result<Vec<Class>, Error<Rule>> {
     let prg: Pair<Rule> = JavaParser::parse(Rule::Program, file)?.next().unwrap();
 

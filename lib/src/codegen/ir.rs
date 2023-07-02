@@ -454,9 +454,7 @@ pub struct NameAndType {
 }
 
 fn get_instruction_length(istr: &Instruction) -> u16 {
-    match istr {
-        i => i.as_bytes().len() as u16,
-    }
+    istr.as_bytes().len() as u16
 }
 
 fn get_instructions_length(instructions: &[Instruction]) -> u16 {
@@ -936,7 +934,7 @@ fn generate_code_stmt_expr(
                             })
                             .collect(),
                     );
-                    fn generate_name_and_type(return_type: &Type, args: &Vec<Expr>) -> String {
+                    fn generate_name_and_type(return_type: &Type, args: &[Expr]) -> String {
                         // Argument types comma seperated
                         let argument_types = args
                             .iter()
@@ -1058,7 +1056,7 @@ fn generate_code_expr(
                     let field_index = constant_pool.add(Constant::FieldRef(FieldRef {
                         class: class_name.to_string(),
                         field: NameAndType {
-                            name: name,
+                            name,
                             r#type: r#type.to_ir_string(),
                         },
                     }));
@@ -1412,7 +1410,7 @@ fn generate_code_expr(
                     let index = constant_pool.add(Constant::FieldRef(FieldRef {
                         class: class_name.to_string(),
                         field: NameAndType {
-                            name: name,
+                            name,
                             r#type: r#type.to_ir_string(),
                         },
                     }));
