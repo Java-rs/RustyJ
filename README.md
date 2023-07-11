@@ -39,7 +39,7 @@ However, it was a great learning experience, and we hope it can be useful to som
 
 -   Philipp Wolf (Flippchen)
 -   Maximilian Floto (mfloto)
--   Marion Hinkel (MarionHinkel)
+-   Marion Hinkel (Segelente)
 -   Benedikt Brandmaier (Nereuxofficial)
 -   Tori Gönnheimer (ToriTheGreenOne)
 -   Sander Stella (SanderForGodot)
